@@ -52,10 +52,10 @@ export function registerTerminationCleanup(handlerRef, handler) {
 }
 
 /**
- * 登记项（清理函数与终止发起方同形）：核 "<文件>#<函数>" 与函数，返回冻结的 {handlerRef, handler}。
+ * 登记项（清理函数、终止发起方、建档实例化与原语写者同形；rules/load/primitive-writers.mjs 复用，S2-L 草案 §3）：核 "<文件>#<函数>" 与函数，返回冻结的 {handlerRef, handler}。
  * @param {string} handlerRef @param {Function} handler @returns {Readonly<{handlerRef: string, handler: Function}>}
  */
-function handlerEntry(handlerRef, handler) {
+export function handlerEntry(handlerRef, handler) {
   const at = typeof handlerRef === 'string' ? handlerRef.indexOf(HANDLER_REF_SEP) : -1;
   const ok = at > 0 && at === handlerRef.lastIndexOf(HANDLER_REF_SEP) && at < handlerRef.length - 1;
   if (!ok || typeof handler !== 'function') {
@@ -194,36 +194,47 @@ export function destroyEntity(state, entityId, tx) {
 }
 
 /**
- * 按 state-owners systems.<名>.<field> {kinds, handler} 登记认一个种类的处理函数（终止发起方与建档实例化共用一处）：取 kinds 含该种类的那一条，
- * 按 handler 在装配层交入的登记项数组 given 里认函数。没有登记返回 null；多于一条或登记形状不合即 E-DIM-STRUCT-FIELD；登记了却没交函数即 E-DIM-REF-MISSING。
- * @param {LifeEngine} engine @param {string} field @param {unknown} given @param {string} kind @returns {Function | null}
+ * 按 state-owners systems.<名>.<field> {kinds, handler, sortKey?} 登记认一个种类的全部处理函数（终止发起方与建档实例化共用一处）：取 kinds 含该种类的各条，
+ * 按 sortKey（没写即 0，S2-L 主会话 Q8 甲；与 terminationCleanup 同口径）升序、同值按系统名代号序，按 handler 在装配层交入的登记项数组 given 里认函数。
+ * 登记形状不合（sortKey 写了却不是整数同此）即 E-DIM-STRUCT-FIELD；登记了却没交函数即 E-DIM-REF-MISSING。
+ * @param {LifeEngine} engine @param {string} field @param {unknown} given @param {string} kind @returns {Function[]}
  */
-function systemRoute(engine, field, given, kind) {
+function systemRoutes(engine, field, given, kind) {
   if (!Array.isArray(given)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `engine handler entries for systems.*.${field} must be an array`);
   const systems = Object(Object(Object(engine.docData).owners).systems);
-  /** @type {Array<{name: string, handlerRef: string}>} */
+  /** @type {Array<{name: string, handlerRef: string, sortKey: number}>} */
   const rows = [];
   for (const name of Object.keys(systems).sort()) {
     const t = Object(systems[name])[field];
     if (t === undefined) continue;
-    if (!Array.isArray(t.kinds) || typeof t.handler !== 'string') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `systems.${name}.${field} needs kinds and handler`);
-    if (t.kinds.includes(kind)) rows.push({ name, handlerRef: t.handler });
+    const sortKey = t.sortKey === undefined ? 0 : t.sortKey;
+    if (!Array.isArray(t.kinds) || typeof t.handler !== 'string' || !Number.isInteger(sortKey)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `systems.${name}.${field} needs kinds, handler and an integer sortKey if given`);
+    if (t.kinds.includes(kind)) rows.push({ name, handlerRef: t.handler, sortKey: Number(sortKey) });
   }
-  if (rows.length === 0) return null;
-  if (rows.length > 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${kind} has more than one ${field} (${rows.map((r) => r.name).join(', ')})`);
-  return registeredHandler(given, rows[0].handlerRef, `${field} ${rows[0].handlerRef} (systems.${rows[0].name})`);
+  rows.sort((a, b) => (a.sortKey - b.sortKey) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return rows.map((r) => registeredHandler(given, r.handlerRef, `${field} ${r.handlerRef} (systems.${r.name})`));
+}
+
+/**
+ * 只许一条登记的路由（终止发起方）：同 systemRoutes；没有登记返回 null，多于一条即 E-DIM-STRUCT-FIELD。
+ * @param {LifeEngine} engine @param {string} field @param {unknown} given @param {string} kind @returns {Function | null}
+ */
+function systemRoute(engine, field, given, kind) {
+  const fns = systemRoutes(engine, field, given, kind);
+  if (fns.length > 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${kind} has more than one ${field}`);
+  return fns.length === 0 ? null : fns[0];
 }
 
 /**
  * create 原语的建档入口（S1-3c 草案 §5；装配层注入为 engine.lifecycle.instantiate，kernel/transaction.mjs HANDLERS.create 写入阶段末尾调）：
- * 不按 kind 名分支，按 systems.*.instantiate 登记路由到实例化函数 handler(engine, state, entityId, tx)；该种类没有登记即不做事（物品、组织等照旧）。
+ * 不按 kind 名分支，按 systems.*.instantiate 登记路由到实例化函数 handler(engine, state, entityId, tx)；同一种类可登记多个系统，按 sortKey 再按系统名依次调
+ * （S2-L 主会话 Q8 甲：body 域建档补全在前，economy 域开局入账在后）；该种类没有登记即不做事（物品、组织等照旧）。
  * @param {unknown} state @param {string} entityId @param {unknown} tx
  */
 export function instantiateEntity(state, entityId, tx) {
   /** @type {LifeEngine} */
   const engine = Object(tx).engine;
-  const fn = systemRoute(engine, INSTANTIATE_FIELD, Object(engine).instantiators, kindOfEntity(engine, state, entityId));
-  if (fn !== null) fn(engine, state, entityId, tx);
+  for (const fn of systemRoutes(engine, INSTANTIATE_FIELD, Object(engine).instantiators, kindOfEntity(engine, state, entityId))) fn(engine, state, entityId, tx);
 }
 
 /**

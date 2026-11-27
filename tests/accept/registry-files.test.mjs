@@ -2,12 +2,13 @@
 // entry-registry 读合并结果、--write 按来源文件分写，无分片时写出字节与主文件相同。临时仓库用 testTempRoot。
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { testTempRoot, removeTempRoot, writeUnderTempRoot, ROOT } from './temp-root.mjs';
 import { readDecl, loadContext } from '../../tools/accept/read.mjs';
 import { readOwnersFiles, readEntryRegistry, hasOwnersFiles } from '../../tools/accept/lib/registry-files.mjs';
 import { splitBySource } from '../../tools/entry-registry-merge.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { detect } from '../../tools/accept/detectors/state_pattern.mjs';
 
 const OWNERS = 'world/ontology/state-owners.json';
@@ -67,6 +68,10 @@ test('entry-registry：读合并结果；--write 分写回各来源文件，无�
   assert.throws(() => readEntryRegistry(root), (e) => Object(e).code === 'E-DIM-DUPLICATE-KEY' && String(Object(e).message).includes('重复行键'));
 });
 
-test('真实仓库：门禁读到的声明表与 state-owners 主文件一致（仓库内尚无 state-owners 分片）', () => {
-  assert.deepEqual(readDecl(ROOT), JSON.parse(readFileSync(join(ROOT, OWNERS), 'utf8')));
+// S2-L 改（主会话裁定 2 甲）：原断言「仓库内尚无分片、等于主文件」是偶然现状，第一张真分片即打破；改为门禁读到的声明表 = 主文件与磁盘上全部分片按文件名序合并的结果。
+test('真实仓库：门禁读到的声明表与 state-owners 主文件加全部分片的合并结果一致', () => {
+  const dir = join(ROOT, shardDirOf(OWNERS));
+  const names = existsSync(dir) ? readdirSync(dir).filter((n) => n.endsWith('.json')).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(OWNERS)}/${n}`, doc: JSON.parse(readFileSync(join(dir, n), 'utf8')) }));
+  assert.deepEqual(readDecl(ROOT), mergeOwners({ file: OWNERS, doc: JSON.parse(readFileSync(join(ROOT, OWNERS), 'utf8')) }, shards).doc);
 });

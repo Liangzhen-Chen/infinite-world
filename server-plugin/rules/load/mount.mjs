@@ -24,11 +24,14 @@ import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
 import { checkTerminationTables, destroyEntity, instantiateEntity } from '../lifecycle/terminate.mjs';
 import { checkRecordCoverage } from '../lifecycle/records.mjs';
 import { DOMAINS } from './domains.mjs';
+import { assemblePrimitiveWriters } from './primitive-writers.mjs';
+import { checkLedgerTables, conservationCheck } from '../economy/ledger-check.mjs';
+import { accountsOf, balance } from '../economy/ledger.mjs';
 import { loadActions, menuOf } from '../act/catalog.mjs';
 import { resolveIntent } from '../act/resolve.mjs';
 
 // 各域装配登记按 domains.mjs 的次序收齐（S2-SH 草案 §3）：一个字段名收一张冻结表。
-const collect = (/** @type {'terminationCleanups' | 'terminationTriggers' | 'instantiators' | 'advanceHooks'} */ field) => Object.freeze(DOMAINS.flatMap((d) => d[field] || []));
+const collect = (/** @type {'terminationCleanups' | 'terminationTriggers' | 'instantiators' | 'advanceHooks' | 'primitiveWriters'} */ field) => Object.freeze(DOMAINS.flatMap((d) => d[field] || []));
 // 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在其域 manifest 收齐）。
 const TERMINATION_CLEANUPS = collect('terminationCleanups');
 // 终止发起方的登记项（草案 §4.1；各系统模块经 registerTerminationTrigger 产出，destroy 原语按 systems.*.terminationTrigger 路由）。
@@ -37,6 +40,8 @@ const TERMINATION_TRIGGERS = collect('terminationTriggers');
 const INSTANTIATORS = collect('instantiators');
 // 推进钩子（各域 manifest 的 advanceHooks）。
 const ADVANCE_HOOKS = collect('advanceHooks');
+// 原语写者的登记项（S2-L 草案 §3 R0；各系统模块经 registerPrimitiveWriter 产出，装配期按 systems.*.primitiveWriter 装成 op → 函数 表挂 engine.primitiveWriters）。
+const PRIMITIVE_WRITERS = collect('primitiveWriters');
 // 协议入口注入（kernel/transaction.mjs HANDLERS.destroy、HANDLERS.create 调 engine.lifecycle.*；内核不 import 规则层，与 engine.advance 同一做法）。
 const LIFECYCLE = Object.freeze({ destroy: destroyEntity, instantiate: instantiateEntity });
 
@@ -151,12 +156,14 @@ export function mountKernel(raw, caps, resume) {
     throw new KernelError('E-REPLAY-DIVERGE', { bake: 'place_tree' }, 'baked place tree differs between two builds of the same doc_data');
   }
   // 动作目录（卷九 §2.2；S1-3a）：加载期编成冻结目录挂 engine.actions；世界数据未带动作目录（actionDocs 缺）即为空，act/menu 调用即拒 E-ACT-UNKNOWN。
-  const actions = docData.actionDocs === undefined ? null : loadActions({ registry, docData, vocab: vocabDoc, primitives });
+  // 规则层原语写者（S2-L R0）：内核 resolve 在内置处理函数表查不到时回落查它；动作目录加载期核可达原语时一并认它。
+  const primitiveWriters = assemblePrimitiveWriters(owners, PRIMITIVE_WRITERS);
+  const actions = docData.actionDocs === undefined ? null : loadActions({ registry, docData, vocab: vocabDoc, primitives, primitiveWriters });
   // 提交后推进由本层注入 engine.advance（transaction 不 import scheduler，免成环）；openStates 记「事务已开」的 state（不嵌套）。
   /** @type {any} */
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
-    stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc, actions,
+    stateKeys, P, host, saveLayout, primitives, primitiveWriters, bake, vocab: vocabDoc, actions,
     advanceHooks: ADVANCE_HOOKS, terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, instantiators: INSTANTIATORS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     // 意图收窄由本层注入（transaction 不 import 规则层；同 advance 注入），开局与复演同一函数（S1-3a）。
@@ -170,11 +177,16 @@ export function mountKernel(raw, caps, resume) {
   // 装配期核终止协议的登记（S2-0a）：类别行 termination 与未建数据门（主会话裁定 R7）、去留表取值；去留表覆盖核对（卷二 :562 E-TERM-RECORD-UNLISTED）。
   checkTerminationTables(engine);
   checkRecordCoverage(engine);
+  // 装配期核账本表（S2-L）：资源种类行、budget 窗口、出身起始钱可解析；坏数据开局即拒。
+  checkLedgerTables(engine);
   // 开局：世界创建事务（genesisMinute 与时钟）→ 开局一步事务（openingMinute 与开放范围），都在 0 号快照之前、不进日志输入（卷十 R10-11.4、卷二十七 :742）；
   // 读档：同一 engine 上复演（不按种类分支，只看有无 resume）。
   /** @type {{state: any, logBook: any, saveDigest?: string}} */
   const start = resume === undefined ? { state: openWorld(engine), logBook: createLogBook() } : replayApply(engine, resume);
   const { state: built, logBook, saveDigest } = start;
+  // 守恒核对（卷六 §4.1 规则 4、A6-1.2；草案 §4 第 7 行）：开局与读档复演后各核一次，有违例即拒（E-LEDGER-UNBALANCED，违例带进消息）。
+  const broken = conservationCheck(engine, built);
+  if (broken.length > 0) throw new KernelError('E-LEDGER-UNBALANCED', {}, `ledger conservation broken: ${JSON.stringify(broken)}`);
   // 装配期核分片表覆盖（卷二十七 :556）；开局再拍 0 号快照（读档的快照随日志簿复演带回）。
   checkShards(saveLayout.shards, Object.keys(docOf(engine, built, logBook)));
   if (resume === undefined) tickEnd(engine, built, logBook);
@@ -194,6 +206,10 @@ export function mountKernel(raw, caps, resume) {
       speciesView: (/** @type {string} */ id) => speciesView(engine, built, id),
       bodyView: (/** @type {string} */ id) => bodyView(engine, built, id),
       carcassOf: (/** @type {import('../body/carcass.mjs').CarcassArg} */ arg) => carcassOf(engine, built, arg),
+      // 持有人名下全部账户（卷六 :354；S2-L 主会话 Q3 乙：只给只读入口，界面归 S1-4）。
+      accountsOf: (/** @type {string} */ holderId) => accountsOf(engine, built, holderId),
+      // 账户串所指账户的余额（卷六 :354；同上只读）。
+      balance: (/** @type {string} */ accountKey) => balance(engine, built, accountKey),
     }),
     ...(saveDigest === undefined ? {} : { saveDigest }),
   };

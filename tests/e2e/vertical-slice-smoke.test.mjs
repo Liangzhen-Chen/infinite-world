@@ -73,6 +73,20 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     assert.equal(pkg.manifest.clockMinute, ctx.clock0 + 30, '清单 clockMinute 应为开局 + 30（越界那次不推进）');
     const persons = findInShards(pkg, (o) => o.kind === 'person' && (o.birthplace ?? o.props?.birthplace) != null);
     assert.ok(persons.length >= 1, '导出 doc_state 中应有 kind:person 且带 birthplace 的化身');
+    // S2-L（草案 §6）：选来历经账本真实入账——化身名下钱账户余额 = 所选来历出身条目的起始钱，ledgerTotals 该钱种开局来源累计同数；期望值取导出包自带的世界数据副本 doc_data。
+    const [st] = findInShards(pkg, (o) => o.accounts !== undefined && o.ledgerTotals !== undefined && typeof o.clock?.minute === 'number');
+    const [dd] = findInShards(pkg, (o) => o.vocabDoc !== undefined && o.tableDocs !== undefined && o.dimensionDocs !== undefined);
+    assert.ok(st && dd, '导出包应有带账本键的 doc_state 与 doc_data');
+    const endow = dd.tableDocs.economyLedger.rows.find((r) => r.key === 'endowment').value;
+    const holders = Object.keys(st.accounts);
+    assert.equal(holders.length, 1, '开局选来历后账本应只有化身一个持有人');
+    const rec = st.created[holders[0]];
+    const table = dd.dimensionDocs.find((d) => d.kind === rec.kind);
+    const ent = dd.vocabDoc.families[table.dimensions[endow.originDimension].vocab].entries[table.rows[rec.template][endow.originDimension]];
+    const coin = ent[endow.coinField];
+    const bal = Object.values(st.accounts[holders[0]][endow.purpose][coin]).reduce((s, v) => s + v, 0);
+    assert.equal(bal, ent[endow.moneyField], '化身钱账户余额应等于所选来历出身条目的起始钱');
+    assert.equal(st.ledgerTotals[coin][endow.source].cumulative, ent[endow.moneyField], 'ledgerTotals 开局来源累计应等于起始钱');
     ctx.d1 = pkg.manifest.saveDigest;
     ctx.bytes1 = e1.buf;
     assert.equal(typeof ctx.d1, 'string', '存档清单缺 saveDigest');

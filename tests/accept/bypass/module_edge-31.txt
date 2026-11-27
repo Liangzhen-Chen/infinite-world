@@ -1,2 +1,2 @@
-import { post } from '../../kernel/ledger.mjs';
+import { post } from '../../rules/economy/ledger.mjs';
 export const f = (s) => post(s, []);

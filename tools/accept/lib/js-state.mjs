@@ -215,7 +215,7 @@ function specificity(a, b) {
 }
 
 /**
- * 从声明表派生：写者（stateKeys.<键>.writers 相对模式转绝对、textWriters）、P 成员名 → 模式（与 kernel buildP 同一派生：点换下划线、`*` 不进名）、
+ * 从声明表派生：写者（stateKeys.<键>.writers 相对模式转绝对，空串键即整键；textWriters）、P 成员名 → 模式（与 kernel buildP 同一派生：点换下划线、`*` 不进名）、
  * 显示路径（stateKeys.<键>.display 转绝对 ∪ textPaths）。
  * @param {any} decl
  */
@@ -229,7 +229,8 @@ export function declPaths(decl) {
     if (!row || typeof row !== 'object') continue;
     for (const [rel, w] of Object.entries(row.writers || {})) {
       const rec = typeof w === 'string' ? { rewrite: w, create: [], viaRelocate: false } : { rewrite: w && w.rewrite, create: (w && w.create) || [], viaRelocate: Boolean(w && w.viaRelocate) };
-      writers.push({ pattern: `${key}.${rel}`, key, ...rec });
+      // 写者键为空串即该顶层键整键（卷二:252 ledgerTotals 这类「整键的值，无 * 段」的状态；S2-L 主会话裁定【1】甲）：模式就是键本身，仍须显式登记。
+      writers.push({ pattern: rel === '' ? key : `${key}.${rel}`, key, ...rec });
     }
     for (const rel of row.display || []) display.add(`${key}.${rel}`);
   }

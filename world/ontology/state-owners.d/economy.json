@@ -1,0 +1,35 @@
+{
+ "stateKeys": {
+  "accounts": {"writers": {"*": {"create": ["rules/economy/ledger.mjs"], "rewrite": "rules/economy/ledger.mjs", "rewriteRows": "all", "viaRelocate": false}}},
+  "ledgerCounters": {"writers": {"lotNext": {"create": ["rules/economy/ledger.mjs"], "rewrite": "rules/economy/ledger.mjs", "rewriteRows": "all", "viaRelocate": false}}},
+  "ledgerTotals": {"writers": {"": {"create": ["rules/economy/ledger.mjs"], "rewrite": "rules/economy/ledger.mjs", "rewriteRows": "all", "viaRelocate": false}}},
+  "outflowTotals": {
+   "writers": {"*": {"create": ["rules/economy/ledger.mjs"], "rewrite": "rules/economy/ledger.mjs", "rewriteRows": "all", "viaRelocate": false}},
+   "subjectRecords": {"outflowTotals.*": {"recordClass": "rcls_outflow_history", "subjectSegments": [1]}}
+  }
+ },
+ "systems": {
+  "endow": {"instantiate": {"kinds": ["person"], "handler": "rules/economy/endow.mjs#endowFromOrigin", "sortKey": 1}},
+  "ledger": {"primitiveWriter": {"ops": ["transfer"], "handler": "rules/economy/ledger.mjs#transferWriter"}}
+ },
+ "pathTypes": {
+  "accounts.*": "struct:holderAccounts",
+  "ledgerTotals": "struct:resourceTotals",
+  "outflowTotals.*": "struct:holderOutflow",
+  "ledgerCounters.lotNext": "integer:count"
+ },
+ "keyKinds": {
+  "accounts.*": [["org", "person", "place"]],
+  "outflowTotals.*": [["org", "person", "place"]]
+ },
+ "kernelApi": {
+  "exports": [
+   {"export": "kernel/storage.mjs#readPathIn", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/economy/ledger.mjs#post", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/economy/ledger.mjs#transfer", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/economy/ledger.mjs#openAccount", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/economy/ledger.mjs#balance", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/economy/ledger.mjs#accountsOf", "callers": ["rules"], "acceptsState": true}
+  ]
+ }
+}

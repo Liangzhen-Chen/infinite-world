@@ -1,4 +1,4 @@
-// kernelApi 存储函数：运行期黑户判定 kindOfEntity、按路径读写 readPath/writePath、新建实体 createEntity
+// kernelApi 存储函数：运行期黑户判定 kindOfEntity、按路径读写 readPath/writePath（readPathIn 在路径值里按段再取，S2-L）、新建实体 createEntity
 // （卷二 §2.6"按路径读写" :493–497；docs/gemini/kickoff-1125.md:90"state.created 改走 kindOfEntity"）。
 // 本卡只做这四件（S1-1 卡 A）；事务、存档序列化等其余存储入口由卡 B 补。
 // "id 属于哪个 kind"的唯一判断处是 kindOfEntity：先经加载器交入的 kindOfLoaded 查加载期登记，查不到再看运行期新建的 state.created[id]，
@@ -212,6 +212,21 @@ export function kindOfEntity(engine, state, id) {
 export function readPath(state, path) {
   requireState(state);
   return getAt(state, requirePath(path));
+}
+
+/**
+ * kernelApi `readPathIn(state, path, keys)`（卷二 :535「按路径读（readPath 及按段取值）唯一定义在本文件」；S2-L 主会话裁定【2】丙）：先按登记路径 path 读，
+ * 再在读到的值（pathTypes 所指命名 struct 的 map 值，卷二:257 词表代号段收进 struct、不进路径）里依次按 keys 各段往下取；任一处不是对象或没有该键即 undefined，与 readPath 同口径。
+ * 不认任何具体状态键或 struct，对任何登记路径都适用。keys 须是非空串数组，否则 E-DIM-ID-FORMAT。不写状态、不碰缓存。
+ * @template {string} P
+ * @param {any} state
+ * @param {import('./types.d.ts').StatePath<P>} path
+ * @param {readonly string[]} keys
+ * @returns {any}
+ */
+export function readPathIn(state, path, keys) {
+  if (!Array.isArray(keys) || keys.some((k) => typeof k !== 'string' || k.length === 0)) throw new KernelError('E-DIM-ID-FORMAT', {}, 'readPathIn: keys must be non-empty strings');
+  return getAt(readPath(state, path), keys);
 }
 
 /**

@@ -17,7 +17,8 @@ test('codePrint 不含 BigInt 的输入与改前 master 的指纹逐字相同', 
   // L-09 检测器加固改了 typed_pos（接 tsc）与 import_edge（导出级默认拒绝），前两条字面量随之重算；js-scan、js-state 未动。
   // 门禁封口卡 B 改了 js-state（排除绑定声明）与 typed_pos（tsc 临时目录走临时根设施），三条字面量随之重算；修改轮再收紧 js-state，第二条再算。
   assert.equal(codePrint(ctx, ['tools/accept/detectors/typed_pos.mjs']), '4fe676f94f055cf0dcf353d81f02dcfed09468c6c04d8d8ff4cba001df68ccaa');
-  assert.equal(codePrint(ctx, ['tools/accept/lib/js-scan.mjs', 'tools/accept/lib/js-state.mjs']), 'c310c55ffc54982ce5f77112532d23798f1453f4f978883da16bcbd92c61c03e');
+  // S2-L 改 js-state（declPaths 认空串键整键写者，主会话裁定【1】甲），第二条随之重算。
+  assert.equal(codePrint(ctx, ['tools/accept/lib/js-scan.mjs', 'tools/accept/lib/js-state.mjs']), '059a2e7546c2f7ba062c73cc414a7dd8beb26ca23b2306fac025c30ab185f875');
   assert.equal(codePrint(ctx, ['tools/accept/detectors/import_edge.mjs', 'tools/accept/detectors/typed_pos.mjs']), '4bf284b8c26d3b6a987f83c926b43e4e97e82215bfaefcf810aba6f3eae17ae6');
   // 判据闭包为空的类别（登记了检测器代号但仓库里没有该模块）：指纹是空序列的 sha256，改前改后一样。
   assert.equal(classPrint(ctx, 'flow_taint'), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
