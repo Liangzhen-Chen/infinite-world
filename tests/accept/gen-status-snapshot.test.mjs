@@ -248,3 +248,41 @@ test('已合派生：浅克隆写（缺：完整历史），不静默判定', (t
   const both = renderSnapshot({ cards: [card('a-card', 'pr', 0, '合'), card('b-card', 'pr', 0, '等')], merged: ['a-card'] });
   assert.deepEqual(sectionOf(both, '## 在途卡'), ['b-card | pr | 失败 0 | 下一步 等', '已合 1 张：a-card（git 派生）']);
 });
+
+// 主会话 11-27 裁定：生成取 HEAD 本身（含 HEAD），--check 取被检提交的各父提交；提交前生成的结果 = 提交后在新提交上 --check 的结果。
+test('已合派生：从「角色：合并」合并提交开新分支，提交前生成 → 提交 → 新提交上 --check 通过，不需要再重生成', (t) => {
+  const repoDir = testTempRoot('snapshot-pending-');
+  t.after(() => removeTempRoot(repoDir));
+  gitIn(repoDir, ['init', '-q', '-b', 'master']);
+  writeUnderTempRoot(repoDir, 'tools/accept/entry-registry.json', JSON.stringify({ version: 1, entries: [] }));
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'base']);
+  gitIn(repoDir, ['checkout', '-q', '-b', 'card/a']);
+  writeUnderTempRoot(repoDir, 'docs/卡档案/a-card/state.json', JSON.stringify(card('a-card', 'pr', 0, '合')));
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'a state']);
+  gitIn(repoDir, ['checkout', '-q', 'master']);
+  gitIn(repoDir, ['merge', '-q', '--no-ff', 'card/a', '-m', '合入 a', '-m', '卡分支：card/a\n角色：合并\n标识：main-test']);
+
+  // 从合并提交开新卡分支：提交前生成，生成时 HEAD 就是合并提交本身，a-card 已合。
+  gitIn(repoDir, ['checkout', '-q', '-b', 'card/b']);
+  writeUnderTempRoot(repoDir, 'docs/卡档案/b-card/state.json', JSON.stringify(card('b-card', 'dispatched', 0, '写')));
+  const gen = run(repoDir, []);
+  assert.equal(gen.status, 0, gen.stderr);
+  const text = readFileSync(join(repoDir, SNAPSHOT_REL), 'utf8');
+  assert.deepEqual(sectionOf(text, '## 在途卡'), ['b-card | dispatched | 失败 0 | 下一步 写', '已合 1 张：a-card（git 派生）']);
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'b 首个提交']);
+  const check = run(repoDir, ['--check']);
+  assert.equal(check.status, 0, check.stdout + check.stderr);
+
+  // 已合卡的 state.json 随下一个提交改动：生成时按在途（新提交成为 S），提交后 --check 照样通过。
+  writeUnderTempRoot(repoDir, 'docs/卡档案/a-card/state.json', JSON.stringify(card('a-card', 'merged', 0, '已合入')));
+  assert.equal(run(repoDir, []).status, 0);
+  const reopened = readFileSync(join(repoDir, SNAPSHOT_REL), 'utf8');
+  assert.deepEqual(sectionOf(reopened, '## 在途卡'), ['a-card | merged | 失败 0 | 下一步 已合入', 'b-card | dispatched | 失败 0 | 下一步 写', '已合 0 张：（无）（git 派生）']);
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'a 记账']);
+  const recheck = run(repoDir, ['--check']);
+  assert.equal(recheck.status, 0, recheck.stdout + recheck.stderr);
+});
