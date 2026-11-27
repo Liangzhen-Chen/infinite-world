@@ -1,0 +1,64 @@
+{
+ "version": 1,
+ "source": "卷二 §1.9 :972–:983（wire_route 四路、上下行 schema 只有一份数据源 world/schema/wire-v1.json）、:993（ReplyResult 只有代号、数值与实体 id）、:1012–:1016（存档四路）；S1-3 接口草案 §1 第 2、4、5 行与主会话裁定 Q3、Q5",
+ "grade": "designed",
+ "basis": "卷文定了四路与各载荷的内容，未定判别字段名、存读档代号来源与导出字节打包格式；按主会话裁定 Q3（载荷顶层判别字段三值，字段名 payload、save_op 二值不进 act_ 目录）与 Q5（导出 canonical({format, manifest, shards}) 的 UTF-8）定，属技术口径，已记卷二勘误（docs/卡档案/feat-s1-3b/开发.md）",
+ "enums": {
+  "menu_payload": ["act", "report", "ui"],
+  "save_op": ["save", "load"],
+  "ui_command": ["view"]
+ },
+ "exportFormat": "if-save-v1",
+ "schemas": {
+  "wire-up-menu-v1": {
+   "discriminator": "payload",
+   "variants": {
+    "act": {
+     "type": "struct",
+     "fields": {
+      "payload": {"type": "enum", "vocab": "menu_payload"},
+      "act": {"type": "string", "maxLength": 48},
+      "slots": {"type": "map", "key": {"type": "string", "maxLength": 48}, "value": {"type": "integer", "domain": [0, null]}},
+      "numbers": {"type": "map", "key": {"type": "string", "maxLength": 48}, "value": {"type": "integer"}},
+      "save": {"type": "enum", "vocab": "save_op"},
+      "saveSlot": {"type": "integer"}
+     },
+     "required": ["payload"]
+    },
+    "report": {
+     "type": "struct",
+     "fields": {
+      "payload": {"type": "enum", "vocab": "menu_payload"},
+      "code": {"type": "string", "maxLength": 48},
+      "fields": {"type": "map", "key": {"type": "string", "maxLength": 48}, "value": {"type": "union", "oneOf": [{"type": "number"}, {"type": "string", "maxLength": 48}, {"type": "boolean"}]}}
+     },
+     "required": ["payload", "code"]
+    },
+    "ui": {
+     "type": "struct",
+     "fields": {
+      "payload": {"type": "enum", "vocab": "menu_payload"},
+      "command": {"type": "enum", "vocab": "ui_command"},
+      "panel": {"type": "string", "maxLength": 48},
+      "subject": {"type": "string", "maxLength": 48}
+     },
+     "required": ["payload", "command"]
+    }
+   }
+  },
+  "wire-up-save-v1": {"type": "struct", "fields": {"slot": {"type": "integer"}}, "required": ["slot"]},
+  "wire-up-import-v1": {"type": "struct", "fields": {"slot": {"type": "integer"}, "bytes": {"type": "string"}}, "required": ["slot", "bytes"]},
+  "reply-result-v1": {
+   "type": "struct",
+   "fields": {
+    "result": {"type": "enum", "vocab": "reply_result"},
+    "code": {"type": "string", "maxLength": 48},
+    "events": {"type": "struct", "fields": {"from": {"type": "integer"}, "to": {"type": "integer"}}, "required": ["from", "to"]},
+    "advancedMinutes": {"type": "integer"},
+    "save": {"type": "struct", "fields": {"slot": {"type": "integer"}, "clockMinute": {"type": "integer"}}, "required": ["slot", "clockMinute"]},
+    "screen": {"type": "struct", "fields": {"panel": {"type": "string", "maxLength": 48}, "subject": {"type": "string", "maxLength": 48}}}
+   },
+   "required": ["result"]
+  }
+ }
+}

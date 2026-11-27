@@ -1,0 +1,93 @@
+{
+  "说明": "拔线登记（draft-s1-3 §3.3；出题方 haiku-orca-test-s13b；锚点按已合入实现核对，主会话裁定 2026-11-26 合并后修正）。每行在临时仓副本里把 file 中恰好一次出现的 find 替换为 replace（缺省删除），再跑 tests/e2e/vertical-slice-smoke.test.mjs，要求红且输出含「停在第 step/6 步」。依赖 S1-3a 尚未合入的锚点（act-wait-row、eff-pass-time-output、mount-load-actions）预期红：文件或锚点缺失时工具记 FAIL 并继续，不静默。",
+  "rows": [
+    {
+      "id": "index-create-router-caps",
+      "file": "server-plugin/index.mjs",
+      "find": "= createRouterCaps(router)",
+      "replace": "= createRouterCaps_cut(router)",
+      "step": 1,
+      "note": "装配取能力对象（卷二:1033）；拔掉则开局即抛，停在第 1 步"
+    },
+    {
+      "id": "index-mount-menu-entry",
+      "file": "server-plugin/index.mjs",
+      "find": "mountMenuEntry(requestCap",
+      "replace": "mountMenuEntry_cut(requestCap",
+      "step": 1,
+      "note": "menu 入口挂接（卷二:672）；开局即抛"
+    },
+    {
+      "id": "index-mount-save-routes",
+      "file": "server-plugin/index.mjs",
+      "find": "mountSaveRoutes(requestCap",
+      "replace": "mountSaveRoutes_cut(requestCap",
+      "step": 1,
+      "note": "存档路由挂接（卷二:674）；开局即抛（开局快照已含导出）"
+    },
+    {
+      "id": "router-caps-route-registration",
+      "file": "server-plugin/rules/transport/router-caps.mjs",
+      "find": "router.post(",
+      "replace": "router.post_cut(",
+      "step": 1,
+      "note": "RequestCap 路由注册（卷二:1050）；无路由则开局视图即失败"
+    },
+    {
+      "id": "menu-entry-act-dispatch",
+      "file": "server-plugin/rules/transport/menu-entry.mjs",
+      "find": "session.world.act(",
+      "replace": "session.world.act_cut(",
+      "step": 2,
+      "note": "动作分派 world.act（内含 resolveIntent→submitProposal，属 S1-3a）；第 1 步无动作，第 2 步选来历即首个动作"
+    },
+    {
+      "id": "menu-entry-write-slot",
+      "file": "server-plugin/rules/transport/menu-entry.mjs",
+      "find": "session.world.save(slot)",
+      "replace": "session.world.save_cut(slot)",
+      "step": 1,
+      "note": "存档写盘（卷二:1012）；开局快照即在第 1 步存槽"
+    },
+    {
+      "id": "menu-entry-replay",
+      "file": "server-plugin/rules/transport/menu-entry.mjs",
+      "find": "mountKernel(loaded.docData",
+      "replace": "mountKernel_cut(loaded.docData",
+      "step": 6,
+      "note": "读档复演换局（李白 11-26 条件）；只有第 6 步读档会调到"
+    },
+    {
+      "id": "menu-entry-replay-noop",
+      "file": "server-plugin/rules/transport/menu-entry.mjs",
+      "find": "session.world = mountKernel(loaded.docData",
+      "replace": "void mountKernel(loaded.docData",
+      "step": 6,
+      "note": "读档中和为空操作（不换局）：读档后状态未被复演换局，第 6 步槽 2 摘要须等于 D1 而失败（审卡必须改 ③）"
+    },
+    {
+      "id": "act-wait-row",
+      "file": "world/actions/core.json",
+      "find": "\"act_wait\"",
+      "replace": "\"act_wait_cut\"",
+      "step": 3,
+      "note": "动作表 act_wait 行被拔后：菜单不列 act_wait 合法（S1-3a 合同），第 1 步通过，第 3 步 act_wait 提交失败（E-ACT-UNKNOWN）"
+    },
+    {
+      "id": "eff-pass-time-output",
+      "file": "world/ontology/dimensions/_effects.json",
+      "find": "\"time\"",
+      "replace": "\"time_cut\"",
+      "step": 1,
+      "note": "eff_pass_time 的 time 输出改名：3a 加载期即拒（act 目录核对可达原语），开局即抛，停在第 1 步（审卡修订：加载期核对更早拦住）"
+    },
+    {
+      "id": "mount-load-actions",
+      "file": "server-plugin/rules/load/mount.mjs",
+      "find": "loadActions(",
+      "replace": "loadActions_cut(",
+      "step": 1,
+      "note": "装载期挂载动作表（属 S1-3a）；未合入前锚点缺失，预期红"
+    }
+  ]
+}

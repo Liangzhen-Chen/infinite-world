@@ -9,6 +9,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
@@ -44,7 +45,7 @@ after(() => {
 async function fresh(/** @type {string} */ prefix = 's13c-create-') {
   const root = testTempRoot(prefix);
   roots.push(root);
-  const world = await init({ saveRoot: root });
+  const world = await init(express.Router(), { saveRoot: root });
   return { world, root };
 }
 
@@ -80,7 +81,7 @@ async function freshPatched(patch) {
   patch(doc);
   writeUnderTempRoot(root, rel, JSON.stringify(doc, null, 2));
   const { init: initCopy } = await import(pathToFileURL(join(root, 'server-plugin/index.mjs')).href);
-  const world = await initCopy({ saveRoot: root });
+  const world = await initCopy(express.Router(), { saveRoot: root });
   return { world, root };
 }
 

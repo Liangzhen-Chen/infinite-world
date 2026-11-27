@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
 
@@ -53,7 +54,7 @@ after(() => {
 async function fresh() {
   const root = testTempRoot('s13c-avatar-');
   roots.push(root);
-  const world = await init({ saveRoot: root });
+  const world = await init(express.Router(), { saveRoot: root });
   return { world, root };
 }
 

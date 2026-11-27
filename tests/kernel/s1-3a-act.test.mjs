@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
@@ -69,7 +70,7 @@ const openPlaces = (raw) => Object.entries(raw.dimensionDocs.find((d) => d.kind 
 test('1 开局菜单 menu(null)：只有无需化身的建档动作；候选 = 开放出身的模板行 × 开放地点；visible 只含开放地点', async () => {
   const raw = rawWorld();
   const { spawn, rows } = rowsOf(raw);
-  const g = await init({ saveRoot: testTempRoot('s3a-menu-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-menu-') });
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [spawn]);
   const a = m.affordances[0];
@@ -87,7 +88,7 @@ test('1 开局菜单 menu(null)：只有无需化身的建档动作；候选 = �
 test('2 选来历：经 submitProposal 建化身（template 为所选模板行、birthplace 写所选地点 ref、culture 随模板）；日志多一条输入；不推进时钟', async () => {
   const raw = rawWorld();
   const { spawn } = rowsOf(raw);
-  const g = await init({ saveRoot: testTempRoot('s3a-spawn-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-spawn-') });
   const a = g.menu(null).affordances[0];
   const names = Object.keys(a.slots);
   const pick = Object.fromEntries(names.map((n) => [n, a.slots[n].length - 1]));
@@ -114,7 +115,7 @@ test('2 选来历：经 submitProposal 建化身（template 为所选模板行�
 test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMinutes 该动作类）；提交推进时钟；越界、无化身、未知动作被拒且不动状态；拒收也按请求编号留在日志（输入条目 + 拒绝事件，卷二:545）', async () => {
   const raw = rawWorld();
   const { spawn, pass, rows } = rowsOf(raw);
-  const g = await init({ saveRoot: testTempRoot('s3a-wait-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-wait-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 1 } }).code, 'E-ACT-PRECONDITION');
   assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
@@ -151,7 +152,7 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
 test('4 候选编号越界被拒；存档读档复演 saveDigest 一致，复演后化身与时钟同原局，可续玩', async () => {
   const { spawn, pass } = rowsOf(rawWorld());
   const dir = testTempRoot('s3a-replay-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   const a = g.menu(null).affordances[0];
   const over = Object.fromEntries(Object.keys(a.slots).map((n) => [n, a.slots[n].length]));
   assert.equal(g.act({ act: spawn, slots: over }).code, 'E-ACT-SLOT');
@@ -254,7 +255,7 @@ test('8 规则层不写数据代号：rules/act 源码里没有任何动作、�
 test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被拒，saveDigest 逐字相同，日志条目同位相等', async () => {
   const { spawn, pass } = rowsOf(rawWorld());
   const dir = testTempRoot('s3a-reject-replay-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   const r0 = g.act({ act: pass, numbers: { minutes: 5 } });
   assert.equal(r0.code, 'E-ACT-PRECONDITION');
   assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
@@ -274,7 +275,7 @@ test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被
 test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待成功；menu(null) 按唯一化身投影、visible 含化身；化身不唯一即拒', async () => {
   const raw = rawWorld();
   const { spawn, pass } = rowsOf(raw);
-  const g = await init({ saveRoot: testTempRoot('s3a-noactor-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-noactor-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-PRECONDITION');
   assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];

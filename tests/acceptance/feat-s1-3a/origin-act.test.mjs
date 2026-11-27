@@ -6,6 +6,7 @@
 // 不写死 id：开关过滤的文化由 person 行的 origin 经 _vocab.json 的 origin 族 gate 字段推出（设计册 14 §4.7 步 1）。
 // 主会话裁定：world.menu(null) 为开局菜单（affordances 只含 act_choose_origin，visible 只含开放地点候选）；有化身后 world.menu(化身id)。
 // 写码实现：意图缺 actor 时取本局唯一化身（写码侧 ①）；本文件的等待用例仍显式带 actor，二者都应通过。
+import { express } from '../../support/express.mjs';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -55,7 +56,7 @@ after(() => { for (const r of roots) removeTempRoot(r); });
 async function fresh() {
   const root = testTempRoot('s13a-origin-');
   roots.push(root);
-  const world = await init({ saveRoot: root });
+  const world = await init(express.Router(), { saveRoot: root });
   return { world, root };
 }
 
@@ -267,7 +268,7 @@ test('8. 开关置 false：对应来历不再出现在选来历候选（受控�
   writeUnderTempRoot(root, rel, JSON.stringify(doc, null, 2));
 
   const { init: initCopy } = await import(pathToFileURL(join(root, 'server-plugin/index.mjs')).href);
-  const world = await initCopy({ saveRoot: root });
+  const world = await initCopy(express.Router(), { saveRoot: root });
   const offered = candidatesOf(world, 'act_choose_origin', 'origin');
   const expected = ids.filter((id) => gateOf(id) === null);
   assert.ok(expected.length < ids.length, '开关为 false 时应有来历被排除');

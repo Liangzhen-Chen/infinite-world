@@ -3,6 +3,7 @@
 // pathTypes 生成的句柄；成员名由模式机械派生：点换下划线，* 段不进名字；两条模式派生撞名报 E-PATH-NAME-CLASH；
 // 实参个数不对或为空即拒）、卷二:541–542（事务内拒写整笔撤回）、卷二:721（pathTypes 的 created.*.props.* 与 keyKinds 写法）。
 // 不写死实体 id、维度名、kind：全部从 world/ontology/dimensions 与 world/ontology/state-owners.json 读取。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -25,8 +26,8 @@ function loadTables() {
 }
 
 async function boot() {
-  const booted = await init();
-  assert.ok(booted && booted.engine && booted.state, 'init() 应返回 {engine, state}');
+  const booted = await init(express.Router());
+  assert.ok(booted && booted.engine && booted.state, 'init(express.Router()) 应返回 {engine, state}');
   return booted;
 }
 

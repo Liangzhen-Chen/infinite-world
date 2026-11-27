@@ -11,6 +11,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { runTransaction } from '../../../server-plugin/kernel/transaction.mjs';
 import { canonical } from '../../../server-plugin/kernel/storage.mjs';
@@ -46,7 +47,7 @@ after(() => {
 });
 
 async function bootWorld() {
-  return init({ saveRoot: newRoot() });
+  return init(express.Router(), { saveRoot: newRoot() });
 }
 
 // 以模板行 create 一个实体，返回新实体 id（kind 取该表的 kind，模板取该表的行）。

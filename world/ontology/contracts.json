@@ -47,7 +47,7 @@
   "contracts": [
     {
       "id": "ctr_post_commit_time",
-      "title": "动作耗时提交后推进协议（postCommit.advanceMinutes）",
+      "title": "动作耗时提交后推进协议（advancedMinutes）",
       "owner": "docs/统一底层设计/卷九-AI接口.md",
       "consumers": [
         "docs/统一底层设计/卷一-总纲与分层.md",
@@ -59,15 +59,15 @@
       "rulingIds": [],
       "statement": {
         "kind": "protocol_split",
-        "summary": "解除单事务 execute 与自开事务 scheduler.advance 的嵌套死锁：动作事务内校验 time 原语并产出 postCommit.advanceMinutes，动作事务成功提交后由外层 submitProposal/调度入口调用 scheduler.advance 按刻独立事务推进；回滚则丢弃推进。",
+        "summary": "解除单事务 execute 与自开事务 scheduler.advance 的嵌套死锁：动作事务内校验 time 原语并产出 advancedMinutes，动作事务成功提交后由外层 submitProposal/调度入口调用 scheduler.advance 按刻独立事务推进；回滚则丢弃推进。",
         "invariants": [
           {
             "id": "no_nested_tx_for_time",
             "target": "execute",
-            "assertion": "execute 在单次非嵌套内核事务内校验 time(minutes) 为非负整数并汇总至 commit 结果的 postCommit.advanceMinutes，事务内不得调用 scheduler.advance 或直写 state.clock.*",
+            "assertion": "execute 在单次非嵌套内核事务内校验 time(minutes) 为非负整数并汇总至 commit 结果的 advancedMinutes，事务内不得调用 scheduler.advance 或直写 state.clock.*",
             "params": {
               "primitive": "time",
-              "field": "postCommit.advanceMinutes",
+              "field": "advancedMinutes",
               "valueType": "non_negative_integer",
               "forbidClockWriteInActionTx": true
             }
@@ -75,7 +75,7 @@
           {
             "id": "post_commit_advance_only_on_commit",
             "target": "submitProposal",
-            "assertion": "仅当动作事务提交成功且 postCommit.advanceMinutes > 0 时，外层入口调用 scheduler.advance(state.clock.minute + postCommit.advanceMinutes)；动作事务回滚时丢弃 postCommit 且不推进时钟",
+            "assertion": "仅当动作事务提交成功且 advancedMinutes > 0 时，外层入口调用 scheduler.advance(state.clock.minute + advancedMinutes)；动作事务回滚时不推进时钟（结果 ok:false，无 advancedMinutes）",
             "params": {
               "clockWriter": "kernel/scheduler.mjs",
               "onRollback": "discard"
@@ -84,7 +84,7 @@
           {
             "id": "replay_deterministic",
             "target": "replay_apply",
-            "assertion": "复演重跑同一指令序列必须确定性再现相同的 postCommit.advanceMinutes 与每刻事务序列，saveDigest 逐字节一致",
+            "assertion": "复演重跑同一指令序列必须确定性再现相同的 advancedMinutes 与每刻事务序列，saveDigest 逐字节一致",
             "params": {
               "digestMode": "byte_identical"
             }

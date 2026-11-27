@@ -224,26 +224,27 @@ test('.github/workflows/ci.yml 存在，文本里按顺序出现 npm ci → type
   }
 });
 
-test('.github/workflows/ci.yml：有一个 job 跑 test:e2e 且该 job 带 job 级 continue-on-error: true', () => {
+test('.github/workflows/ci.yml：跑 test:e2e 的 job 是主 job（main），且不带 continue-on-error（烟测必过）', () => {
   const jobs = parseJobs(read('.github/workflows/ci.yml'));
   const e2eJobs = jobs.filter((j) => j.lines.some((l) => /test:e2e/.test(l)));
   assert.ok(e2eJobs.length > 0, 'ci.yml 没有任何 job 跑 test:e2e');
-  const ok = e2eJobs.some((j) => {
-    const firstProp = j.lines.find((l) => /\S/.test(l));
-    const propIndent = firstProp ? /^\s*/.exec(firstProp)[0].length : 0;
-    return j.lines.some((l) =>
-      /^\s*/.exec(l)[0].length === propIndent && /^\s*continue-on-error:\s*true\s*$/.test(l));
-  });
-  assert.ok(ok, '跑 test:e2e 的 job 未带 job 级 continue-on-error: true');
+  assert.ok(e2eJobs.some((j) => j.name === 'main'), '跑 test:e2e 的 job 应为主 job（main）');
+  for (const j of e2eJobs) {
+    assert.ok(!j.lines.some((l) => /continue-on-error/.test(l)), `跑 test:e2e 的 job「${j.name}」不得带 continue-on-error`);
+  }
 });
 
-test('.github/workflows/ci.yml：主 job（不跑 test:e2e 的 job）里没有 continue-on-error', () => {
+test('.github/workflows/ci.yml：主 job（main）跑 test:e2e 且无 continue-on-error', () => {
   const jobs = parseJobs(read('.github/workflows/ci.yml'));
-  const mainJobs = jobs.filter((j) => !j.lines.some((l) => /test:e2e/.test(l)));
-  assert.ok(mainJobs.length > 0, 'ci.yml 没有主 job');
-  for (const j of mainJobs) {
-    assert.ok(!j.lines.some((l) => /continue-on-error/.test(l)), `主 job「${j.name}」里出现 continue-on-error`);
-  }
+  const main = jobs.find((j) => j.name === 'main');
+  assert.ok(main, 'ci.yml 缺主 job main');
+  assert.ok(main.lines.some((l) => /test:e2e/.test(l)), '主 job 必须跑 test:e2e');
+  assert.ok(!main.lines.some((l) => /continue-on-error/.test(l)), '主 job 不得带 continue-on-error');
+});
+
+test('.github/workflows/ci.yml：无 e2e-observe 红灯观测 job（烟测已升格进主 job）', () => {
+  const jobs = parseJobs(read('.github/workflows/ci.yml'));
+  assert.ok(!jobs.some((j) => j.name === 'e2e-observe'), '不得再有 e2e-observe job');
 });
 
 test('.github/workflows/ci.yml：checkout 步骤带 fetch-depth: 0', () => {
@@ -274,7 +275,7 @@ test('tests/e2e/vertical-slice-smoke.test.mjs 不含 mock（不区分大小写�
   assert.doesNotMatch(code, /\btest\.todo\b|\{\s*todo\b/, '含 test.todo 或 { todo');
 });
 
-test('node --test tests/e2e/vertical-slice-smoke.test.mjs 退出码非 0 且输出含「未实现」', { timeout: 120000 }, () => {
+test('node --test tests/e2e/vertical-slice-smoke.test.mjs 退出码为 0 且输出不含「未实现」（烟测六步全绿）', { timeout: 120000 }, () => {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   const r = spawnSync(process.execPath, ['--test', E2E], {
@@ -285,6 +286,6 @@ test('node --test tests/e2e/vertical-slice-smoke.test.mjs 退出码非 0 且输�
     maxBuffer: 1 << 26,
   });
   const out = `${r.stdout ?? ''}\n${r.stderr ?? ''}`;
-  assert.notEqual(r.status, 0, '红灯桩应以非 0 退出');
-  assert.ok(out.includes('未实现'), `输出应含「未实现」，实际末段：\n${out.split(/\r?\n/).slice(-30).join('\n')}`);
+  assert.equal(r.status, 0, `烟测应全绿，实际末段：\n${out.split(/\r?\n/).slice(-30).join('\n')}`);
+  assert.ok(!out.includes('未实现'), '烟测输出不应含「未实现」');
 });
