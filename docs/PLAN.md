@@ -97,10 +97,11 @@
   - 偏离：客户端直读语言包违背卷二十九:225（U1 删）；R29-7.10 frontend_kind 无合适值；holdings template 一律 null。
 - [ ] S2-T2 天气单元与当日天气（约 325 行，前置 T1）：亮圳 11-27 17:16 答「按设定文字挑站、做完给我看」，已解阻；站点对照草稿 主会话临时目录 s2t-stations.md 交李白核、待亮圳看（纬度带窄、覆灯湾极夜、雾杉文化圈三问）；纬度临时取郡行 coord.y（李白同意，卷五区域足迹卡后改读形心）。
 - 派卡须知：卡文写「提交前跑 check-push-archive.mjs 自验通过」；派卡前核基线含全部依赖卡；建树与对比一律以 origin/master 为底。
-- S2-GOV：产品原则.md 第三节第 6 条旧模型分工删掉（李白 11-27 裁定，模型分工只在 CLAUDE.md 写一处）；派活卡头规矩压回 ≤50 行并修合并提交免查自相矛盾；11-26 裁定同步进现行有效裁定.json；瘦身本文件；gen-status-snapshot 自动把已合卡归 merged；tests/support/isolated-repo.mjs 修临时仓库泄漏（亮圳 11-27 准删的 F:/temp/iso-repo-* 已删 10 个）。
+- [x] S2-GOV 规矩一致性清理（非玩法卡）：卡头规矩压到 45 行、第五节原样迁 tools/accept/card-rules.md（readRulesAt 先新后旧、远端优先）；合并提交不免查；产品原则三.6 改指针句；裁定表删 2 加 6；PLAN 拆行；快照 git 派生已合卡（生成含 HEAD、--check 取父提交）；isolated-repo 进程被杀后残留清理。Sonnet 写、Haiku 出题、Opus 审必须改 1（反思不属实）→ API 第二轮可合 → 测试一次性对比钉到 e5cb05269 → API 第三轮可合（两轮共 1.22 美元）。
 - [x] S1-3d 开局选种族（亮圳 11-27 01:16「玩家自己挑种族」）：选来历菜单加步 0 种族槽，候选为挂 rules.chargen.playableClass（comp_playable）的物种行，槽值写 create.facts.species；删来历行 species 列与 origin.ready，54 条来历全开；旧验收 9 文件前提改写。Sonnet 写一轮、Haiku 出题、Opus 审第一轮可合（旧验收逐条核只改前提）。不阻合：person.mjs:54 注释残留 origin.ready、origin-avatar 第 1 条标题过期。PR 头 feat/s1-3d。
 
 ### 待办登记（11-27 主会话5 并入，不阻当前卡）
+- S2-GOV 不阻合：同步 master 的合并提交生成快照时只算第一父，合并后要多补一次快照提交（生成应含 MERGE_HEAD）；isolated-repo 两套重试参数（RM 与 REMOVE_RETRY）、退出钩子吞错；已合卡记账分支上回列在途；卷十二:544 引用旧第五节待勘误；产品原则 :28 tests/overfit-guard 已不存在、:31「更正」所指不清（待报亮圳）；K1126 出处只落在本卡开发.md。
 - 长生种设想（亮圳 11-26 12:27）改动稿与独立审查已出（主会话临时目录 longevity-*.md），待 Gemini 审与亮圳拍板 P1–P7。
 - docs/问题.md 11-24 起停更，仍有效两条挪此：world/meta 未归档，见 docs/问题.md:4；卷文出处待判 5 处，见 docs/问题.md:25–:30。
 - 规矩读取过渡退路，S2-GOV Q9：card-archive.mjs readRulesAt 在 ref 上读不到 tools/accept/card-rules.md 时退回 docs/派活卡头规矩.md 第五节，留到 S2-SW 删。
