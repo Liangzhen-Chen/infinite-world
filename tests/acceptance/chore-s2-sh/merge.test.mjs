@@ -175,3 +175,14 @@ test('M-14 mergeEntries：纯函数与门禁读取同序，分片行按次序接
   ]);
   assert.deepEqual(/** @type {any} */ (r.registry).entries.map((x) => x.name), ['m', 'a', 'b']);
 });
+
+test('M-15 mergeOwners：分片里登记与主文件同 ns、内容不同的 rxNamespaces 行 → E-DIM-DUPLICATE-KEY（ns 为行键，卷二:408 登记文件重复条目）', () => {
+  // rxNamespaces 按 ns 判重（rx 按 ns 取行）：同 ns 即重复，哪怕内容不同也拒，不靠「内容相同才拒」。
+  expectRejected(
+    () => mergeOwners(asMain({ version: 1, rxNamespaces: [{ ns: 'zz.same', type: 'number' }] }), [
+      { file: 'a.json', doc: { rxNamespaces: [{ ns: 'zz.same', type: 'integer' }] } },
+    ]),
+    'E-DIM-DUPLICATE-KEY',
+    'a.json',
+  );
+});

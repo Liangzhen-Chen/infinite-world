@@ -9,6 +9,18 @@ const SHARD_DIR_SUFFIX = '.d';
 const SHARD_NAME_RE = /^[a-z][a-z0-9-]*\.json$/;
 const PATH_SEP = '/';
 const OWNERS_SHARDABLE = Object.freeze(['stateKeys', 'systems', 'pathTypes', 'keyKinds', 'rxNamespaces', 'textPaths', 'textWriters', 'kernelApi', 'groupApi']);
+// 可由分片追加行的数组（行集合）→ 行键字段；key 为 null 即元素本身是行键（主会话 11-27 审卡第一轮裁定，覆盖草案 §2.1「同 id 交下游」一句）。
+// 只有命中本表的路径按行键判重后追加；其余数组（keyKinds 定长元组、写者 create 列表、systems 种类表等）一律按叶子处理，分片碰到即 E-DIM-DUPLICATE-KEY。
+const OWNERS_ROW_SETS = Object.freeze([
+  // world/ontology/state-owners.json rxNamespaces：每行一个命名空间 {ns, type, entry}，ns 唯一（server-plugin/kernel/rx.mjs 按 ns 取行）。
+  Object.freeze({ path: Object.freeze(['rxNamespaces']), key: 'ns' }),
+  // kernelApi.exports：每行一个内核导出 {export, callers, …}，export 唯一（tools/accept/lib/api-callers.mjs 按 export 取行）。
+  Object.freeze({ path: Object.freeze(['kernelApi', 'exports']), key: 'export' }),
+  // groupApi.exports：每行一个组间导出 {export, callers}，export 唯一（同上口径）。
+  Object.freeze({ path: Object.freeze(['groupApi', 'exports']), key: 'export' }),
+  // textPaths：每行是一条文本路径模式字串，元素本身即行键。
+  Object.freeze({ path: Object.freeze(['textPaths']), key: null }),
+]);
 const ENTRIES_SECTION = 'entries';
 const ENTRIES_SHARDABLE = Object.freeze([ENTRIES_SECTION]);
 
@@ -23,16 +35,11 @@ export function shardDirOf(mainFile) {
 const baseName = (/** @type {string} */ f) => f.split(PATH_SEP).pop() || f;
 const cmpUnits = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** JSON 值相等（数组按下标、对象按键集合）；只服务数组元素的重复判定。 @param {unknown} a @param {unknown} b @returns {boolean} */
-function sameJson(a, b) {
-  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => sameJson(x, b[i]));
-  if (a !== null && typeof a === 'object' && b !== null && typeof b === 'object') {
-    const ea = Object.entries(a);
-    const mb = new Map(Object.entries(b));
-    return ea.length === mb.size && ea.every(([k, v]) => mb.has(k) && sameJson(v, mb.get(k)));
-  }
-  return a === b;
-}
+/** 路径命中的行集合登记（OWNERS_ROW_SETS 的一行），不命中为 undefined。 @param {KeyPath} at */
+const rowSetOf = (at) => OWNERS_ROW_SETS.find((r) => JSON.stringify(r.path) === JSON.stringify(at));
+
+/** 行集合里一行的行键（key 为 null 时元素本身）。 @param {{key: string | null}} rowSet @param {unknown} row @returns {unknown} */
+const rowKeyOf = (rowSet, row) => (rowSet.key === null ? row : Object(row)[rowSet.key]);
 
 /** 深冻结（合并结果只读）。 @template T @param {T} v @returns {T} */
 function deepFreeze(v) {
@@ -61,15 +68,19 @@ function orderedShards(shards, allowed) {
 }
 
 /**
- * 把分片的一个值并进已有值（不改两边，返回新值）：对象逐键递归；数组追加，与已有元素全等即 E-DIM-DUPLICATE-KEY；
- * 其余（两边都是叶子、或一边对象一边非对象）即 E-DIM-DUPLICATE-KEY。新登记的路径记进 origin。
+ * 把分片的一个值并进已有值（不改两边，返回新值）：对象逐键递归；行集合数组（OWNERS_ROW_SETS）按行键追加，与已有行（主文件、先并入的分片、本分片前几行）同键即 E-DIM-DUPLICATE-KEY；
+ * 其余（两边都是叶子、表外数组、或一边对象一边非对象）即 E-DIM-DUPLICATE-KEY。新登记的路径记进 origin。
  * @param {unknown} base @param {unknown} add @param {KeyPath} at @param {string} file @param {Map<string, string>} origin @returns {unknown}
  */
 function mergeValue(base, add, at, file, origin) {
-  if (Array.isArray(base) && Array.isArray(add)) {
+  const rowSet = rowSetOf(at);
+  if (rowSet !== undefined && Array.isArray(base) && Array.isArray(add)) {
     const out = [...base];
+    const keys = new Set(out.map((y) => rowKeyOf(rowSet, y)));
     for (const x of add) {
-      if (out.some((y) => sameJson(x, y))) throw new KernelError('E-DIM-DUPLICATE-KEY', {}, `registry shard ${file}: duplicate element in ${JSON.stringify(at)}`);
+      const k = rowKeyOf(rowSet, x);
+      if (keys.has(k)) throw new KernelError('E-DIM-DUPLICATE-KEY', {}, `registry shard ${file}: ${JSON.stringify(at)} row key ${JSON.stringify(k)} is already registered`);
+      keys.add(k);
       origin.set(JSON.stringify([...at, out.length]), file);
       out.push(x);
     }
@@ -81,6 +92,8 @@ function mergeValue(base, add, at, file, origin) {
     for (const [k, v] of Object.entries(add)) {
       const here = [...at, k];
       if (Object.hasOwn(out, k)) { out[k] = mergeValue(out[k], v, here, file, origin); continue; }
+      // 主文件没有的行集合段：从空表并入，分片内同键照样拒。
+      if (rowSetOf(here) !== undefined && Array.isArray(v)) { out[k] = mergeValue([], v, here, file, origin); continue; }
       origin.set(JSON.stringify(here), file);
       out[k] = v;
     }
