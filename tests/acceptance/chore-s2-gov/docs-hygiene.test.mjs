@@ -35,9 +35,9 @@ test('PLAN.md 瘦身不丢字：字符多重集与基线相同（允许新增指
   const norm = (t) => [...t.replace(/[\s\-*]/g, '')];
   const count = (chars) => chars.reduce((m, c) => m.set(c, (m.get(c) || 0) + 1), new Map());
   const before = count(norm(oldText('docs/PLAN.md')));
-  // 设计稿 Q7 甲：问题.md 仍有效两条挪进 PLAN 待办（新增内容，不算丢字），只精确放行这一行。
-  const Q7_PREFIX = '- docs/问题.md 11-24 起停更';
-  const kept = nowText('docs/PLAN.md').split('\n').filter((l) => !l.startsWith(Q7_PREFIX)).join('\n');
+  // 设计稿 Q7 甲：问题.md 仍有效两条挪进 PLAN 待办；Q9 甲：规矩读取过渡退路登记待办。两者都是本卡规定的新增待办，不算丢字，只精确放行这两行。
+  const NEW_PENDING_PREFIXES = ['- docs/问题.md 11-24 起停更', '- 规矩读取过渡退路'];
+  const kept = nowText('docs/PLAN.md').split('\n').filter((l) => !NEW_PENDING_PREFIXES.some((p) => l.startsWith(p))).join('\n');
   const after = count(norm(kept.split('（后续见待办登记）').join('')));
   for (const [c, n] of before) {
     assert.ok((after.get(c) || 0) === n, `字符「${c}」基线 ${n} 次，现 ${after.get(c) || 0} 次`);
@@ -45,4 +45,18 @@ test('PLAN.md 瘦身不丢字：字符多重集与基线相同（允许新增指
   for (const [c, n] of after) {
     assert.equal(n, before.get(c) || 0, `字符「${c}」现 ${n} 次`);
   }
+});
+
+// 依据：卷十二:545（E-ACC-CARD-ARCHIVE 档案与门禁总条）；补充：docs/PLAN.md:67；测的是什么：Q7 甲指引行存在，且含 docs/问题.md:4 与 docs/问题.md:25 两个指引；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:51
+test('PLAN.md 待办含问题.md 两条指引（设计稿 Q7 甲）', () => {
+  const line = nowText('docs/PLAN.md').split('\n').find((l) => l.startsWith('- docs/问题.md 11-24 起停更'));
+  assert.ok(line, '缺 Q7 指引行');
+  assert.ok(line.includes('docs/问题.md:4') && line.includes('docs/问题.md:25'), 'Q7 指引行缺两个 docs/问题.md 指引');
+});
+
+// 依据：卷十二:545（E-ACC-CARD-ARCHIVE 档案与门禁总条）；补充：docs/PLAN.md:67；测的是什么：Q9 甲指引行存在，且含 readRulesAt 与 S2-SW；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:58
+test('PLAN.md 待办含规矩读取退路指引（设计稿 Q9 甲）', () => {
+  const line = nowText('docs/PLAN.md').split('\n').find((l) => l.startsWith('- 规矩读取过渡退路'));
+  assert.ok(line, '缺 Q9 指引行');
+  assert.ok(line.includes('readRulesAt') && line.includes('S2-SW'), 'Q9 指引行缺 readRulesAt 或 S2-SW');
 });
