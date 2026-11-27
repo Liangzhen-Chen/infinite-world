@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
@@ -15,10 +15,20 @@ import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { drawByKey } from '../../server-plugin/rules/gen/sample.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 
 const W = new URL('../../world/', import.meta.url);
 const json = (rel) => JSON.parse(readFileSync(new URL(rel, W), 'utf8'));
 const clone = (v) => JSON.parse(JSON.stringify(v));
+
+// 合并后的 state-owners：主文件并 state-owners.d 分片，经生产合并入口 registry-shards.mjs#mergeOwners（同 index.mjs#readOwners；S2-H 起选来历的席位边经分片登记的原语写者）。返回可改的副本。
+const OWNERS_MAIN = 'world/ontology/state-owners.json';
+function owners() {
+  const dir = new URL(`../../${shardDirOf(OWNERS_MAIN)}/`, import.meta.url);
+  const names = existsSync(dir) ? readdirSync(dir).filter((n) => n.endsWith('.json')).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(OWNERS_MAIN)}/${n}`, doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  return JSON.parse(JSON.stringify(mergeOwners({ file: OWNERS_MAIN, doc: json('ontology/state-owners.json') }, shards).doc));
+}
 
 /** 世界数据原文（与 index.mjs#readWorld 同形）。 */
 function rawWorld() {
@@ -28,7 +38,7 @@ function rawWorld() {
   return {
     dimensionDocs: readdirSync(dims).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dims), 'utf8'))),
     namedStructsDoc: json('ontology/named-structs.json'),
-    owners: json('ontology/state-owners.json'),
+    owners: owners(),
     registryRows,
     tableDocs: Object.fromEntries(registryRows.map((r) => [r.code, json(`rules/${r.file}`)])),
     digestExclude: json('rules/tables/digest-exclude.json').paths,

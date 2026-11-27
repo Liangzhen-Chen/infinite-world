@@ -27,6 +27,8 @@ import { DOMAINS } from './domains.mjs';
 import { assemblePrimitiveWriters } from './primitive-writers.mjs';
 import { checkLedgerTables, conservationCheck } from '../economy/ledger-check.mjs';
 import { accountsOf, balance } from '../economy/ledger.mjs';
+import { checkHoldingKinds, checkOutfitTables } from '../social/holding-check.mjs';
+import { controlledByPlayer } from '../social/control.mjs';
 import { loadActions, menuOf } from '../act/catalog.mjs';
 import { resolveIntent } from '../act/resolve.mjs';
 
@@ -179,6 +181,9 @@ export function mountKernel(raw, caps, resume) {
   checkRecordCoverage(engine);
   // 装配期核账本表（S2-L）：资源种类行、budget 窗口、出身起始钱可解析；坏数据开局即拒。
   checkLedgerTables(engine);
+  // 装配期核持有种类表与来历起始物（S2-H）：种类行字段与处置格、端类型映射、原语写入口、起始物资源与放处；坏数据开局即拒。
+  checkHoldingKinds(engine);
+  checkOutfitTables(engine);
   // 开局：世界创建事务（genesisMinute 与时钟）→ 开局一步事务（openingMinute 与开放范围），都在 0 号快照之前、不进日志输入（卷十 R10-11.4、卷二十七 :742）；
   // 读档：同一 engine 上复演（不按种类分支，只看有无 resume）。
   /** @type {{state: any, logBook: any, saveDigest?: string}} */
@@ -210,6 +215,8 @@ export function mountKernel(raw, caps, resume) {
       accountsOf: (/** @type {string} */ holderId) => accountsOf(engine, built, holderId),
       // 账户串所指账户的余额（卷六 :354；同上只读）。
       balance: (/** @type {string} */ accountKey) => balance(engine, built, accountKey),
+      // 该实体是否由玩家控制（卷九 R9-3.9 有在世的玩家席位边；S2-H 只读）。
+      controlledByPlayer: (/** @type {string} */ id) => controlledByPlayer(engine, built, id),
     }),
     ...(saveDigest === undefined ? {} : { saveDigest }),
   };

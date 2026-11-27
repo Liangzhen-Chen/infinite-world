@@ -238,10 +238,10 @@ export function instantiateEntity(state, entityId, tx) {
 }
 
 /**
- * 主体 id 去掉其表前缀的部分（单例 id 没有前缀，原样）。
+ * 主体 id 去掉其表前缀的部分（单例 id 没有前缀，原样）。残骸 id 与起始物实例 id（rules/social/outfit.mjs）同用。
  * @param {LifeEngine} engine @param {string} kind @param {string} id @returns {string}
  */
-function idStem(engine, kind, id) {
+export function idStem(engine, kind, id) {
   const rec = engine.registry.kindIds.get(kind);
   const prefix = rec && Array.isArray(rec.idPrefix) ? rec.idPrefix.find((p) => id.startsWith(p)) : undefined;
   return prefix === undefined ? id : id.slice(prefix.length);

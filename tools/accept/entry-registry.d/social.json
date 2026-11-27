@@ -1,0 +1,302 @@
+{
+ "entries": [
+  {
+   "name": "SOCIAL_MANIFEST",
+   "file": "rules/social/manifest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "subjectEndCleanup",
+    "holdingWriter",
+    "outfitFromOrigin"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkHoldingKinds",
+   "file": "rules/social/holding-check.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "kindRow",
+    "writeEntryNames",
+    "dispositionNames"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkOutfitTables",
+   "file": "rules/social/holding-check.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "vocabEntry",
+    "resourceRow",
+    "codesOf",
+    "kindRow",
+    "outfitRule",
+    "outfitPlan",
+    "resourceOfItem"
+   ],
+   "rules": []
+  },
+  {
+   "name": "controlledByPlayer",
+   "file": "rules/social/control.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "holdingsOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "controlledEntities",
+   "file": "rules/social/control.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "holdingsOfKind"
+   ],
+   "rules": []
+  },
+  {
+   "name": "kindRow",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdingsOf",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "stateMemo",
+    "matchPaths"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdersOf",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "stateMemo",
+    "matchPaths"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdingsOfKind",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "stateMemo",
+    "matchPaths"
+   ],
+   "rules": []
+  },
+  {
+   "name": "openHolding",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "kindRow",
+    "ruleValue",
+    "dim",
+    "readPath",
+    "writePath",
+    "txEmit",
+    "clone",
+    "holdingsOf",
+    "holdersOf",
+    "holderEnded"
+   ],
+   "rules": []
+  },
+  {
+   "name": "closeHolding",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "kindRow",
+    "ruleValue",
+    "readPath",
+    "writePath",
+    "txEmit",
+    "clone"
+   ],
+   "rules": []
+  },
+  {
+   "name": "transferHolding",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "kindRow",
+    "ruleValue",
+    "readPath",
+    "writePath",
+    "txEmit",
+    "clone",
+    "holdingsOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holderEnded",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "kindRow",
+    "holdingsOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "subjectEnded",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "holdersOf",
+    "closeHolding"
+   ],
+   "rules": []
+  },
+  {
+   "name": "subjectEndCleanup",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "subjectEnded"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdingWriter",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "openHolding",
+    "closeHolding",
+    "transferHolding"
+   ],
+   "rules": []
+  },
+  {
+   "name": "writeEntryNames",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dispositionNames",
+   "file": "rules/social/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "outfitRule",
+   "file": "rules/social/outfit.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "resourceOfItem",
+   "file": "rules/social/outfit.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "outfitRule"
+   ],
+   "rules": []
+  },
+  {
+   "name": "outfitPlan",
+   "file": "rules/social/outfit.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "outfitRule"
+   ],
+   "rules": []
+  },
+  {
+   "name": "outfitFromOrigin",
+   "file": "rules/social/outfit.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "dim",
+    "ruleValue",
+    "openAccount",
+    "post",
+    "openHolding",
+    "outfitRule",
+    "outfitPlan",
+    "resourceOfItem"
+   ],
+   "rules": []
+  }
+ ]
+}
