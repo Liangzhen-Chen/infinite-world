@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-h",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-27T07:53:28.894Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-27T09:43:55.326Z",
   "branches": {
     "code": "feat/s2-h",
     "test": "test/s2-h",
@@ -13,17 +13,53 @@
       "family": "claude-sonnet",
       "model": "claude-sonnet-5-5",
       "receipt": null,
-      "orca": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s2h",
+        "session": "ctx_00a2d1af52b2",
+        "commits": [
+          "13e1ee301",
+          "32f03b029"
+        ]
+      },
       "costUsd": null
     },
     "test": {
       "family": "claude-haiku",
       "model": "claude-haiku-5-5",
       "receipt": null,
-      "orca": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s2h",
+        "session": "ctx_9f0709b6bdbf",
+        "commits": [
+          "2856b437e",
+          "388b42c25"
+        ]
+      },
       "costUsd": null
     },
-    "review": []
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s2h",
+          "session": "ctx_8672ab815dec",
+          "commits": [
+            "a7827bafc",
+            "339f62334"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-h/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.497
+      }
+    ]
   },
   "ci": {
     "status": "pending",
@@ -31,5 +67,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码 Sonnet 于 s2h、出题 Haiku 于 ts-s2h 并行；写码交卷后出题合入实现跑全量，再派 Opus 审卡"
+  "nextAction": "PR feat/s2-h→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-h）；合后删 s2h、ts-s2h 工作树目录（不删分支）并报李白提交号；接着派 S2-P"
 }
