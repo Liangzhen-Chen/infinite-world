@@ -4,6 +4,7 @@
 
 import { existsSync, readFileSync, readdirSync, mkdirSync } from 'node:fs';
 import { writeCliOut } from './accept/lib/cli-out.mjs';
+import { ENTRY_REGISTRY_FILE, readEntryRegistry } from './accept/lib/registry-files.mjs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +17,7 @@ const SUBJECT_MAX_CHARS = 60;
 const SNAPSHOT_PATH = 'docs/状态快照.generated.md';
 const CARD_ARCHIVE_DIR = 'docs/卡档案';
 const CARD_TEMPLATE_DIR = '_template';
-const REGISTRY_PATH = 'tools/accept/entry-registry.json';
+const REGISTRY_PATH = ENTRY_REGISTRY_FILE;
 const BASELINE_PATH = 'tools/accept/baseline.json';
 const SECTION_HEAD = '## 生成基准';
 const SECTION_COMMITS = '## 最近提交';
@@ -177,11 +178,20 @@ function readCards(root) {
   return cards;
 }
 
+// 总登记表按主文件与分片的合并结果读（S2-SH）；读不出（缺文件、坏 JSON、分片冲突）同 readJson 记为缺。
+function readRegistry(root) {
+  try {
+    return readEntryRegistry(root).registry;
+  } catch {
+    return null;
+  }
+}
+
 function collectInputs(root) {
   return {
     head: readHead(root),
     commits: readCommits(root),
-    registry: readJson(root, REGISTRY_PATH),
+    registry: readRegistry(root),
     baseline: readJson(root, BASELINE_PATH),
     cards: readCards(root),
   };

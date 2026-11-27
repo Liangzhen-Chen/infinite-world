@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tokenize, importsOf } from './lib/js-scan.mjs';
 import { LAYOUT as WORLD_LAYOUT } from './lib/world-layout.mjs';
+import { readOwnersFiles } from './lib/registry-files.mjs';
 
 // 卷二 §1.1 的文件布局与卷十二 §2.11、§2.9、§2.3 的登记位置（相对仓库根）。
 export const LAYOUT = Object.freeze({
@@ -40,9 +41,9 @@ export function readRegistry(root, kind) {
   return existsSync(p) ? readJson(p).rows : [];
 }
 
+// 声明表 = state-owners 主文件与其分片的合并结果（S2-SH；门禁读声明表只此一处）。
 export function readDecl(root) {
-  const p = join(root, LAYOUT.stateOwners);
-  return existsSync(p) ? readJson(p) : {};
+  return readOwnersFiles(root).doc;
 }
 
 // 版本库文件全集（已跟踪与未忽略的新文件，去掉磁盘上已不存在的）；不是 git 仓库时按磁盘遍历。

@@ -16,6 +16,7 @@ import { samplingBody } from './sampling-body.mjs';
 import { loadRules, modelFamilies, modelFamilyReasons, partyModelFamilies, checkArchive } from '../accept/lib/card-archive.mjs';
 import { buildReceipt } from '../accept/lib/receipt.mjs';
 import { fsRepo } from '../accept/commit-hook.mjs';
+import { ENTRY_REGISTRY_FILE, readEntryRegistry } from '../accept/lib/registry-files.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -219,9 +220,10 @@ export function main(argv) {
   if (opts.needs) {
     let registry;
     try {
-      registry = JSON.parse(readFileSync(join(HERE, '..', 'accept', 'entry-registry.json'), 'utf8'));
+      // 总登记表按主文件与分片的合并结果读（S2-SH）。
+      registry = readEntryRegistry(join(HERE, '..', '..')).registry;
     } catch (e) {
-      process.stderr.write(`读不到总登记表 tools/accept/entry-registry.json：${e.message}\n`);
+      process.stderr.write(`读不到总登记表 ${ENTRY_REGISTRY_FILE}：${e.message}\n`);
       return 2;
     }
     const dangling = checkNeeds(registry, opts.needs);

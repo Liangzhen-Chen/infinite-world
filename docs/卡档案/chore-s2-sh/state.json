@@ -1,0 +1,42 @@
+{
+  "card": "chore-s2-sh",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-27T03:03:57.144Z",
+  "branches": {
+    "code": "chore/s2-sh",
+    "test": "test/s2-sh"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/sh",
+        "session": "ctx_1f9f1d07e0a3",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-sh",
+        "session": "ctx_fb9b1683b558",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet（sh）与出题 Haiku（ts-sh）并行；写码交付后出题合入实现跑全量，再派 Opus 审卡；须先于 S2-L 合入"
+}

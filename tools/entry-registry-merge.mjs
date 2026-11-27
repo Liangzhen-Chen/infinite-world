@@ -14,6 +14,7 @@ import { writeCliOut } from './accept/lib/cli-out.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sectionRange, REGISTRY_FILE } from './entry-registry.mjs';
+import { readEntryRegistry } from './accept/lib/registry-files.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');
 const DESIGN = 'docs/统一底层设计';
@@ -83,7 +84,8 @@ export function mergeNeeds(input) {
 }
 
 export function loadMergeInput(root = ROOT) {
-  const registry = JSON.parse(readFileSync(join(root, REGISTRY_FILE), 'utf8'));
+  // 登记表按主文件与分片的合并结果读（S2-SH）；sourceOf 给 --write 按每行来源文件分写。
+  const { registry, sourceOf } = readEntryRegistry(root);
   const volumes = new Map();
   for (const f of readdirSync(join(root, DESIGN)).filter((x) => /^卷.*\.md$/.test(x)).sort(cmp)) volumes.set(f.split('-')[0], readFileSync(join(root, DESIGN, f), 'utf8').split(/\r?\n/));
   const shards = [];
@@ -93,14 +95,25 @@ export function loadMergeInput(root = ROOT) {
       try { shards.push({ ...JSON.parse(readFileSync(join(root, d, f), 'utf8')), _from: `${d}/${f}` }); } catch (e) { throw new Error(`${d}/${f} 不是合法 JSON：${e.message}`); }
     }
   }
-  return { registry, shards, volumes };
+  return { registry, shards, volumes, sourceOf };
+}
+
+/**
+ * --write 的分写：合并后的各行按来源文件归回（主文件保留 entries 以外的段，分片只写 entries），行序不变；无分片时只写主文件，字节与改前相同。
+ * @param {any} registry mergeNeeds 的新登记表 @param {(i: number) => string} sourceOf @returns {Map<string, string>} 文件 → 写出文本
+ */
+export function splitBySource(registry, sourceOf) {
+  const byFile = new Map([[REGISTRY_FILE, []]]);
+  registry.entries.forEach((r, i) => { const f = sourceOf(i); if (!byFile.has(f)) byFile.set(f, []); byFile.get(f).push(r); });
+  return new Map([...byFile].map(([f, entries]) => [f, `${JSON.stringify(f === REGISTRY_FILE ? { ...registry, entries } : { entries }, null, 1)}\n`]));
 }
 
 function main(argv) {
-  const res = mergeNeeds(loadMergeInput());
+  const input = loadMergeInput();
+  const res = mergeNeeds(input);
   const ri = argv.indexOf('--rejects');
   if (ri >= 0 && argv[ri + 1]) writeCliOut(ROOT, resolve(argv[ri + 1]), `${JSON.stringify({ 仍拒: res.rejects, 判不是: res.decided }, null, 1)}\n`);
-  if (argv.includes('--write')) writeCliOut(ROOT, REGISTRY_FILE, `${JSON.stringify(res.registry, null, 1)}\n`);
+  if (argv.includes('--write')) for (const [f, text] of splitBySource(res.registry, input.sourceOf)) writeCliOut(ROOT, f, text);
   console.log(`needs 采信 ${res.accepted.needs}，rules 采信 ${res.accepted.rules}；判不是 ${res.decided.length}；仍拒 ${res.rejects.length}（needs ${res.rejects.filter((x) => x.kind === "needs").length}，rules ${res.rejects.filter((x) => x.kind === "rules").length}）`);
 }
 if (process.argv[1] && resolve(process.argv[1]).replace(/\\/g, '/') === resolve(fileURLToPath(import.meta.url)).replace(/\\/g, '/')) main(process.argv.slice(2));
