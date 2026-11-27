@@ -156,6 +156,16 @@
    "specRef": "docs/统一底层设计/卷十-世界随机生成.md",
    "source": "卷十 R10-11.4 :852（years 可以为 0：openingMinute 等于 genesisMinute，不提交推进请求，开局一步紧接世界创建事务运行）、:866（西陲手写世界 years 为 0，作者写的史事是早于第 0 日的静态行）；世界模板参数暂落本表，卷十封卷后勘误 1126k1",
    "basis": "西陲手写世界的历史预跑年数，卷十 :866 原文给 0。预跑（years > 0）未建，登记取值域只收 0，非 0 加载即拒，不静默跳过。读者是 rules/gen/worldgen-writeback.mjs#runOpening"
+  },
+  {
+   "key": "worldSeed",
+   "value": 0,
+   "file": "server-plugin/rules/gen/worldgen-writeback.mjs",
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷十-世界随机生成.md",
+   "source": "卷十 R10-1.3 :379（生成器读世界种子）；卷二十七 R27-8.5 :796 骰值键第一段 worldSeed；S1-3c 主会话 Q1（genesis.worldSeed 由 runGenesis 从 rules.gen.worldSeed 缺省值写入）",
+   "basis": "世界模板参数的缺省世界种子；手写世界西陲没有给种子，同 genesisMinute 取原点的做法取 0，不引入额外取值。新开局由菜单选种子不在 S1-3c 做（主会话 Q1），届时开局给值即覆盖本缺省。读者 rules/gen/worldgen-writeback.mjs#runGenesis（写 state.genesis.worldSeed），采样经 state 读"
   }
  ]
 }

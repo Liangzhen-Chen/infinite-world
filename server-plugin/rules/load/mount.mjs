@@ -14,25 +14,28 @@ import { closeInputs } from '../../kernel/memo.mjs';
 import { DIM_DECL } from '../../kernel/dimensions.mjs';
 import { clone } from '../../kernel/bytes.mjs';
 import { KernelError } from '../../kernel/errors.mjs';
-import { installFixedConstants } from '../../kernel/det-math.mjs';
+import { installFixedConstants, installExpTable } from '../../kernel/det-math.mjs';
 import { checkBodyPlans } from '../body/body-plan.mjs';
 import { speciesView } from '../body/species.mjs';
 import { bodyView } from '../body/body.mjs';
 import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
-import { checkTerminationTables, destroyEntity } from '../lifecycle/terminate.mjs';
+import { checkTerminationTables, destroyEntity, instantiateEntity } from '../lifecycle/terminate.mjs';
 import { SETTLE_BODY_CLEANUP, DIE_BY_DESTROY_TRIGGER } from '../body/death.mjs';
+import { PERSON_INSTANTIATOR } from '../body/person.mjs';
 import { checkRecordCoverage } from '../lifecycle/records.mjs';
+import { loadActions, menuOf } from '../act/catalog.mjs';
+import { resolveIntent } from '../act/resolve.mjs';
 
 // 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。
 const TERMINATION_CLEANUPS = Object.freeze([SETTLE_BODY_CLEANUP]);
 // 终止发起方的登记项（草案 §4.1；各系统模块经 registerTerminationTrigger 产出、在此收齐，destroy 原语按 systems.*.terminationTrigger 路由）。
 const TERMINATION_TRIGGERS = Object.freeze([DIE_BY_DESTROY_TRIGGER]);
-// 协议入口注入（kernel/transaction.mjs HANDLERS.destroy 调 engine.lifecycle.destroy；内核不 import 规则层，与 engine.advance 同一做法）。
-const LIFECYCLE = Object.freeze({ destroy: destroyEntity });
-import { loadActions, menuOf } from '../act/catalog.mjs';
-import { resolveIntent } from '../act/resolve.mjs';
+// 建档实例化的登记项（S1-3c 草案 §5；各系统模块经 registerInstantiator 产出、在此收齐，create 原语按 systems.*.instantiate 路由）。
+const INSTANTIATORS = Object.freeze([PERSON_INSTANTIATOR]);
+// 协议入口注入（kernel/transaction.mjs HANDLERS.destroy、HANDLERS.create 调 engine.lifecycle.*；内核不 import 规则层，与 engine.advance 同一做法）。
+const LIFECYCLE = Object.freeze({ destroy: destroyEntity, instantiate: instantiateEntity });
 
 // 装配层注入能力的形状（启动强断言；S1-1c 派卡「主会话已定」第 1–3 条）：一张「字段 → 要求 → 判定」表，assertCaps 循环判。
 // unitOfPath 可缺省（卷二十七 :553 只在分片表用到按单元分片时才须有；缺时由 checkShards 同一判定报 E-SAVE-SHARD-UNCOVERED）。
@@ -73,6 +76,21 @@ function fixedConstantsOf(kc) {
     fixedLnWorkExponent: opt('fixedLnWorkExponent'), fixedLnInputExponent: opt('fixedLnInputExponent'), fixedLnSeriesTerms: opt('fixedLnSeriesTerms'),
     LN2: kc.LN2 === undefined ? undefined : String(kc.LN2),
   };
+}
+
+// _distributions.json 的摘要口径（该文件 note：sha256 对 values.map(String).join(',') 的 UTF-8 字节；离线由 tools/gen-det-tables.mjs 生成冻结）。
+const DIST_SHA_JOIN = ',';
+const UTF8 = 'utf8';
+
+/**
+ * 采样表装入（卷二 §1.10 :331 normalQuantile 带 sha256、:332 expTable）：分位数表摘要与文件所记不符即 E-DIM-STRUCT-FIELD；exp 表交 det-math#installExpTable（它核形状）。
+ * @param {{sha256Hex: (data: string, encoding: 'utf8') => string}} digestCap @param {unknown} doc
+ */
+function installDistributions(digestCap, doc) {
+  const q = Object(Object(doc).normalQuantile);
+  const ok = Array.isArray(q.values) && typeof q.sha256 === 'string' && digestCap.sha256Hex(q.values.map(String).join(DIST_SHA_JOIN), UTF8) === q.sha256;
+  if (!ok) throw new KernelError('E-DIM-STRUCT-FIELD', {}, '_distributions.json normalQuantile: values do not match the recorded sha256');
+  installExpTable(Object(doc).expTable);
 }
 
 /**
@@ -120,6 +138,8 @@ export function mountKernel(raw, caps, resume) {
   const { host, saveLayout } = rules;
   const primitives = new Map(primitivesDoc.primitives.map((/** @type {any} */ p) => [p.op, p]));
   const { digestCap, saveRoot, sources, modifierSources, unitOfPath, verifyBake } = caps;
+  // 采样表（卷二 §1.10 :331–:332）：世界数据带了 _distributions.json 即核分位数表摘要、装入 exp 表；没带时采样（rules/gen/sample.mjs）用到即报错。
+  if (docData.distributionsDoc !== undefined) installDistributions(digestCap, docData.distributionsDoc);
   // 烘焙层（卷二十七 R27-4.13、R27-5.9）：由 doc_data 纯函数建出，挂 engine.bake，不进 state 与 doc_*；开局与读档复演同样从空重建。
   const bake = Object.freeze({ placeTree: bakePlaceTree(registry) });
   if (verifyBake === true && placeTreeDigest({ digestCap }, bakePlaceTree(registry)) !== placeTreeDigest({ digestCap }, bake.placeTree)) {
@@ -132,7 +152,7 @@ export function mountKernel(raw, caps, resume) {
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
     stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc, actions,
-    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
+    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, instantiators: INSTANTIATORS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     // 意图收窄由本层注入（transaction 不 import 规则层；同 advance 注入），开局与复演同一函数（S1-3a）。
     resolveIntent: (/** @type {object} */ st, /** @type {unknown} */ intent) => resolveIntent(engine, st, intent),

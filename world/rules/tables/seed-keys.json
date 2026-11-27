@@ -2,7 +2,9 @@
  "rows": [
   {
    "key": "entries",
-   "value": []
+   "value": [
+    {"file": "rules/body/person.mjs", "stream": "person_instantiate", "site": "person_sample", "role": "role_seed", "prefix": "person_instantiate", "purpose": "个体建档补全（S1-3c）：rules.person.sampleFrom 每行对物种分布抽一次；对象段为复合「个体 id | 目标维度 [| 映射键]」（卷二十七 R27-8.5 :801），时刻取建行分钟"}
+   ]
   }
  ]
 }

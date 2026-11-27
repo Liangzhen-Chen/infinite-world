@@ -49,6 +49,12 @@ async function fresh(/** @type {string} */ prefix = 's13c-create-') {
 }
 
 // 经真实 create 提案建一个人（按人物模板）。返回 submitProposal 的结果与新增的 person id 列表。
+// species 不写进个体 props：个体经 rec.template 指向来历模板行，读入口先看 props、再看该行（与 kernel readBase 同序）。
+const readSpecies = (/** @type {any} */ world, /** @type {string} */ id) => {
+  const rec = world.state.created[id];
+  return Object.hasOwn(rec.props, 'species') ? rec.props.species : PERSON_ROWS[rec.template].species;
+};
+
 function createPerson(world, /** @type {string} */ tmpl, /** @type {Record<string, unknown>} */ facts = {}) {
   const before = new Set(personIds(world));
   const r = world.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tmpl, facts }] });
@@ -110,7 +116,7 @@ test('4. 已有值不覆盖：create 提案 facts 显式给了 adultMassKg 的�
   const props = world.state.created[added[0]].props;
   assert.equal(props.adultMassKg, given, 'facts 显式给出的 adultMassKg 应保留，不被采样覆盖');
   assert.equal(typeof props.birthMinute, 'number', '其余 always 维度仍应补齐（birthMinute）');
-  assert.equal(props.species, PERSON_ROWS[TEMPLATE].species, '其余 always 维度仍应补齐（species 取模板行）');
+  assert.equal(readSpecies(world, added[0]), PERSON_ROWS[TEMPLATE].species, '其余 always 维度仍应补齐（species 取模板行）');
 });
 
 test('5. 缺 species 整笔拒：模板与 facts 都给不出 species 的 person create 被拒，码 E-DIM-UNKNOWN-READ，state 逐位不变、无新增实体', async () => {

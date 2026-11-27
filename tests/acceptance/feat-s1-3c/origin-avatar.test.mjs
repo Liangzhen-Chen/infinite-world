@@ -91,7 +91,10 @@ test('1. 玩家入口零 mock：经 act_choose_origin 建化身；species、adul
   assert.ok(typeof want === 'string' && want.length > 0, '来历模板行应写 species（设计册 14 :228：species 取文化的物种）');
   assert.ok(Object.hasOwn(SPECIES_ROWS, want), 'species 应指向物种表中的行');
 
-  assert.equal(rec.props.species, want, '化身 species 应等于来历模板行的 species');
+  assert.equal(rec.template, template, '化身应以所选来历行为模板');
+  // species 不写进化身 props：经 rec.template 指向的来历行读入（与 kernel readBase 同序：先 props，再实体行）。
+  const speciesRead = Object.hasOwn(rec.props, 'species') ? rec.props.species : PERSON_ROWS[rec.template].species;
+  assert.equal(speciesRead, want, '化身 species 应等于来历模板行的 species');
   assert.equal(typeof rec.props.adultMassKg, 'number', 'adultMassKg 应为数');
   assert.ok(Number.isFinite(rec.props.adultMassKg), 'adultMassKg 应为有限数');
   assert.equal(typeof rec.props.birthMinute, 'number', 'birthMinute 应为数');

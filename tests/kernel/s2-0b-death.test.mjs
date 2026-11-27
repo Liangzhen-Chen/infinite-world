@@ -37,6 +37,8 @@ function rawWorld() {
     primitivesDoc: json('primitives.json'),
     vocabDoc: json('dimensions/_vocab.json'),
     unitsDoc: json('dimensions/_units.json'),
+    // 采样表（S1-3c：create 建人时按物种分布补齐维度，与 index.mjs#readWorld 同形）。
+    distributionsDoc: json('dimensions/_distributions.json'),
   };
 }
 const docOf = (raw, kind) => raw.dimensionDocs.find((d) => d.kind === kind);

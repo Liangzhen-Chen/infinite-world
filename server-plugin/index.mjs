@@ -48,6 +48,8 @@ function readWorld() {
     vocabDoc: json('dimensions/_vocab.json'),
     // 单位表（日与分钟的换算等，rules/lifecycle/terminate.mjs 写终止标记的日时读；S2-0a）。
     unitsDoc: json('dimensions/_units.json'),
+    // 采样表（normal 分位数表与 exp 表，rules/gen/sample.mjs 读、mount 装入时核摘要；S1-3c）。
+    distributionsDoc: json('dimensions/_distributions.json'),
     // 效果族表与动作目录（卷二 §3.9、卷九 §2.2；S1-3a）。
     effectsDoc: json('dimensions/_effects.json'),
     actionDocs: readActionDocs(),

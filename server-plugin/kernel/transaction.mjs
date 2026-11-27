@@ -202,10 +202,14 @@ const HANDLERS = {
         throw new KernelError('E-DIM-REF-MISSING', {}, `create.template ${JSON.stringify(tpl)}: not a registered ${effect.kind} entity row`);
       }
     }
+    // 建行后在同一事务里调装配层注入的 engine.lifecycle.instantiate（规则层按 systems.*.instantiate 登记路由，S1-3c 草案 §5）；没有注入即 E-EFF-PARAM。
+    const life = engine.lifecycle;
+    if (life === null || typeof life !== 'object' || typeof life.instantiate !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'create: engine.lifecycle.instantiate is not assembled');
     return {
       write: (tx) => {
         createEntity(state, id, effect.kind, {}, tx, effect.template);
         for (const [field, value] of Object.entries(effect.facts)) setEntityProp(state, id, field, value, tx);
+        life.instantiate(state, id, tx);
       },
     };
   },

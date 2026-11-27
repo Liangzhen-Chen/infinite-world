@@ -4,6 +4,9 @@
 // 不 mock，不写死表名、id、数值。
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { init, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
@@ -12,6 +15,14 @@ const roots = [];
 after(() => {
   for (const r of roots.splice(0)) removeTempRoot(r);
 });
+
+// 化身的 dims：species 不写进 props，经 rec.template 指向的来历行读入（与 kernel readBase 同序）；adultMassKg、birthMinute 写在 props。
+const PERSON_ROWS = JSON.parse(readFileSync(join(fileURLToPath(new URL('../../../world/ontology/dimensions/person.json', import.meta.url))), 'utf8')).rows;
+const dimsOf = (/** @type {any} */ world, /** @type {string} */ id) => {
+  const rec = world.state.created[id];
+  const species = Object.hasOwn(rec.props, 'species') ? rec.props.species : PERSON_ROWS[rec.template].species;
+  return { species, adultMassKg: rec.props.adultMassKg, birthMinute: rec.props.birthMinute };
+};
 
 const avatarIds = (world) =>
   Object.keys(world.state.created ?? {}).filter((id) => world.state.created[id].kind === 'person');
@@ -30,7 +41,7 @@ test('8. 复演一致：选来历建化身 → 推进 60 分钟 → 存槽 → �
   const ids = avatarIds(world);
   assert.equal(ids.length, 1, '选来历后应有一个化身');
   const id = ids[0];
-  const before = { ...world.state.created[id].props };
+  const before = dimsOf(world, id);
   for (const k of ['species', 'adultMassKg', 'birthMinute']) {
     assert.notEqual(before[k], undefined, `存前化身 ${k} 应已写入`);
   }
@@ -43,7 +54,7 @@ test('8. 复演一致：选来历建化身 → 推进 60 分钟 → 存槽 → �
   assert.equal(back.saveDigest, manifest.saveDigest, '复演后的 saveDigest 应与存前逐字节相同');
 
   assert.deepEqual(avatarIds(back), ids, '复演后化身应存在且为同一实体');
-  const after2 = back.state.created[id].props;
+  const after2 = dimsOf(back, id);
   for (const k of ['species', 'adultMassKg', 'birthMinute']) {
     assert.ok(Object.is(after2[k], before[k]), `复演后化身 ${k} 应逐位相同：${before[k]} 对 ${after2[k]}`);
   }
