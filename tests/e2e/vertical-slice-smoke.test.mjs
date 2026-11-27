@@ -33,6 +33,7 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     const origin = menuRows.find((m) => m.act === 'act_choose_origin');
     const wait = menuRows.find((m) => m.act === 'act_wait');
     assert.ok(origin && !origin.blocked, '菜单缺未受阻的 act_choose_origin（开局尚无化身）');
+    assert.ok((origin.slots?.species ?? []).length > 0, '开局菜单 act_choose_origin 缺种族槽候选（S1-3d 步 0 选种族）');
     assert.ok(!wait || wait.blocked, '菜单中 act_wait 若列出则须带 blocked（尚无化身；不列出亦可，S1-3a 合同）');
     const s0 = await saveAt(B, 0);
     assert.equal(s0.json?.result, 'ok', `存槽 0 未 ok：${s0.text}`);
@@ -44,7 +45,7 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
   });
 
   await step(2, 'state.created 新建化身并写另一实体 ref（真实菜单动作）', async () => {
-    const r = await act(B, 'act_choose_origin', { origin: 0, place: 0 });
+    const r = await act(B, 'act_choose_origin', { species: 0, origin: 0, place: 0 });
     assert.equal(r.json?.result, 'ok', `act_choose_origin 未 ok：${r.text}`);
     assert.ok(r.json.events && r.json.events.to >= r.json.events.from, '结果缺事件序号区间 events');
     ctx.seqAfterOrigin = r.json.events.to;

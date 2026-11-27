@@ -1,0 +1,42 @@
+{
+  "card": "feat-s1-3d",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-27T02:35:56.763Z",
+  "branches": {
+    "code": "feat/s1-3d",
+    "test": "test/s1-3d"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s13d",
+        "session": "ctx_0885530e721d",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s13d",
+        "session": "ctx_d821a1aa98dc",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet（s13d）与出题 Haiku（ts-s13d）并行；写码交付后出题合入实现跑全量，再派 Opus 审卡"
+}

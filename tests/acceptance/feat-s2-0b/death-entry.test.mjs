@@ -30,10 +30,10 @@ const DIM_DOCS = readdirSync(DIM_DIR)
 const SPECIES_DOC = DIM_DOCS.find((d) => d.kind === 'species');
 const ITEM_DOC = DIM_DOCS.find((d) => d.kind === 'item');
 const PERSON_DOC = DIM_DOCS.find((d) => d.kind === 'person');
-// 人物模板行：person 表里按排序第一条 species 指向物种表登记行的行（来历模板行，S1-3c 草案 §1）。个体由 create 提案 kind=person 建，species 由 instantiatePerson 补齐。
-const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows)
-  .sort()
-  .find((k) => Object.hasOwn(SPECIES_DOC.rows, PERSON_DOC.rows[k].species));
+// 人物模板行：person 表里按排序第一条（S1-3d：来历行不再带 species，种族由 create 的 facts 给）。
+const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows).sort()[0];
+// 有心智物种行：物种表中 classes 含 comp_sapient 的首行（按表序，数据取，不写 id）。species 经 facts 给出。
+const SAPIENT_SPECIES_ID = Object.keys(SPECIES_DOC.rows).find((k) => SPECIES_DOC.rows[k].classes.includes('comp_sapient'));
 const ITEM_ID = Object.keys(ITEM_DOC.rows).sort()[0];
 const DEATH = rowsOf(loadJson(join(WORLD, 'rules/tables/death.json')));
 const UNITS = loadJson(join(WORLD, 'ontology/dimensions/_units.json')).units;
@@ -60,9 +60,10 @@ async function bootWorld() {
 
 // 经真实 create 提案建一个人物个体（kind=person，模板行取 PERSON_TEMPLATE_ID），返回新实体 id。
 function createIndividual(env) {
-  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有 species 指向物种表行的模板行');
+  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有模板行');
+  assert.ok(SAPIENT_SPECIES_ID, '物种表应有 classes 含 comp_sapient 的有心智物种行');
   const before = new Set(Object.keys(env.state.created ?? {}));
-  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: {} }] });
+  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: { species: SAPIENT_SPECIES_ID } }] });
   assert.equal(r.ok, true, `create 应成功：${JSON.stringify(r)}`);
   const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id));
   assert.equal(added.length, 1, 'create 应恰好新增一个实体');

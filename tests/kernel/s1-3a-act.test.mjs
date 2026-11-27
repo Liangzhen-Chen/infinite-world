@@ -52,7 +52,7 @@ function rowsOf(raw) {
   const pass = ids.find((id) => Object.values(rows[id].slots).some((s) => s.kind === 'number'));
   return { rows, spawn, pass };
 }
-/** 开放的出身代号（按设计册 §4.7：gate 为空，或所指开关为真）与带这些出身的模板行；S1-3c 起另须模板行 species 是物种表里的行（origin.ready 数据门）。 */
+/** 开放的出身代号（按设计册 §4.7：gate 为空，或所指开关为真）与带这些出身的模板行（S1-3d 起种族与出身解耦，来历候选不看 species）。 */
 function openTemplates(raw) {
   const po = raw.tableDocs.playerOrigins.rows;
   const sw = Object.fromEntries(po.map((r) => [r.key, r.value]));
@@ -60,10 +60,17 @@ function openTemplates(raw) {
   const person = raw.dimensionDocs.find((d) => d.kind === 'person').rows;
   return Object.keys(person).filter((id) => {
     const o = origins[person[id].origin];
-    const species = raw.dimensionDocs.find((d) => d.kind === 'species').rows;
-    return o && (o.gate === null || sw[o.gate] === true) && Object.hasOwn(species, String(person[id].species));
+    return o && (o.gate === null || sw[o.gate] === true);
   }).sort();
 }
+/** 可扮演种族（卷四 G-2 :1085）：物种行 classes 含 rules.chargen.playableClass 所指组件类。 */
+function playableSpecies(raw) {
+  const cls = raw.tableDocs.chargen.rows.find((r) => r.key === 'playableClass').value;
+  const species = raw.dimensionDocs.find((d) => d.kind === 'species').rows;
+  return Object.keys(species).filter((id) => Array.isArray(species[id].classes) && species[id].classes.includes(cls)).sort();
+}
+/** 槽位按所指数据表找（不写槽名）。 */
+const slotOn = (rows, act, table) => Object.keys(rows[act].slots).find((k) => rows[act].slots[k].tableRow === table);
 /** 开放地点：place 行 genOpen 为真。 */
 const openPlaces = (raw) => Object.entries(raw.dimensionDocs.find((d) => d.kind === 'place').rows).filter(([, r]) => r.genOpen === true).map(([id]) => id).sort();
 
@@ -76,7 +83,8 @@ test('1 开局菜单 menu(null)：只有无需化身的建档动作；候选 = �
   const a = m.affordances[0];
   const tableOf = (k) => rows[spawn].slots[k].tableRow;
   for (const [slot, ids] of Object.entries(a.slots)) {
-    assert.deepEqual([...ids], tableOf(slot) === 'place' ? openPlaces(raw) : openTemplates(raw), slot);
+    const want = { place: openPlaces(raw), species: playableSpecies(raw), person: openTemplates(raw) }[tableOf(slot)];
+    assert.deepEqual([...ids], want, slot);
   }
   assert.deepEqual([...m.visible], openPlaces(raw));
   // 设计册 §6.5：18 文化 × 3 背景；每个文化恰 3 条模板行（文化数从 cultures.json 读）。
@@ -102,10 +110,10 @@ test('2 选来历：经 submitProposal 建化身（template 为所选模板行�
   const avatar = Object.keys(g.state.created).find((id) => g.state.created[id].kind === 'person');
   const rec = g.state.created[avatar];
   const chosen = Object.fromEntries(names.map((n) => [n, a.slots[n][pick[n]]]));
-  const tplSlot = names.find((n) => chosen[n] === rec.template);
-  const placeSlot = names.find((n) => n !== tplSlot);
-  assert.ok(tplSlot, 'template 是所选候选');
-  assert.equal(dim(g.engine, g.state, 'person', avatar, 'birthplace').value, chosen[placeSlot]);
+  const { rows } = rowsOf(raw);
+  assert.equal(rec.template, chosen[slotOn(rows, spawn, 'person')], 'template 是所选来历候选');
+  assert.equal(dim(g.engine, g.state, 'person', avatar, 'birthplace').value, chosen[slotOn(rows, spawn, 'place')]);
+  assert.equal(dim(g.engine, g.state, 'person', avatar, 'species').value, chosen[slotOn(rows, spawn, 'species')]);
   assert.equal(dim(g.engine, g.state, 'person', avatar, 'culture').value, raw.dimensionDocs.find((d) => d.kind === 'person').rows[rec.template].culture);
   // 已有化身：再建档被 whenRX 拒；menu(null) 按唯一化身投影，不再出现建档动作。
   assert.equal(g.act({ act: spawn, slots: pick }).code, 'E-ACT-PRECONDITION');
@@ -117,7 +125,7 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
   const { spawn, pass, rows } = rowsOf(raw);
   const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-wait-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 1 } }).code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(avatar);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
@@ -156,7 +164,7 @@ test('4 候选编号越界被拒；存档读档复演 saveDigest 一致，复演
   const a = g.menu(null).affordances[0];
   const over = Object.fromEntries(Object.keys(a.slots).map((n) => [n, a.slots[n].length]));
   assert.equal(g.act({ act: spawn, slots: over }).code, 'E-ACT-SLOT');
-  assert.equal(g.act({ act: spawn, slots: { origin: 1, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 1, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 45 } }).ok, true);
   const saved = saveSlot(g);
@@ -176,10 +184,11 @@ test('5 出身开关：开关改假，受它管的出身不进候选（只改数
     r.tableDocs.playerOrigins.rows.find((x) => x.key === gate).value = false;
     const g = mount(r, 's3a-gate-');
     const { spawn, rows } = rowsOf(r);
-    const slot = Object.keys(rows[spawn].slots).find((k) => rows[spawn].slots[k].tableRow !== 'place');
+    const slot = slotOn(rows, spawn, 'person');
     const got = g.menu(null).affordances[0].slots[slot];
     assert.deepEqual([...got], openTemplates(r), gate);
-    // 关掉的开关所管的出身一条也不进候选（S1-3c 起兽裔模板行无物种行，已被 origin.ready 隐藏，候选数不一定再减）。
+    assert.ok(got.length < openTemplates(raw).length, gate);
+    // 关掉的开关所管的出身一条也不进候选。
     const origins = r.vocabDoc.families.origin.entries;
     const person = r.dimensionDocs.find((d) => d.kind === 'person').rows;
     assert.ok([...got].every((id) => origins[person[id].origin].gate !== gate), gate);
@@ -197,7 +206,7 @@ test('6 动作表加一行（复制等待行改代号与上限）：不改任何
   const r = clone(raw);
   r.actionDocs.push({ [added]: extra });
   const g = mount(r, 's3a-addrow-');
-  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const aff = g.menu(avatar).affordances;
   assert.deepEqual(aff.map((a) => a.act), [pass, added]);
@@ -234,7 +243,7 @@ test('7 加载即拒：本阶段未实现的字段非空、baseMinutes > 0、未
   for (const [name, r, want] of cases) assert.throws(() => mount(r, 's3a-reject-'), code(want), name);
 });
 
-test('8 规则层不写数据代号：rules/act 源码里没有任何动作、效果族、对象筛选、动作类、菜单组、出身代号或模板行 id 的字面量（R9-1.1、A9-1.1）', () => {
+test('8 规则层不写数据代号：rules/act 源码里没有任何动作、效果族、对象筛选、动作类、菜单组、出身代号、模板行 id、组件类或物种 id 的字面量（R9-1.1、A9-1.1）', () => {
   const raw = rawWorld();
   const fams = raw.vocabDoc.families;
   const codes = new Set([
@@ -242,6 +251,8 @@ test('8 规则层不写数据代号：rules/act 源码里没有任何动作、�
     ...Object.keys(raw.effectsDoc),
     ...['target_filter', 'act_class', 'menu_group', 'origin'].flatMap((f) => Object.keys(fams[f].entries)),
     ...Object.keys(raw.dimensionDocs.find((d) => d.kind === 'person').rows),
+    ...Object.keys(fams.component.entries),
+    ...Object.keys(raw.dimensionDocs.find((d) => d.kind === 'species').rows),
   ]);
   assert.ok(codes.size > 0);
   const dir = new URL('../../server-plugin/rules/act/', import.meta.url);
@@ -258,7 +269,7 @@ test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被
   const g = await init(express.Router(), { saveRoot: dir });
   const r0 = g.act({ act: pass, numbers: { minutes: 5 } });
   assert.equal(r0.code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const r1 = g.act({ act: pass, actor: avatar, numbers: { minutes: 0 } });
   assert.equal(r1.code, 'E-ACT-SLOT');
@@ -277,7 +288,7 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   const { spawn, pass } = rowsOf(raw);
   const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-noactor-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
@@ -289,8 +300,48 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   // 前提：造出第二个化身（经原语建第二个以带出身的模板行为 template 的个体），缺省行动者不唯一即拒。
   const tpl = g.state.created[avatar].template;
   const place = openPlaces(raw)[0];
-  assert.equal(g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { birthplace: place } }] }).ok, true);
+  const species = g.state.created[avatar].props.species;
+  assert.equal(g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { birthplace: place, species } }] }).ok, true);
   assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-SLOT');
   assert.throws(() => g.menu(null), code('E-DISPLAY-SUBJECT'));
   assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 5 } }).ok, true);
+});
+
+test('11 种族槽（S1-3d）：候选 = classes 含 rules.chargen.playableClass 所指类的物种行；物种行挂上该类即进候选；去掉可扮演类即无候选、不可建档', () => {
+  const raw = rawWorld();
+  const { rows, spawn } = rowsOf(raw);
+  const slot = slotOn(rows, spawn, 'species');
+  assert.ok(playableSpecies(raw).length > 0, '前提：数据里有可扮演物种');
+  assert.deepEqual([...mount(raw, 's13d-sp-').menu(null).affordances[0].slots[slot]], playableSpecies(raw));
+  // 给一条原本不可扮演的物种行挂上可扮演类（只改数据）：它即进候选。
+  const cur = raw.tableDocs.chargen.rows.find((r) => r.key === 'playableClass').value;
+  const species = raw.dimensionDocs.find((d) => d.kind === 'species').rows;
+  const extra = Object.keys(species).sort().find((id) => !playableSpecies(raw).includes(id));
+  assert.ok(extra, '前提：物种表里有不可扮演的行');
+  const r1 = clone(raw);
+  const row1 = r1.dimensionDocs.find((d) => d.kind === 'species').rows[extra];
+  row1.classes = [...(Array.isArray(row1.classes) ? row1.classes : []), cur];
+  assert.ok(playableSpecies(r1).includes(extra));
+  assert.deepEqual([...mount(r1, 's13d-sp2-').menu(null).affordances[0].slots[slot]], playableSpecies(r1));
+  // 物种行全部去掉可扮演类：种族槽无候选，必填槽空即建档动作不进菜单，提交即 E-ACT-SLOT，state 不变。
+  const r2 = clone(raw);
+  for (const row of Object.values(r2.dimensionDocs.find((d) => d.kind === 'species').rows)) if (Array.isArray(row.classes)) row.classes = row.classes.filter((c) => c !== cur);
+  assert.deepEqual(playableSpecies(r2), []);
+  const g = mount(r2, 's13d-sp3-');
+  assert.equal(g.menu(null).affordances.some((a) => a.act === spawn), false);
+  const created = JSON.stringify(g.state.created ?? {});
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).code, 'E-ACT-SLOT');
+  assert.equal(JSON.stringify(g.state.created ?? {}), created);
+});
+
+test('12 缺种族槽或下标越界：E-ACT-SLOT，state 不变', async () => {
+  const raw = rawWorld();
+  const { spawn } = rowsOf(raw);
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s13d-noslot-') });
+  const n = g.menu(null).affordances[0].slots.species.length;
+  const created = JSON.stringify(g.state.created ?? {});
+  for (const slots of [{ origin: 0, place: 0 }, { species: n, origin: 0, place: 0 }, { species: -1, origin: 0, place: 0 }]) {
+    assert.equal(g.act({ act: spawn, slots }).code, 'E-ACT-SLOT', JSON.stringify(slots));
+    assert.equal(JSON.stringify(g.state.created ?? {}), created);
+  }
 });

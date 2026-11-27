@@ -2,6 +2,7 @@
  "act_choose_origin": {
   "class": "acls_decide",
   "slots": {
+   "species": {"kind": "code", "multi": false, "tableRow": "species", "filter": ["tf_playable_species"], "required": true},
    "origin": {"kind": "code", "multi": false, "tableRow": "person", "filter": ["tf_player_origin"], "required": true},
    "place": {"kind": "code", "multi": false, "tableRow": "place", "filter": ["tf_open_place"], "required": true}
   },
@@ -12,7 +13,7 @@
   "backlash": [], "costRows": [], "skillGain": null, "decision": null,
   "menu": {"group": "menu_chargen", "order": 0},
   "shapeFrom": null, "sourceStrength": {},
-  "basis": "选来历建玩家化身：亮圳 11-26 19:25 拍板 Q1=A；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :215–:241（选文化、选背景合为来历模板行一槽，候选按 rules.playerOrigins 开关过滤；出生地从已开放地点选，卷四 §4.12.3 G-2）；卷九 §2.2 行格式，无检定，success 一档，其余四档显式 null（卷九 :196）；仅当本局尚无玩家化身可用（S1-3 接口草案（主会话 11-26） §2.1）"
+  "basis": "选来历建玩家化身：亮圳 11-26 19:25 拍板 Q1=A；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :215–:241（选文化、选背景合为来历模板行一槽，候选按 rules.playerOrigins 开关过滤；出生地从已开放地点选，卷四 §4.12.3 G-2）；卷九 §2.2 行格式，无检定，success 一档，其余四档显式 null（卷九 :196）；仅当本局尚无玩家化身可用（S1-3 接口草案（主会话 11-26） §2.1）；步 0 种族槽 species 排首位，候选为挂 rules.chargen.playableClass 所指组件类的物种行（设计册 14 §4.7 :217，亮圳 11-27「玩家自己挑种族」；卷四 G-1 :1084、G-2 :1085；S1-3d）"
  },
  "act_wait": {
   "class": "acls_rest",

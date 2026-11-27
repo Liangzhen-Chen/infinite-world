@@ -1,0 +1,13 @@
+{
+ "rows": [
+  {
+   "key": "playableClass",
+   "value": "comp_playable",
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷四-生物身体与人物.md",
+   "source": "卷四 docs/统一底层设计/卷四-生物身体与人物.md:320（rules.chargen.playableClass: ref vocab component）、:1085（G-2 物种可选集）、:1209（可扮演组件类）",
+   "basis": "指 _vocab.json component 族 comp_playable（代号本卡取，S1-3d 主会话 Q4）；读者是 rules/act/catalog.mjs 的命名空间读数 species.playable，.mjs 不写该代号（卷四 :323）"
+  }
+ ]
+}
