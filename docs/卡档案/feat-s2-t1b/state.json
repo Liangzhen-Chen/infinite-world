@@ -1,0 +1,16 @@
+{
+  "card": "feat-s2-t1b",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-27T20:00:00.000Z",
+  "branches": { "code": "feat/s2-t1b", "test": "test/s2-t1b", "pr": "feat/s2-t1b" },
+  "pr": null,
+  "parties": {
+    "code": { "family": "claude-sonnet", "model": "claude-sonnet-5-5", "receipt": null, "orca": null, "costUsd": null },
+    "test": { "family": "claude-haiku", "model": "claude-haiku-5-5", "receipt": null, "orca": null, "costUsd": null },
+    "review": []
+  },
+  "ci": { "status": "pending", "runUrl": null },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet 于 t1b、出题 Haiku 于 ts-t1b 并行；写码交卷后主会话读 diff，出题合入跑全量，再派 Opus 审卡"
+}

@@ -1,6 +1,6 @@
 {
  "rows": [
   {"key": "cellClass", "value": "comp_weather_cell", "file": "server-plugin/rules/time_env/season.mjs", "grade": "designed", "source": "卷二十 §2.7 :335（weatherCell = nearest(rel_contains, 挂 comp_weather_cell)）、:691（地点的季节取其单元 seasonScheme）；S2-T1", "basis": "卷文定义的天气单元组件类，登数据而不写进代码（同 rules.gen.roleFacility 先例）：季节读数沿包含链取最近的挂该类的地点作单元"},
-  {"key": "unbuilt", "value": ["schemeRules"], "file": "server-plugin/rules/time_env/season.mjs", "grade": "designed", "source": "卷二十 §2.9 :401（season.schemeRules）；§2.6 :301–:303（季节行 growth、wetness、warmth 三个数值维度）；李白 11-19 13:3x ③（示意行数值不算出处）", "basis": "schemeRules（按纬度与 precipSeasonality 派生方案）卷文无数据格式，规则式（|纬度| > 黄赤交角选四季）没有读者，块 6 的天气单元显式指定 seasonAt 读的 seasonScheme（卷二十 §2.7 :362 allowExplicit），故仍登记。季节十二项已按太原 1991–2020 实测归一化入词表族 season 各行（6-29 第 2 步，算法见 docs/卡回报/ds-b6-29.md「换算方法」F）"}
+  {"key": "unbuilt", "value": ["schemeRules"], "file": "server-plugin/rules/time_env/season.mjs", "grade": "designed", "source": "卷二十 §2.9 :401（season.schemeRules）；§2.6 :301–:303（季节行 growth、wetness、warmth 三个数值维度）；李白 11-19 13:3x ③（示意行数值不算出处）", "basis": "schemeRules（按纬度与 precipSeasonality 派生方案）卷文无数据格式，规则式（|纬度| > 黄赤交角选四季）没有读者；S2-T1b（卷二十勘误）起 seasonScheme 不再派生，由天气单元行显式填（季节、节气按单元本地方案与 phaseOffset），schemeRules 改登未建、留给日后按日照与纬度生成新地区单元时用，故仍登记。季节十二项已按太原 1991–2020 实测归一化入词表族 season 各行（6-29 第 2 步，算法见 docs/卡回报/ds-b6-29.md「换算方法」F）"}
  ]
 }
