@@ -247,7 +247,9 @@ function resolve(engine, state, proposal, seq) {
     const prim = engine.primitives instanceof Map ? engine.primitives.get(effect.op) : undefined;
     if (!prim) throw new KernelError('E-EFF-PRIMITIVE', {}, `op ${effect.op}: not in primitives catalog`);
     checkEffect(prim, effect);
-    const h = Object.hasOwn(HANDLERS, effect.op) ? HANDLERS[effect.op] : undefined;
+    // 内置表查不到即回落查装配层注入的规则层原语写者（engine.primitiveWriters：op → 处理函数，S2-L 草案 §3 R0）；两处都没有照旧拒收。
+    const writers = engine.primitiveWriters instanceof Map ? engine.primitiveWriters : undefined;
+    const h = Object.hasOwn(HANDLERS, effect.op) ? HANDLERS[effect.op] : writers ? writers.get(effect.op) : undefined;
     if (!h) throw new KernelError('E-EFF-PRIMITIVE', {}, `op ${effect.op}: no handler registered`);
     const out = h(engine, state, effect, { seq, index });
     if (out.write) writes.push(out.write);

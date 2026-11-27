@@ -3,7 +3,8 @@
 // 黑盒：真实 init（不 mock）；分片情形用 copyRepo 的临时副本，副本内的 index.mjs 读副本世界数据。期望值从主文件原文与 saveDigest 比对得出，不写死哈希。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { mergeOwners } from '../../../server-plugin/rules/load/registry-shards.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
@@ -16,6 +17,14 @@ import { dataPacksDigestOf } from '../../../server-plugin/kernel/save.mjs';
 const REPO = new URL('../../../', import.meta.url);
 const REPO_PATH = fileURLToPath(REPO);
 const MAIN_OWNERS_TEXT = readFileSync(new URL('world/ontology/state-owners.json', REPO), 'utf8');
+// 前提口径（S2-L 合入后改）：登记的权威是「主文件 + 分片（state-owners.d/，按文件名次序）」的合并结果（卷二 :512–:513；registry-shards.mjs mergeOwners）。
+// 原先只用主文件原文：仓库已有首张真分片（economy.json，S2-L），主文件原文不再是全部登记，故改为合并结果。
+const SHARD_DIR = new URL('world/ontology/state-owners.d/', REPO);
+const MERGED_OWNERS = mergeOwners(
+  { file: 'state-owners.json', doc: JSON.parse(MAIN_OWNERS_TEXT) },
+  readdirSync(SHARD_DIR).filter((f) => f.endsWith('.json')).sort()
+    .map((f) => ({ file: f, doc: JSON.parse(readFileSync(new URL(f, SHARD_DIR), 'utf8')) })),
+).doc;
 // 探针分片：只含一条 rxNamespaces（只增内容、不被任何规则引用）。
 const PROBE_SHARD = JSON.stringify({ rxNamespaces: [{ ns: 'zz.probe', type: 'number', entry: '探针', shape: '无', volume: '卷二:57' }] });
 const SHARD_REL = 'world/ontology/state-owners.d/body.json';
@@ -28,7 +37,7 @@ test('E-1 真实 init 起局：engine.dataPacksDigest 与「owners 换成主文�
     const plugin = await import(new URL('server-plugin/index.mjs', REPO).href);
     const world = await plugin.init(express.Router(), { saveRoot: root });
     const { engine } = world;
-    const recomputed = dataPacksDigestOf(engine, { ...engine.docData, owners: JSON.parse(MAIN_OWNERS_TEXT) });
+    const recomputed = dataPacksDigestOf(engine, { ...engine.docData, owners: MERGED_OWNERS });
     assert.equal(engine.dataPacksDigest, recomputed);
   } finally {
     removeTempRoot(root);

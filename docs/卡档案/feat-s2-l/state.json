@@ -1,0 +1,42 @@
+{
+  "card": "feat-s2-l",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-27T05:43:11.717Z",
+  "branches": {
+    "code": "feat/s2-l",
+    "test": "test/s2-l"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s2l",
+        "session": "ctx_9c116da02813",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s2l",
+        "session": "ctx_cd2b7459c155",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet（s2l）与出题 Haiku（ts-s2l）并行；写码交付后出题合入实现跑全量，再派 Opus 审卡；合入后主会话5换班"
+}

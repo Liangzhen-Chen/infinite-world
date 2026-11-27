@@ -1,2 +1,2 @@
-import * as L from '../../kernel/ledger.mjs';
+import * as L from '../../rules/economy/ledger.mjs';
 export const f = (s) => L.transfer(s, []);

@@ -21,7 +21,8 @@ test('N-1 init 装配的终止清理、终止发起方、建档实例化登记�
     const { engine } = await plugin.init(express.Router(), { saveRoot });
     assert.deepEqual(engine.terminationCleanups.map((x) => x.handlerRef), ['rules/body/death.mjs#settleBody']);
     assert.deepEqual(engine.terminationTriggers.map((x) => x.handlerRef), ['rules/body/death.mjs#dieByDestroy']);
-    assert.deepEqual(engine.instantiators.map((x) => x.handlerRef), ['rules/body/person.mjs#instantiatePerson']);
+    // S2-L 合入后前提改：建档实例化序列在改前只有 person；S2-L 按 sortKey 追加经济域 endow（开局给钱，卷六:291 / S2-L 草案 §5），身体域的 person 仍在前。
+    assert.deepEqual(engine.instantiators.map((x) => x.handlerRef), ['rules/body/person.mjs#instantiatePerson', 'rules/economy/endow.mjs#endowFromOrigin']);
     assert.deepEqual(engine.advanceHooks, []);
   } finally {
     removeTempRoot(saveRoot);

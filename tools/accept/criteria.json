@@ -1065,10 +1065,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 39
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 40
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 39,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 40,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -1312,10 +1316,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 9
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 10
     }
    ],
-   "print": "896e80c2741b5b0c44eb8718b715ef1285fd77655b93826d32996c108568ecab",
-   "rev": 9,
+   "print": "e728e92227b8f3a4ea6baa22c0f733c5af7a6dfa7a598b573d19292efe675b3e",
+   "rev": 10,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -1367,10 +1375,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 3
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "757a90ab7ed428971703fa92e21bd5e61e4e98528e60780f763023e87c0d2a96",
-   "rev": 3,
+   "print": "bc8e1bc9b35bbc0969ef71a0782f1b48641033c2596bf577a340c6d340ffcad0",
+   "rev": 4,
    "scanClass": "digest_read",
    "source": "卷十二 §2.4 :255（digest_read 摘要读取，检测器 import_edge、call_edge、path_access）、:276（卷二十七 S27-8）；S12-3 全卷登记卡新登类别，只挂 registered 条目，未实现",
    "terms": {
@@ -1542,10 +1554,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 39
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 40
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 39,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 40,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -2033,10 +2049,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 110
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 111
     }
    ],
-   "print": "a22ad18dd0fca24f871b3e8a8e1b2ee5ae3caab0ae871f9f17531f8ceee82f4d",
-   "rev": 110,
+   "print": "fb93f4f369dc4c8d67248e2e28b62d320114245efa1eb24b01fa25804c8c2bb7",
+   "rev": 111,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -2207,10 +2227,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 39
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 40
     }
    ],
-   "print": "2092e78966126a6b05db71a4967344556a6f9a4e2fc4b93180cf003e866f5133",
-   "rev": 39,
+   "print": "34ba77a6f7d33a49f0c4a952cd1568db1d8499a0a2a95a9f1cc3aa96ee92d73c",
+   "rev": 40,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -2549,10 +2573,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 40
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 41
     }
    ],
-   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
-   "rev": 40,
+   "print": "5c1bf36ba3f653c9e2201ecbfcac09db8decd06bf3252a81032a36cf0e6c12af",
+   "rev": 41,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2668,10 +2696,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 25,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 26,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -2854,10 +2886,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 27
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 26,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 27,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -3619,10 +3655,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 40
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 41
     }
    ],
-   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
-   "rev": 40,
+   "print": "5c1bf36ba3f653c9e2201ecbfcac09db8decd06bf3252a81032a36cf0e6c12af",
+   "rev": 41,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -5338,10 +5378,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 27
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 26,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 27,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -5998,10 +6042,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 57
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 58
     }
    ],
-   "print": "757a90ab7ed428971703fa92e21bd5e61e4e98528e60780f763023e87c0d2a96",
-   "rev": 57,
+   "print": "bc8e1bc9b35bbc0969ef71a0782f1b48641033c2596bf577a340c6d340ffcad0",
+   "rev": 58,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -7212,10 +7260,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 98
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 99
     }
    ],
-   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
-   "rev": 98,
+   "print": "859f4160ab8af9a2861157112fb34248de2e2c99d40e30bcd7673930008ac0f1",
+   "rev": 99,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -8102,10 +8154,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 33
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 34
     }
    ],
-   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
-   "rev": 33,
+   "print": "859f4160ab8af9a2861157112fb34248de2e2c99d40e30bcd7673930008ac0f1",
+   "rev": 34,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -9000,10 +9056,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 22
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 21,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 22,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -9763,10 +9823,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 25,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 26,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -11558,10 +11622,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 32
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 33
     }
    ],
-   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
-   "rev": 32,
+   "print": "859f4160ab8af9a2861157112fb34248de2e2c99d40e30bcd7673930008ac0f1",
+   "rev": 33,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -12398,10 +12466,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 125
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 126
     }
    ],
-   "print": "89d6b9f2a8d6ad99ff2b943ed8012ecf8efe87906e8ba0bf448cd99193aa0630",
-   "rev": 125,
+   "print": "c7aca896d9896b49eb86c55531bfa72d71d6ed3022e4c42af1f434843a2d08ce",
+   "rev": 126,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -12595,10 +12667,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 45
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 46
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 45,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 46,
    "scanClass": "rng_bypass",
    "terms": {
     "vol17.S17-5": {
@@ -13749,10 +13825,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 24
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 25
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 24,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 25,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -14202,10 +14282,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 39
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 40
     }
    ],
-   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
-   "rev": 39,
+   "print": "5c1bf36ba3f653c9e2201ecbfcac09db8decd06bf3252a81032a36cf0e6c12af",
+   "rev": 40,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -14665,10 +14749,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 25,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 26,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -14736,10 +14824,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 13
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
-   "rev": 13,
+   "print": "5c1bf36ba3f653c9e2201ecbfcac09db8decd06bf3252a81032a36cf0e6c12af",
+   "rev": 14,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -15154,10 +15246,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 100
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 101
     }
    ],
-   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
-   "rev": 100,
+   "print": "859f4160ab8af9a2861157112fb34248de2e2c99d40e30bcd7673930008ac0f1",
+   "rev": 101,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -15281,10 +15377,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
-   "rev": 25,
+   "print": "645a45a31aeb260e2ea05207ea76cc7e58baa52c3dcd40074c926d801c0c25cc",
+   "rev": 26,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -15467,10 +15567,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 42
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 43
     }
    ],
-   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
-   "rev": 42,
+   "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
+   "rev": 43,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -15784,10 +15888,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 71
+    },
+    {
+     "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
+     "rev": 72
     }
    ],
-   "print": "b6a85589de2461298e7a241cad3b45ae5926b03e0cf0791e551952c74e491556",
-   "rev": 71,
+   "print": "40e61e197ac9dbba166379e9bbf519482edcd3e95de446ea80bb9d9f52909921",
+   "rev": 72,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

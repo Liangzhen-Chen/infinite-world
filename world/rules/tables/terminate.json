@@ -22,10 +22,10 @@
   },
   {
    "key": "protocolKeys",
-   "value": ["holdings", "modifiers", "statuses", "stockLots", "terminated"],
+   "value": ["accounts", "holdings", "modifiers", "statuses", "stockLots", "terminated"],
    "source": "卷二 §2.6 :562（覆盖核对：属于协议自己处置的键——账户、stockLots、holdings、statuses、modifiers、terminated、到期堆——不要求登记去留）",
    "grade": "designed",
-   "basis": "照 :562 原列举收顶层键名；账户与到期堆卷文未给顶层键名，等账本（S2-L）与到期堆（S2-D）卡登记状态键时加行"
+   "basis": "照 :562 原列举收顶层键名；账户与到期堆卷文未给顶层键名，等账本（S2-L）与到期堆（S2-D）卡登记状态键时加行；accounts 由 S2-L 加（账本余额顶层键，卷六 §4.1.1；分流归 S2-0c 第 3 步）"
   },
   {
    "key": "unbuilt",

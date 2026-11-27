@@ -1,6 +1,27 @@
 {
  "rows": [
   {
+   "key": "primitiveReason",
+   "value": "verb_transfer",
+   "source": "卷九 :629 原语 transfer（账本转移）；卷六 §3.2 :290 transfer 的 reason 是 verb 代号",
+   "grade": "designed",
+   "basis": "原语提案不带事由，transfer 原语写者以本行作 post 的 reason（S2-L 主会话 Q6 乙：_vocab verb 族新加 verb_transfer）"
+  },
+  {
+   "key": "endowment",
+   "value": {"source": "src_genesis", "purpose": "purpose_general", "reason": "verb_grant", "originDimension": "origin", "moneyField": "startingMoney", "coinField": "startingCoin"},
+   "source": "卷四 G-5（出身给予经账本）；卷六 §4.22 规则 3 :1260（开局 src_genesis 只在第 0 日）；卷六 §2.2 purpose 族",
+   "grade": "designed",
+   "basis": "开局随身钱入账（S2-L 草案 §5）：新个体 origin 维度所指出身条目的 moneyField 枚数、coinField 钱种，经 post 以 source 来源入 purpose 分区新批次，事由 reason。purpose_general 取缺省分区（spendable 真）；verb_grant 是现有给予动词；字段名照 _vocab origin 条目（startingCoin 为 Q1 甲新栏）"
+  },
+  {
+   "key": "account",
+   "value": {"sep": "/", "lotPrefix": "lot_", "holderFlag": "ledgerHolder"},
+   "source": "卷六 §2.1 :103–:104（账户 holder、resource{kind, key}、purpose）；卷三乙 §2.3（散货批次键 lot_＋全局递增序号）；卷六 :1642 E-LEDGER-HOLDER-NOT-SUBJECT 与卷二 §5.6 ledgerHolder 标记",
+   "grade": "designed",
+   "basis": "原语目录 account 参数是串（kernel/transaction.mjs PARAM_TYPES account: string），账户串文法 <持有人><sep><用途><sep><资源种类><sep><资源键>（S2-L 主会话 Q5 甲）；sep 取 /（代号文法 ^[a-z][a-z0-9_]* 不含它）；散货批次键前缀 lot_ 照卷三乙 §2.3（S2-L 主会话 Q4 甲）；holderFlag 是持有人主体标记维度名：持有人所在表声明了这一维度的（现只 place），该行此维度须为真才可开户（卷六 :103、:1642），未声明的表（person、org）按种类即主体；持有人种类取 state-owners keyKinds 的 accounts.* 段"
+  },
+  {
    "key": "budget",
    "value": {
     "res_building_share": {
@@ -8,11 +29,20 @@
     },
     "res_unmaterialized_share": {
      "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
+    },
+    "res_coin_civic": {
+     "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
+    },
+    "res_coin_coast": {
+     "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
+    },
+    "res_coin_wrap": {
+     "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
     }
    },
    "source": "卷六 §2.5 :224（budget）；§4.22.1 :1239、§4.22 规则 3 :1260（src_genesis 只在第 0 日）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40 裁定（卷六勘误另卡）",
    "grade": "designed",
-   "basis": "只登限额通道 src_genesis（§4.22 规则 2 :1259 限额通道只 src_genesis、src_boundary；边界供货限额不在本表，§4.1 规则 6 :376）；窗口 [0,0] 即第 0 日之后不可用；窗口内 limit 空 = 不限（:224），第 0 日开局量全书无数，待整体经济验收标定"
+   "basis": "只登限额通道 src_genesis（§4.22 规则 2 :1259 限额通道只 src_genesis、src_boundary；边界供货限额不在本表，§4.1 规则 6 :376）；窗口 [0,0] 即第 0 日之后不可用；窗口内 limit 空 = 不限（:224），第 0 日开局量全书无数，待整体经济验收标定。三种钱 res_coin_civic、res_coin_coast、res_coin_wrap 的 src_genesis 窗口 [0,0]（S2-L 主会话 Q9 甲：开局随身钱经账本入账，资源行 sources 已含 src_genesis；不设隐式缺省窗口，R10-12.5）"
   },
   {
    "key": "alert",

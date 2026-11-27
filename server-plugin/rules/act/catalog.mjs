@@ -141,10 +141,13 @@ const OUTPUT_KINDS = Object.freeze({
 
 /**
  * 动作目录加载（卷九 §2.2 校验句；草案 §2、§6 第 12 条）。
- * @param world 装配期已有的登记 registry、世界数据副本 docData、词表 vocab 与原语目录 primitives（Map）
+ * @param world 装配期已有的登记 registry、世界数据副本 docData、词表 vocab、原语目录 primitives（Map）与规则层原语写者 primitiveWriters（Map，可缺；S2-L R0）
  */
 export function loadActions(world) {
   const { registry, docData, vocab, primitives } = world;
+  // 动作可达的原语有无处理函数：内核内置表（handlesOp）或规则层原语写者（S2-L 草案 §3 R0）。
+  const writers = world.primitiveWriters instanceof Map ? world.primitiveWriters : new Map();
+  const handled = (/** @type {string} */ op) => handlesOp(op) || writers.has(op);
   const families = isObj(vocab) && isObj(vocab.families) ? vocab.families : {};
   const vocabIndex = new Map();
   for (const [family, rec] of Object.entries(families)) {
@@ -167,7 +170,7 @@ export function loadActions(world) {
     return new Map(Object.entries(doc && isObj(doc.dimensions) ? doc.dimensions : {}));
   };
   const ctx = {
-    registry, primitives, compile,
+    registry, primitives, compile, handled,
     // 对象筛选（卷九 §2.1 target_filter）：按候选所在表的维度编译，同一筛选用在不同表各编一次。
     filterTree(code, kind, at) {
       const entry = entriesOf(FAM.filter)[code];
@@ -253,7 +256,7 @@ function loadRow(ctx, id, row, entriesOf, effectFamilies) {
       if (dom === null || typeof v !== 'number' || (dom[0] !== null && v < dom[0]) || (dom[1] !== null && v > dom[1])) throw new KernelError('E-EFF-PARAM', {}, `action ${id}: ${call.family}.${p} not declared or out of domain`);
     }
     // 动作可达的原语都须有处理函数（草案 §2.2），否则菜单里会出现点了必拒的动作。
-    for (const out of fam.outputs) if (!handlesOp(out.op)) throw rowErr(id, `${call.family} outputs ${out.op}, which has no handler`);
+    for (const out of fam.outputs) if (!ctx.handled(out.op)) throw rowErr(id, `${call.family} outputs ${out.op}, which has no handler`);
     return Object.freeze({ family: call.family, params: Object.freeze({ ...call.params }) });
   });
   return Object.freeze({ id, cls: row.class, slots: Object.freeze(slots), when, calls: Object.freeze(calls), group: row.menu.group, order: row.menu.order });
