@@ -1,6 +1,7 @@
-// S2-T1 单测：日历模块（systemTimeView、calendarView 往返与单调、dayPartOf、astroView.solarPhase 有理数）、季节与节气（seasonAt 对相位、solarTermAt 半球归一）、
-// 不兜底（无文化表、无纬度、无单元时 null 加缺口）、nowOf 形状、读取时刻无关、菜单 view 带 now。写码方自补，不作验收依据。
-// 期望值按卷二十公式（:584–:586、:689–:691）在测试里从世界数据手算；不抄仓库读数。世界数据只在测试副本里改（半球一条改 latitudeOriginDeg 的符号），不造文化行、不造单元。
+// S2-T1 单测：日历模块（systemTimeView、calendarView 往返与单调、dayPartOf、astroView.solarPhase 有理数）、季节与节气（seasonAt 对相位、S2-T1b 单元本地相位与方案）、
+// 不兜底（无文化表、单元缺偏移或方案、无单元时 null 加缺口）、单元内无足迹的区域地点可求、nowOf 形状、读取时刻无关、菜单 view 带 now。写码方自补，不作验收依据。
+// 期望值按卷二十公式（:584–:586、:689–:691，S2-T1b 勘误：本地相位 = 世界相位 + 单元 phaseOffset 取小数）在测试里从世界数据手算；不抄仓库读数。
+// 世界数据只在测试副本里改（第 6 例给另两个已挂单元类的地点行填偏移与方案、加一套测试节气方案行），不造文化行，不进真仓库世界。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -13,7 +14,7 @@ import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { controlledEntities } from '../../server-plugin/rules/social/control.mjs';
 import { canonical } from '../../server-plugin/kernel/storage.mjs';
 import { systemTimeView, calendarFrom, calendarDayIndex, calendarView, dayPartOf, astroView } from '../../server-plugin/rules/time_env/calendar.mjs';
-import { latitudeOf, normalizedPhase, seasonAt, solarTermAt, cellOf } from '../../server-plugin/rules/time_env/season.mjs';
+import { localPhase, seasonAt, solarTermAt, cellOf } from '../../server-plugin/rules/time_env/season.mjs';
 import { envAt, nowOf } from '../../server-plugin/rules/time_env/env.mjs';
 
 const W = new URL('../../world/', import.meta.url);
@@ -61,14 +62,14 @@ const PER_DAY = unitSiOf('day') / unitSiOf('minute');
 const families = RAW.vocabDoc.families;
 const calendars = Object.keys(families.calendar.entries).sort();
 const gcd = (a, b) => (b === 0n ? a : gcd(b, a % b));
-// 太阳相位 frac((m − epoch) × yearDen ÷ (yearNum × 一日分钟))，约分；southern 为真时加二分之一。
-function phaseOf(m, southern = false) {
+// 太阳相位 frac((m − epoch) × yearDen ÷ (yearNum × 一日分钟))，约分；half 为真时加二分之一（偏移 1/2 的单元）。
+function phaseOf(m, half = false) {
   const y = ruleOf(RAW, 'astro', 'yearDays');
   const epoch = BigInt(ruleOf(RAW, 'astro', 'phaseEpochMinute'));
   let den = BigInt(y.num) * BigInt(PER_DAY);
   let num = ((BigInt(m) - epoch) * BigInt(y.den)) % den;
   if (num < 0n) num += den;
-  if (southern) { num = (num + num + den) % (den + den); den += den; }
+  if (half) { num = (num + num + den) % (den + den); den += den; }
   const g = gcd(num, den) || 1n;
   return { num: num / g, den: den / g };
 }
@@ -178,35 +179,62 @@ test('5 seasonAt 对相位：起始建筑沿包含链取天气单元；每一日
   assert.deepEqual([...seen].sort(), Object.keys(families.season.entries).filter((k) => families.season.entries[k].scheme === scheme).sort());
 });
 
-test('6 solarTermAt 半球归一：北半球取原相位、走满一年 24 行都出现；测试副本把纬度原点取负（建筑落到南半球）后同一时刻的节气 = 原相位加二分之一所在的行', () => {
+test('6 单元本地节律（S2-T1b）：起始单元走满一年本方案节气都出现；测试副本另一单元 phaseOffset 差 1/2 时同一时刻季节、节气相反；termScheme 不同时节气取该方案的行、与起始单元不同', () => {
   const g = mountKernel(clone(RAW), caps('s2t1-term-'));
   choose(g);
   const place = g.menu(null).here.place;
-  assert.ok(latitudeOf(g.engine, g.state, place).value > 0);
+  const home = cellOf(g.engine, place);
+  const homeRow = g.engine.registry.tables.get('place').rows[home];
   const terms = families.solar_term.entries;
+  const ofScheme = (sch) => Object.keys(terms).filter((k) => terms[k].scheme === sch);
   const seen = new Set();
   for (let d = 0; d < 370; d += 1) {
     const t = solarTermAt(g.engine, g.state, place, d * PER_DAY + 30);
     assert.ok(inRow(phaseOf(d * PER_DAY), terms[t.value]));
+    assert.equal(terms[t.value].scheme, homeRow.termScheme);
     seen.add(t.value);
   }
-  assert.equal(seen.size, Object.keys(terms).length);
+  assert.deepEqual([...seen].sort(), ofScheme(homeRow.termScheme).sort());
+  // 测试副本：另取两个挂单元类、不在起始地点链上的地点行 A、B；A 偏移 1/2、方案同起始单元；B 偏移 0、节气指一套测试方案（两行各占半年）。
   const raw = clone(RAW);
-  const row = raw.tableDocs.astro.rows.find((r) => r.key === 'latitudeOriginDeg');
-  row.value = -row.value;
+  const pdoc = raw.dimensionDocs.find((d) => d.kind === 'place');
+  const cls = ruleOf(RAW, 'season', 'cellClass');
+  const chain = g.menu(null).here.chain;
+  const [a, b] = Object.keys(pdoc.rows).filter((k) => (pdoc.rows[k].classes || []).includes(cls) && !chain.includes(k)).sort();
+  Object.assign(pdoc.rows[a], { phaseOffset: { num: 1, den: 2 }, seasonScheme: homeRow.seasonScheme, termScheme: homeRow.termScheme });
+  const fam = raw.vocabDoc.families;
+  const tsch = `${fam.term_scheme.prefix}t1b_test`;
+  fam.term_scheme.entries[tsch] = { basis: 'test' };
+  const halves = [[0, 1], [1, 2]].map(([from, to], i) => [`${fam.solar_term.prefix}t1b_test_${i}`, { basis: 'test', scheme: tsch, order: i, phaseFrom: { num: from, den: 2 }, phaseTo: { num: to, den: 2 } }]);
+  Object.assign(fam.solar_term.entries, Object.fromEntries(halves));
+  Object.assign(pdoc.rows[b], { phaseOffset: { num: 0, den: 1 }, seasonScheme: homeRow.seasonScheme, termScheme: tsch });
   const s = mountKernel(raw, caps('s2t1-term2-'));
   choose(s);
-  const sp = s.menu(null).here.place;
-  assert.ok(latitudeOf(s.engine, s.state, sp).value < 0);
+  const seasons = families.season.entries;
+  const nSeason = Object.keys(seasons).filter((k) => seasons[k].scheme === homeRow.seasonScheme).length;
+  const nTerm = ofScheme(homeRow.termScheme).length;
   for (const d of [0, 45, 91, 180, 270]) {
-    const t = solarTermAt(s.engine, s.state, sp, d * PER_DAY);
-    assert.ok(inRow(phaseOf(d * PER_DAY, true), terms[t.value]), `south day ${d}`);
-    const north = solarTermAt(g.engine, g.state, place, d * PER_DAY).value;
-    assert.equal((terms[t.value].order - terms[north].order + 24) % 24, Object.keys(terms).length / 2);
+    const m = d * PER_DAY;
+    const pa = localPhase(s.engine, s.state, a, m).value;
+    const want = phaseOf(m, true);
+    assert.deepEqual([BigInt(pa.num), BigInt(pa.den)], [want.num, want.den]);
+    const homeSea = seasonAt(s.engine, s.state, place, m).value.season;
+    const aSea = seasonAt(s.engine, s.state, a, m).value.season;
+    assert.ok(inRow(phaseOf(m, true), seasons[aSea]), `A season day ${d}`);
+    assert.equal((seasons[aSea].order - seasons[homeSea].order + nSeason) % nSeason, nSeason / 2);
+    const homeT = solarTermAt(s.engine, s.state, place, m).value;
+    const aT = solarTermAt(s.engine, s.state, a, m).value;
+    assert.ok(inRow(phaseOf(m, true), terms[aT]), `A term day ${d}`);
+    assert.equal((terms[aT].order - terms[homeT].order + nTerm) % nTerm, nTerm / 2);
+    const bT = solarTermAt(s.engine, s.state, b, m).value;
+    assert.equal(fam.solar_term.entries[bT].scheme, tsch);
+    assert.ok(inRow(phaseOf(m), fam.solar_term.entries[bT]), `B term day ${d}`);
+    assert.notEqual(bT, homeT);
+    assert.equal(fam.solar_term.entries[homeT].scheme, homeRow.termScheme);
   }
 });
 
-test('7 不兜底：文化表未建 → calendarFrom 为 null、now.calendar 与 dayPart 为 null 且 gaps 含 calendar_from；区域地点无足迹 → 纬度、相位、季节、节气未知带缺口；没有单元 → weather_cell；地点未知整组未知', () => {
+test('7 无足迹区域地点与不兜底：单元内的区域地点（单元本身、挂在单元下的子地点）可求本地相位、季节、节气；文化表未建 → calendarFrom 为 null、gaps 含 calendar_from；单元缺偏移与方案 → phase_offset、season_scheme、term_scheme；没有单元 → weather_cell；地点未知整组未知', () => {
   const g = mountKernel(clone(RAW), caps('s2t1-gap-'));
   const me = choose(g);
   assert.equal(calendarFrom(g.engine, g.state, me), null);
@@ -218,14 +246,36 @@ test('7 不兜底：文化表未建 → calendarFrom 为 null、now.calendar 与
   assert.ok(now.gaps.includes('weather_unbuilt'));
   const chain = g.menu(null).here.chain;
   const cell = cellOf(g.engine, chain[0]);
-  for (const f of [latitudeOf(g.engine, g.state, cell), normalizedPhase(g.engine, g.state, cell, 0), seasonAt(g.engine, g.state, cell, 0), solarTermAt(g.engine, g.state, cell, 0)]) {
-    assert.equal(f.known, false);
-    assert.equal(f.value, null);
-    assert.ok(f.gaps.includes('latitude_deg'));
+  const rows = g.engine.registry.tables.get('place').rows;
+  const child = Object.keys(rows).sort().find((k) => rows[k].parent === cell && !chain.includes(k));
+  const dayStart = PER_DAY * 100;
+  const m = dayStart + 300;
+  for (const p of [cell, child]) {
+    assert.equal(cellOf(g.engine, p), cell);
+    const ph = localPhase(g.engine, g.state, p, m);
+    assert.equal(ph.known, true, p);
+    const want = phaseOf(m);
+    assert.deepEqual([BigInt(ph.value.num), BigInt(ph.value.den)], [want.num, want.den]);
+    const sea = seasonAt(g.engine, g.state, p, m);
+    assert.equal(sea.known, true, p);
+    assert.ok(inRow(phaseOf(dayStart), families.season.entries[sea.value.season]));
+    const t = solarTermAt(g.engine, g.state, p, m);
+    assert.equal(t.known, true, p);
+    assert.ok(inRow(phaseOf(dayStart), families.solar_term.entries[t.value]));
+    assert.deepEqual(envAt(g.engine, g.state, p, m)['env.season'].value, sea.value);
   }
+  const cls = ruleOf(RAW, 'season', 'cellClass');
+  const bare = Object.keys(rows).sort().find((k) => (rows[k].classes || []).includes(cls) && !['phaseOffset', 'seasonScheme', 'termScheme'].some((d) => Object.hasOwn(rows[k], d)));
+  assert.deepEqual([...localPhase(g.engine, g.state, bare, 0).gaps], ['phase_offset']);
+  assert.deepEqual([...seasonAt(g.engine, g.state, bare, 0).gaps], ['season_scheme']);
+  assert.deepEqual([...solarTermAt(g.engine, g.state, bare, 0).gaps], ['term_scheme']);
   const root = chain[chain.length - 1];
   assert.equal(cellOf(g.engine, root), null);
-  assert.deepEqual([...seasonAt(g.engine, g.state, root, 0).gaps], ['weather_cell']);
+  for (const f of [localPhase(g.engine, g.state, root, 0), seasonAt(g.engine, g.state, root, 0), solarTermAt(g.engine, g.state, root, 0)]) {
+    assert.equal(f.known, false);
+    assert.equal(f.value, null);
+    assert.deepEqual([...f.gaps], ['weather_cell']);
+  }
   const far = envAt(g.engine, g.state, { w: 0, x: 987654321, y: 987654321, z: 0, coarse: true }, 0);
   for (const k of Object.keys(far)) assert.equal(far[k].known, false);
 });
