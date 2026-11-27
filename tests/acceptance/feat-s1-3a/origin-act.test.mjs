@@ -118,9 +118,13 @@ test('1. 来历行齐全：菜单选来历的候选 = person 表中的来历行�
   assert.equal(ids.length, CULTURES.length * PER_CULTURE);
 
   const { world } = await fresh();
+  // 数据门（S1-3c 草案 §3）：来历模板行的 species 须是物种表里的行才进候选；无物种行的来历（非人来历）被隐藏。开关开的行均照常入列。
+  const SPECIES_ROWS = loadJson(join(WORLD, 'ontology/dimensions/species.json')).rows;
+  const gated = ids.filter((id) => typeof PERSON_ROWS[id].species === 'string' && Object.hasOwn(SPECIES_ROWS, PERSON_ROWS[id].species));
+  assert.ok(gated.length > 0, '物种门后应仍有来历候选');
   const offered = candidatesOf(world, 'act_choose_origin', 'origin');
-  assert.equal(offered.length, ids.length, '来历候选数应等于数据行数');
-  assert.deepEqual([...offered].sort(), [...ids].sort(), '来历候选集应与 person 表来历行逐个相等');
+  assert.equal(offered.length, gated.length, '来历候选数应等于通过数据门的行数');
+  assert.deepEqual([...offered].sort(), [...gated].sort(), '来历候选集应与通过数据门的 person 来历行逐个相等');
 });
 
 test('2. 选来历后化身存在、birthplace 指向所选的开放地点（候选编号经 act 提交）', async () => {
