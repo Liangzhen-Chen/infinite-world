@@ -2,7 +2,9 @@
  "kernelApi": {
   "exports": [
    {"export": "rules/time_env/env.mjs#nowOf", "callerFiles": ["rules/act/catalog.mjs"], "acceptsState": true},
-   {"export": "rules/time_env/env.mjs#envAt", "callers": ["rules"], "acceptsState": true}
+   {"export": "rules/time_env/env.mjs#envAt", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/time_env/weather.mjs#weatherAt", "callerFiles": ["rules/time_env/env.mjs"], "acceptsState": true},
+   {"export": "rules/time_env/weather.mjs#compileWeather", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false}
   ]
  }
 }
