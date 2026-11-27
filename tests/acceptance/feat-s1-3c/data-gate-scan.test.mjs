@@ -9,6 +9,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
@@ -58,7 +59,7 @@ function mjsUnder(/** @type {string} */ dir, /** @type {string} */ rel = '') {
 test('7. 数据门：模板行无 species、或所指物种行不存在的来历，不出现在开局候选里；其余候选不变', async () => {
   const baseRoot = testTempRoot('s13c-gate-base-');
   roots.push(baseRoot);
-  const base = await init({ saveRoot: baseRoot });
+  const base = await init(express.Router(), { saveRoot: baseRoot });
   const baseOffered = candidatesOf(base, 'origin');
   assert.ok(baseOffered.length >= 3, '基线候选应至少三条，才能改写其中两条验证');
   const [noSpecies, badSpecies] = [baseOffered[0], baseOffered[1]];
@@ -74,7 +75,7 @@ test('7. 数据门：模板行无 species、或所指物种行不存在的来历
   writeUnderTempRoot(root, rel, JSON.stringify(doc, null, 2));
 
   const { init: initCopy } = await import(pathToFileURL(join(root, 'server-plugin/index.mjs')).href);
-  const world = await initCopy({ saveRoot: root });
+  const world = await initCopy(express.Router(), { saveRoot: root });
   const offered = candidatesOf(world, 'origin');
   assert.equal(offered.includes(noSpecies), false, '模板行无 species 的来历不应出现在候选');
   assert.equal(offered.includes(badSpecies), false, '所指物种行不存在的来历不应出现在候选');

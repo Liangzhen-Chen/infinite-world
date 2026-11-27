@@ -4,6 +4,7 @@
 // :740（复演逐条比对 E-REPLAY-DIVERGE）、:742（外来输入只有 command/advance，条目先单独提交）；卷二:545（被拒请求留在输入序列）。
 // 不写死实体 kind、维度名、步长、槽位数：kind 与维度从 world/ontology/dimensions/*.json 读；步长与槽位数从 world/rules/tables/host.json 读。
 // 存档文件名不写死：清单与片按内容识别（见 readManifests / shardFiles）；save-layout.json 的 files 行只断言其存在。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -197,7 +198,7 @@ test('0. save-layout.json 登有 files 行（存档目录布局名不写死在�
 
 test('①存读恒等：fact.set 与 time 提案后 saveSlot→loadSlot→replay_apply，saveDigest 与 clock.minute 相等', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     await seedWorld(env);
     const r = await env.submitProposal({ effects: [{ op: 'time', minutes: STEP }] });
     assert.equal(r.ok, true, JSON.stringify(r));
@@ -208,7 +209,7 @@ test('①存读恒等：fact.set 与 time 提案后 saveSlot→loadSlot→replay
 
 test('②日志不在 state：init 后 state 无 log 键；提交后 logBook.entries 增加，state 顶层键集合不变', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     assert.ok(!('log' in env.state), 'state 顶层不应有 log 键（卷二十七:542）');
     const keysBefore = Object.keys(env.state).sort();
     const entriesBefore = env.logBook.entries.length;
@@ -221,7 +222,7 @@ test('②日志不在 state：init 后 state 无 log 键；提交后 logBook.ent
 
 test('③心跳重放：连续 3 次 advance(步长) 后存读复演，时钟 = 起点 + 3×步长，saveDigest 相等', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     const start = env.state.clock.minute;
     for (let i = 0; i < 3; i++) await env.advance(STEP);
     assert.equal(env.state.clock.minute, start + 3 * STEP, '推进后时钟应为起点加 3 倍步长');
@@ -232,7 +233,7 @@ test('③心跳重放：连续 3 次 advance(步长) 后存读复演，时钟 = 
 
 test('④提交后推进不重复记账：time 25 提案的新增条目里 advance 为 0、command 为 1；复演时钟只增 25', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     const start = env.state.clock.minute;
     const before = env.logBook.entries.length;
     const r = await env.submitProposal({ effects: [{ op: 'time', minutes: 25 }] });
@@ -247,7 +248,7 @@ test('④提交后推进不重复记账：time 25 提案的新增条目里 advan
 
 test('⑤被拒请求留在序列：先必被拒的提案再合法提案 → 两条 command；存读复演 saveDigest 相等', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     const before = env.logBook.entries.length;
     const bad = await env.submitProposal({ effects: [{ op: 'time', minutes: -5 }] });
     assert.equal(bad.ok, false, '负分钟 time 提案应被拒');
@@ -262,7 +263,7 @@ test('⑤被拒请求留在序列：先必被拒的提案再合法提案 → 两
 
 test('⑥篡改结果事件：改日志片内容并让片摘要自洽后，replay_apply 或 loadSlot 抛 E-REPLAY-DIVERGE', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     await seedWorld(env);
     const r = await env.submitProposal({ effects: [{ op: 'time', minutes: STEP }] });
     assert.equal(r.ok, true, JSON.stringify(r));
@@ -295,7 +296,7 @@ test('⑥篡改结果事件：改日志片内容并让片摘要自洽后，repla
 
 test('⑦a片损坏回退：存两次，覆写当前清单独有的片使摘要不符 → loadSlot 回退上一清单，复演得前一次存档的 saveDigest', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     await seedWorld(env);
     const first = await saveSlot(env, 0);
     await env.advance(STEP);
@@ -319,14 +320,14 @@ test('⑦a片损坏回退：存两次，覆写当前清单独有的片使摘要�
 
 test('⑦b空槽：从未存过的合法槽位 loadSlot → E-SAVE-EMPTY', () =>
   withRoot(async (root) => {
-    await init({ saveRoot: root });
+    await init(express.Router(), { saveRoot: root });
     await expectCode(() => loadSlot({ slot: 0 }, { saveRoot: root }), 'E-SAVE-EMPTY');
   }));
 
 test('⑧规则指纹不符：改清单 engineRulesDigest 或 dataPacksDigest → loadSlot 抛 E-SAVE-RULES-MISMATCH，目录字节不变', async () => {
   for (const field of ['engineRulesDigest', 'dataPacksDigest']) {
     await withRoot(async (root) => {
-      const env = await init({ saveRoot: root });
+      const env = await init(express.Router(), { saveRoot: root });
       await seedWorld(env);
       await saveSlot(env, 0);
       for (const m of manifestFiles(root)) {
@@ -345,7 +346,7 @@ test('⑧规则指纹不符：改清单 engineRulesDigest 或 dataPacksDigest �
 
 test('⑨槽位越界：saveSlotCount、-1、1.5 → E-SAVE-SLOT-INVALID，目录无新文件', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     const before = allFiles(root);
     for (const slot of [SLOT_COUNT, -1, 1.5]) {
       await expectCode(() => saveSlot(env, slot), 'E-SAVE-SLOT-INVALID');
@@ -355,7 +356,7 @@ test('⑨槽位越界：saveSlotCount、-1、1.5 → E-SAVE-SLOT-INVALID，目�
 
 test('⑩清单键集合恰为八个且无时间戳；同一世界存两次，清单逐字节相同', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     await seedWorld(env);
     const manifest = await saveSlot(env, 0);
     assert.deepEqual(Object.keys(manifest).sort(), MANIFEST_KEYS, '清单键集合应恰为卷二十七:534 所列八个');
@@ -371,7 +372,7 @@ test('⑩清单键集合恰为八个且无时间戳；同一世界存两次，�
 
 test('⑪同一世界连存两次，片文件数不变（写时复制，不新增片）', () =>
   withRoot(async (root) => {
-    const env = await init({ saveRoot: root });
+    const env = await init(express.Router(), { saveRoot: root });
     await seedWorld(env);
     await saveSlot(env, 0);
     const n1 = shardFiles(root).length;

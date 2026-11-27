@@ -10,6 +10,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { runTransaction } from '../../../server-plugin/kernel/transaction.mjs';
 import { canonical } from '../../../server-plugin/kernel/storage.mjs';
@@ -54,7 +55,7 @@ after(() => {
 });
 
 async function bootWorld() {
-  return init({ saveRoot: newRoot() });
+  return init(express.Router(), { saveRoot: newRoot() });
 }
 
 // 经真实 create 提案建一个人物个体（kind=person，模板行取 PERSON_TEMPLATE_ID），返回新实体 id。

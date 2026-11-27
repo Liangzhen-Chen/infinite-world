@@ -7,6 +7,7 @@
 // 不写死表名、id、数值：身体图表与物种表按维度名（tissueFractions；tissues 与 bodyPlan）识别；组织与能力族条目从 world/ontology/dimensions/_vocab.json 读；
 // 物种质量均值从物种行读；期望值按卷文公式从数据算。加载期坏数据与扩展性用例只在内存副本（镜像 index.mjs#readWorld 的 raw 形状）上改，不改 world/。
 // 测试内的探针 id（前缀取自表的 idPrefix + 固定后缀）只用于副本，不是世界数据。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -154,13 +155,13 @@ test('9. 现世界（人 + 第二物种）开局成功，checkBodyPlans 不抛�
   assert.ok(Object.values(PLANS).some((p) => nullKeys(p.tissueFractions).length >= 1), '身体图 tissueFractions 中应有值为 null 的键（第二物种带进的新组织）');
   assert.ok(HUMAN_IDS.length >= 1, '应有含 null 键身体图的人类物种');
   assert.ok(SECOND_IDS.length >= 1, '世界应有第二物种');
-  const env = await init({ saveRoot: newRoot() });
+  const env = await init(express.Router(), { saveRoot: newRoot() });
   const { checkBodyPlans } = await import('../../../server-plugin/rules/body/body-plan.mjs');
   assert.doesNotThrow(() => checkBodyPlans(env.engine));
 });
 
 test('10. 每个物种（人与第二物种）以其为模板的个体：bodyView 的 parts 与 tissues 键集、能力值与结构基值对齐', async () => {
-  const env = await init({ saveRoot: newRoot() });
+  const env = await init(express.Router(), { saveRoot: newRoot() });
   assert.ok(SECOND_IDS.length >= 1, '应有第二物种');
   for (const speciesId of SPECIES_IDS) {
     const plan = planOf(speciesId);
@@ -194,7 +195,7 @@ test('10. 每个物种（人与第二物种）以其为模板的个体：bodyVie
 });
 
 test('11. carcassOf（物种均值路径）：massKg 相等，材料和为 1，键集与逐键值等于删去 null 键后的 D-4 手算', async () => {
-  const env = await init({ saveRoot: newRoot() });
+  const env = await init(express.Router(), { saveRoot: newRoot() });
   for (const speciesId of SPECIES_IDS) {
     const sp = SPECIES[speciesId];
     const massKg = sp.bodyMassKg?.mean;

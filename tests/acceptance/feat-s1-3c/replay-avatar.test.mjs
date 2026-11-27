@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
 
@@ -30,7 +31,7 @@ const avatarIds = (world) =>
 test('8. 复演一致：选来历建化身 → 推进 60 分钟 → 存槽 → 读档 replay_apply，saveDigest 逐字节相同；化身 species、adultMassKg、birthMinute 逐位相同', async () => {
   const root = testTempRoot('s13c-replay-');
   roots.push(root);
-  const world = await init({ saveRoot: root });
+  const world = await init(express.Router(), { saveRoot: root });
 
   const origin = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.origin;
   const place = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.place;

@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
@@ -114,7 +115,7 @@ test('4 非法分布与键成分：sd ≤ 0、未实现种类报 E-DIM-SAMPLE-PA
 
 test('5 真实入口选来历：化身补齐 species、adultMassKg、birthMinute、sex、lifespanYears、attributes；birthMinute = 建行分钟 − 成年下界年龄折分钟', async () => {
   const raw = rawWorld();
-  const g = await init({ saveRoot: testTempRoot('s13c-spawn-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-spawn-') });
   const t0 = clockMinute(g.engine, g.state);
   const id = spawn(g);
   const tpl = docOf(raw, 'person').rows[g.state.created[id].template];
@@ -138,7 +139,7 @@ test('5 真实入口选来历：化身补齐 species、adultMassKg、birthMinute
 
 test('6 已有值不覆盖：create 的 facts 给了 adultMassKg、birthMinute，结果等于所给值；其余仍补齐', async () => {
   const raw = rawWorld();
-  const g = await init({ saveRoot: testTempRoot('s13c-keep-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-keep-') });
   const tpl = Object.keys(docOf(raw, 'person').rows).find((k) => Object.hasOwn(SPECIES, String(docOf(raw, 'person').rows[k].species)));
   const r = g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { adultMassKg: 50, birthMinute: -100 } }] });
   assert.equal(r.ok, true, JSON.stringify(r));
@@ -150,7 +151,7 @@ test('6 已有值不覆盖：create 的 facts 给了 adultMassKg、birthMinute�
 
 test('7 缺 species 整笔拒：以无 species 的模板行 create 人物，E-DIM-UNKNOWN-READ，state 不变；建物品不受影响', async () => {
   const raw = rawWorld();
-  const g = await init({ saveRoot: testTempRoot('s13c-nospecies-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-nospecies-') });
   const rows = docOf(raw, 'person').rows;
   const tpl = Object.keys(rows).find((k) => !Object.hasOwn(rows[k], 'species'));
   assert.ok(tpl, '前提：有未写 species 的模板行');
@@ -195,7 +196,7 @@ test('9 同种子同值、换种子不同；sampleFrom 删一行即不再补那�
 
 test('10 存槽读档复演：化身各补齐维度逐位相同，saveDigest 相同', async () => {
   const dir = testTempRoot('s13c-replay-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   spawn(g);
   const saved = saveSlot(g);
   const r = replay_apply(loadSlot(saved, { saveRoot: dir }));

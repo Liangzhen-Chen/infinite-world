@@ -6,6 +6,7 @@
 // 1p 对齐（卷二:535–536，主会话 11-26 裁定）：readPath(state, path)、writePath(state, path, value, tx)、
 // createEntity(state, id, kind, props, tx)；路径只经 engine.P 构造，不再手写数组路径。
 // 不写死任何实体 id、维度名：全部从 world/ontology/dimensions 真实表读取。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
@@ -31,8 +32,8 @@ function loadTables() {
 }
 
 async function bootEnv() {
-  const booted = await init();
-  assert.ok(booted && booted.engine && booted.state, 'init() 应返回 {engine, state}');
+  const booted = await init(express.Router());
+  assert.ok(booted && booted.engine && booted.state, 'init(express.Router()) 应返回 {engine, state}');
   return { engine: booted.engine, state: booted.state };
 }
 

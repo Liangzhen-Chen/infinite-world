@@ -8,6 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { express } from '../../support/express.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { canonical } from '../../../server-plugin/kernel/storage.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
@@ -71,7 +72,7 @@ const verbEvents = (/** @type {any} */ logBook, /** @type {string} */ verb) =>
  * @param {number[]} segments 推进分钟数序列
  */
 async function digestAfter(root, segments) {
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const id = createIndividual(env);
   assert.equal(destroy(env, id).ok, true, '前提：destroy 应成功');
   for (const m of segments) {
@@ -87,7 +88,7 @@ async function digestAfter(root, segments) {
  * @param {number[]} segments 推进分钟数序列
  */
 async function worldAfter(root, segments) {
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const id = createIndividual(env);
   assert.equal(destroy(env, id).ok, true, '前提：destroy 应成功');
   for (const m of segments) {
@@ -128,7 +129,7 @@ const movedMinutes = (/** @type {any} */ world) =>
 
 test('11a. 复演一致：建鸡→宰杀→推进 60 分钟→存槽→读档 replay_apply，saveDigest 逐字节相同；terminated、尸体、日志簿里的终止事件逐位相同', async () => {
   const root = newRoot();
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const id = createIndividual(env);
   assert.equal(destroy(env, id).ok, true, '前提：destroy 应成功');
   const adv = env.advance(60);

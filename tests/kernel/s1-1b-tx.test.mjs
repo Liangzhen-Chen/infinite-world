@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { init } from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { clockMinute, advance } from '../../server-plugin/kernel/scheduler.mjs';
 import { runTransaction, submitProposal } from '../../server-plugin/kernel/transaction.mjs';
@@ -13,7 +14,7 @@ import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 const logOf = (g) => g.logBook.entries;
 
 test('time 原语：推进 25 分钟按步长 10/10/5 分三步，时钟加 25', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const step = g.engine.host.heartbeatStepMinutes;
   const r = g.submitProposal({ effects: [{ op: 'time', minutes: 2 * step + 5 }] });
   assert.equal(r.ok, true);
@@ -22,7 +23,7 @@ test('time 原语：推进 25 分钟按步长 10/10/5 分三步，时钟加 25',
 });
 
 test('非正整数分钟拒收，时钟不动', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   for (const m of [0, -3, 1.5, '5']) {
     const r = g.submitProposal({ effects: [{ op: 'time', minutes: m }] });
     assert.equal(r.ok, false);
@@ -33,7 +34,7 @@ test('非正整数分钟拒收，时钟不动', async () => {
 });
 
 test('未登记处理函数的原语拒收，不抛出调用方', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const r = g.submitProposal({ effects: [{ op: 'transfer', from: 'a', to: 'b', qty: 1 }, { op: 'no.such.op' }] });
   assert.equal(r.ok, false);
   assert.equal(typeof r.code, 'string');
@@ -41,7 +42,7 @@ test('未登记处理函数的原语拒收，不抛出调用方', async () => {
 });
 
 test('拒写整笔回滚且时钟不动；输入条目仍留在日志', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const before = logOf(g).length;
   const r = g.submitProposal({ effects: [{ op: 'time', minutes: 10 }, { op: 'fact.set', entity: 'nope_missing', field: 'x', value: 1 }] });
   assert.equal(r.ok, false);
@@ -51,7 +52,7 @@ test('拒写整笔回滚且时钟不动；输入条目仍留在日志', async ()
 });
 
 test('runTransaction：抛错整笔撤回并返回 {ok:false}；不嵌套', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const { P } = g.engine;
   const r = runTransaction(g.engine, g.state, (tx) => {
     writePath(g.state, P.clock_minute(), 99, tx);
@@ -64,7 +65,7 @@ test('runTransaction：抛错整笔撤回并返回 {ok:false}；不嵌套', asyn
 });
 
 test('create 与 fact.set：新建实体并写 props，请求编号单调', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const kind = [...g.engine.registry.kindIds.entries()].find(([, rec]) => Array.isArray(rec.idPrefix) && rec.idPrefix.length > 0)?.[0];
   assert.ok(kind, '前提：存在带 id 前缀的种类');
   const r = g.submitProposal({ effects: [{ op: 'create', kind, facts: {} }] });
@@ -89,7 +90,7 @@ const tplCase = (g) => {
 };
 
 test('create 带 template：dim 读到模板实体行的值；facts 覆盖后读到 facts 值', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const c = tplCase(g);
   assert.ok(c, '前提：item 表有带数值维度的实体行');
   const r = g.submitProposal({ effects: [{ op: 'create', kind: 'item', template: c.tid, facts: {} }] });
@@ -105,7 +106,7 @@ test('create 带 template：dim 读到模板实体行的值；facts 覆盖后读
 });
 
 test('create 的 template 指向别的 kind 或不存在即拒收，状态不变', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const other = Object.keys(g.engine.registry.tables.get('material').rows)[0];
   for (const template of [other, 'item_no_such_row']) {
     const r = g.submitProposal({ effects: [{ op: 'create', kind: 'item', template, facts: {} }] });
@@ -149,7 +150,7 @@ test('装配：heartbeatStepMinutes 缺行、0、负数、非整数、非数字�
 });
 
 test('scheduler.advance：步长非正整数即抛，不进循环，时钟不动', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   for (const bad of [0, -1, 1.5, undefined]) {
     const e = { ...g.engine, host: { heartbeatStepMinutes: bad } };
     assert.throws(() => advance(e, g.state, g.logBook, 5), /E-DIM-DOMAIN-RANGE/);
@@ -158,7 +159,7 @@ test('scheduler.advance：步长非正整数即抛，不进循环，时钟不动
 });
 
 test('推进中途某步被拒：先前 ok:true 事件之外，另追加 ok:false 事件，带 code 与已推进分钟', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const e = { ...g.engine, advance: () => ({ ok: false, code: 'E-EFF-PARAM', advancedMinutes: 10 }) };
   const r = submitProposal(e, g.state, g.logBook, { effects: [{ op: 'time', minutes: 25 }] });
   assert.equal(r.ok, false);
