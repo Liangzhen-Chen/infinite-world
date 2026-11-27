@@ -1,0 +1,62 @@
+{
+  "card": "feat-s2-t1",
+  "phase": "pr",
+  "updatedAt": "2026-11-27T14:35:23.828Z",
+  "branches": {
+    "code": "feat/s2-t1",
+    "test": "test/s2-t1",
+    "pr": "feat/s2-t1"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s2t1",
+        "session": "ctx_137a1e597492",
+        "commits": [
+          "167ba4ff8"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s2t1",
+        "session": "ctx_07b90128d3fc",
+        "commits": [
+          "8f48b2141"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s2t1",
+          "session": "ctx_1137ae6b356a",
+          "commits": [
+            "a39ece1d1",
+            "02a7db9f5"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "PR feat/s2-t1→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-t1）；合后删 s2t1、ts-s2t1 工作树目录（不删分支）并报李白提交号；本班合满 3 张，写交接换班；T2 待亮圳 30 郡站点对照"
+}

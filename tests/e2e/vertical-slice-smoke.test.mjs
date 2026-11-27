@@ -120,6 +120,16 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     assert.ok((placeRows[v.json.here?.place]?.classes ?? []).includes(rowOf('gen', 'roleFacility')), 'view.here.place 应是建筑地点行');
     assert.equal(v.json.here.chain[0], v.json.here.place, 'here.chain 应自所在地点起');
     assert.ok(v.json.here.chain.includes(me.birthplace), 'here.chain 应含化身出生地');
+    // S2-T1（草案 §5，主会话 Q9 甲）：view 的此刻 now 只给数与代号——minute 是存档时钟，day、minuteOfDay 按单位表手算，季节与节气是词表条目；不断言具体日期与天气。
+    const now = v.json.now;
+    const unitSi = (id) => dd.unitsDoc.units.find((u) => u.id === id).si;
+    const perDay = unitSi('day') / unitSi('minute');
+    assert.equal(now?.minute, pkg.manifest.clockMinute, 'view.now.minute 应等于存档时钟');
+    assert.deepEqual([now.day, now.minuteOfDay], [Math.floor(now.minute / perDay), now.minute % perDay], 'now.day、minuteOfDay 应按一日分钟手算');
+    assert.ok(Object.hasOwn(dd.vocabDoc.families.season.entries, now.season?.id), 'now.season.id 应是词表族 season 的条目');
+    assert.ok(Object.hasOwn(dd.vocabDoc.families.solar_term.entries, now.solarTerm), 'now.solarTerm 应是词表族 solar_term 的条目');
+    assert.ok(Array.isArray(now.gaps), 'now.gaps 应是缺口代号表');
+    ctx.now1 = now;
     ctx.d1 = pkg.manifest.saveDigest;
     ctx.bytes1 = e1.buf;
     assert.equal(typeof ctx.d1, 'string', '存档清单缺 saveDigest');
@@ -135,10 +145,15 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     assert.equal(s2.json?.result, 'ok', `读档后存槽 2 未 ok：${s2.text}`);
     const e2 = await exportAt(B, 2);
     assert.equal(unpack(e2.buf).manifest.saveDigest, ctx.d1, '读档后立即再存的 saveDigest 应与读档前存档逐字节相同');
+    // S2-T1：此刻是纯派生，复演回到同一时刻后 view.now 与存档前逐字节相同。
+    const vr = await view(B);
+    assert.equal(JSON.stringify(vr.json?.now), JSON.stringify(ctx.now1), '读档复演后 view.now 应与存档前逐字节相同');
 
     const w = await act(B, 'act_wait', {}, { minutes: 10 });
     assert.equal(w.json?.result, 'ok', `读档后 act_wait 10 未 ok（续玩）：${w.text}`);
     assert.equal(w.json.advancedMinutes, 10, '读档后 advancedMinutes 应为 10');
+    const vw = await view(B);
+    assert.equal(vw.json?.now?.minute, ctx.now1.minute + 10, '等待 10 分钟后 view.now.minute 应加 10');
     const s5 = await saveAt(B, 5);
     assert.equal(s5.json?.result, 'ok', `续玩后存槽 5 未 ok：${s5.text}`);
     const e5 = await exportAt(B, 5);

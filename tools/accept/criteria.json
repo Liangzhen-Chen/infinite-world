@@ -8645,7 +8645,7 @@
    }
   },
   {
-   "criterion": "规则层与内核等服务端组里 import（含 export … from）kernel/climate.mjs、kernel/weather.mjs 的温度与天气模型导出（tempAt、dailyMeanTemp、outdoorTemp、groundTemp、indoorTemp、climateTempC、seasonAt、weatherAt、weatherCellOf）计一处；只许 envAt 实现文件（G16 新建，现不存在）与 climate.mjs、weather.mjs 互引（甲 R1 原句）。现有违例进基线，修理合入后清空。局限：import * as 命名空间与动态 import 不认。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "规则层与内核等服务端组里 import（含 export … from）季节与天气模型文件（文件名 season.mjs、weather.mjs，现 rules/time_env/）的温度、季节与天气模型导出（tempAt、dailyMeanTemp、outdoorTemp、groundTemp、indoorTemp、climateTempC、seasonAt、weatherAt、weatherCellOf）计一处；只许 envAt 实现文件 rules/time_env/env.mjs 与 rules/time_env/weather.mjs 引（甲 R1 原句；S2-T1 路径勘误）。现有违例进基线，修理合入后清空。局限：import * as 命名空间与动态 import 不认。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_envat_import（温度、天气模型只经 envAt（甲 R1））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
@@ -8790,10 +8790,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 36
+    },
+    {
+     "ref": "S2-T1（卷二十 :446 路径勘误、主会话 Q6 甲）：L0 已满，日历模块按 R2 落 rules（卷二十:446 路径勘误）；只换路径、严格程度不变、不加通配：exceptFiles kernel/climate.mjs→rules/time_env/env.mjs（envAt 实现文件，季节模型由它引）、kernel/weather.mjs→rules/time_env/weather.mjs；sourceRe 的 climate 换成季节模型新文件名 season（seasonAt 现在 rules/time_env/season.mjs），names 不变",
+     "rev": 37
     }
    ],
    "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
-   "rev": 36,
+   "rev": 37,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -11807,7 +11811,7 @@
    }
   },
   {
-   "criterion": "标识符 yearMinutes 在 kernel/calendar.mjs 与 kernel/climate.mjs 之外出现计一处（甲 R3）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "标识符 yearMinutes 在 rules/time_env/calendar.mjs 与 rules/time_env/season.mjs 之外出现计一处（S2-T1 路径勘误，原 kernel/calendar.mjs、kernel/climate.mjs）（甲 R3）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_year_minutes（年长只经 astroView 换算入口（甲 R3））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
@@ -11952,10 +11956,14 @@
     {
      "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
      "rev": 36
+    },
+    {
+     "ref": "S2-T1（卷二十 :446 路径勘误、主会话 Q6 甲）：L0 已满，日历模块按 R2 落 rules（卷二十:446 路径勘误）；只换路径、严格程度不变、不加通配：exceptFiles kernel/calendar.mjs→rules/time_env/calendar.mjs、kernel/climate.mjs→rules/time_env/season.mjs",
+     "rev": 37
     }
    ],
    "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
-   "rev": 36,
+   "rev": 37,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
