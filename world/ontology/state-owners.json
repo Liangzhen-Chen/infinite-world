@@ -27,7 +27,7 @@
   {"ns": "player.avatarCount","type": "number", "entry": "本局已建的玩家化身个数 = state.created 中以带出身（person.origin 非空，origin 族条目）的实体行为 template 新建的个体数（rules/act/catalog.mjs#avatarsOf 派生，不另存指针；待 S2-H 玩家席位边替换）", "shape": "count", "volume": "S1-3 接口草案（主会话 11-26） §2.1（选来历仅当尚无玩家化身可用）；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 建档流程"},
   {"ns": "actor.isAvatar","type": "boolean", "entry": "本次意图（或菜单投影）的行动者是否为本局玩家化身（同 player.avatarCount 的派生集合）；无行动者为假", "shape": "boolean", "volume": "S1-3 接口草案（主会话 11-26） §2.1（等待仅当已有化身）；主会话 11-26 裁定 world.menu(null) 返回开局菜单"},
   {"ns": "origin.open","type": "boolean", "entry": "被筛的来历模板候选是否开放：该行的出身（person.origin）是 origin 族条目，且条目 gate 为空或所指 rules.playerOrigins 开关为真（对象筛选 tf_player_origin 读它）", "shape": "boolean", "volume": "设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :218–:220、§3.6 :98–:99"},
-  {"ns": "origin.ready","type": "boolean", "entry": "被筛的来历模板候选能否建档：该行 species 可读，且是表头所声明 ref kind 的登记物种行（rules/body/person.mjs#speciesOf，建档补全 instantiatePerson 同一判断；对象筛选 tf_player_origin 读它）", "shape": "boolean", "volume": "S1-3c 草案 §3 未建数据门（主会话 R2）；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :228（species = 文化的物种）"}
+  {"ns": "species.playable","type": "boolean", "entry": "被筛的物种候选是否可扮演：该物种行 classes 含 rules.chargen.playableClass 所指组件类（rules/act/catalog.mjs 读数；对象筛选 tf_playable_species 读它）", "shape": "boolean", "volume": "卷四 docs/统一底层设计/卷四-生物身体与人物.md G-2 :1085、:320、:323；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :217（S1-3d）"}
  ],
  "inputEdge": {"modules": ["server-plugin/input/**/*.mjs"], "process": "server", "outputSchema": "schema:input-edge-v1"},
  "display": {"modules": ["extension/**/*.mjs", "!extension/host/**", "!extension/textcore/**"], "process": "client"},

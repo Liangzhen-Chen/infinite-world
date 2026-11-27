@@ -5,13 +5,13 @@
   "requirement": null,
   "magnitudeRX": null,
   "outputs": [
-   {"kind": "primitive", "op": "create", "idParams": {"kind": "ctx.slotTable.origin"}, "paramsRX": {"template": "slot.origin", "facts.birthplace": "slot.place"}}
+   {"kind": "primitive", "op": "create", "idParams": {"kind": "ctx.slotTable.origin"}, "paramsRX": {"template": "slot.origin", "facts.birthplace": "slot.place", "facts.species": "slot.species"}}
   ],
   "consent": {"mode": "none", "power": null},
   "cost": null,
   "params": {},
   "cooldownDays": 0,
-  "basis": "以来历模板行为 template 建个体，birthplace 写所选地点（卷九 :640 create(kind, facts, template)；S1-3 接口草案（主会话 11-26） §2.1、§2.3：新建时经 create.facts 写 ref）。kind 取槽位 origin 的数据表（卷二 §3.9 :1530 primitive 输出的明文来源 ctx.<字段>），template 与 birthplace 经 paramsRX 读 slot.<槽位>（卷九 §2.2 勘误 1115k4）；数值参数为空，显式声明 {}"
+  "basis": "以来历模板行为 template 建个体，birthplace 写所选地点（卷九 :640 create(kind, facts, template)；S1-3 接口草案（主会话 11-26） §2.1、§2.3：新建时经 create.facts 写 ref）。kind 取槽位 origin 的数据表（卷二 §3.9 :1530 primitive 输出的明文来源 ctx.<字段>），template 与 birthplace 经 paramsRX 读 slot.<槽位>（卷九 §2.2 勘误 1115k4）；species 写所选种族（S1-3d，设计册 14 §4.7 :217、:228）；数值参数为空，显式声明 {}"
  },
  "eff_pass_time": {
   "family": "eff_pass_time",

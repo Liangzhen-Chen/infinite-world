@@ -4,10 +4,6 @@
 // 不 mock，不写死表名、id、数值。
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { express } from '../../support/express.mjs';
 import { init, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
@@ -17,12 +13,10 @@ after(() => {
   for (const r of roots.splice(0)) removeTempRoot(r);
 });
 
-// 化身的 dims：species 不写进 props，经 rec.template 指向的来历行读入（与 kernel readBase 同序）；adultMassKg、birthMinute 写在 props。
-const PERSON_ROWS = JSON.parse(readFileSync(join(fileURLToPath(new URL('../../../world/ontology/dimensions/person.json', import.meta.url))), 'utf8')).rows;
+// 化身的 dims：S1-3d 起 species 为菜单所选，写在化身 props 上；adultMassKg、birthMinute 同在 props。
 const dimsOf = (/** @type {any} */ world, /** @type {string} */ id) => {
   const rec = world.state.created[id];
-  const species = Object.hasOwn(rec.props, 'species') ? rec.props.species : PERSON_ROWS[rec.template].species;
-  return { species, adultMassKg: rec.props.adultMassKg, birthMinute: rec.props.birthMinute };
+  return { species: rec.props.species, adultMassKg: rec.props.adultMassKg, birthMinute: rec.props.birthMinute };
 };
 
 const avatarIds = (world) =>
@@ -35,7 +29,7 @@ test('8. 复演一致：选来历建化身 → 推进 60 分钟 → 存槽 → �
 
   const origin = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.origin;
   const place = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.place;
-  const picked = await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } });
+  const picked = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
   assert.equal(picked.ok === true, true, `选来历应成功：${JSON.stringify(picked)}`);
   assert.ok(origin.length > 0 && place.length > 0, '开局候选不应为空');
 

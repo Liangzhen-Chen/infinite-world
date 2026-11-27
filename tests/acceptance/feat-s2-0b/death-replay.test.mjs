@@ -25,10 +25,10 @@ const DIM_DOCS = readdirSync(DIM_DIR)
   .map((f) => loadJson(join(DIM_DIR, f)));
 const SPECIES_DOC = DIM_DOCS.find((d) => d.kind === 'species');
 const PERSON_DOC = DIM_DOCS.find((d) => d.kind === 'person');
-// 人物模板行：person 表里按排序第一条 species 指向物种表登记行的行（同 death-entry.test.mjs）。
-const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows)
-  .sort()
-  .find((k) => Object.hasOwn(SPECIES_DOC.rows, PERSON_DOC.rows[k].species));
+// 人物模板行：person 表里按排序第一条（S1-3d：来历行不再带 species；同 death-entry.test.mjs）。
+const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows).sort()[0];
+// 有心智物种行：物种表中 classes 含 comp_sapient 的首行（同 death-entry.test.mjs）。species 经 facts 给出。
+const SAPIENT_SPECIES_ID = Object.keys(SPECIES_DOC.rows).find((k) => SPECIES_DOC.rows[k].classes.includes('comp_sapient'));
 const UNITS = loadJson(join(DIM_DIR, '_units.json')).units;
 const HOST = rowsOf(loadJson(join(WORLD, 'rules/tables/host.json')));
 
@@ -52,9 +52,10 @@ after(() => {
 });
 
 function createIndividual(/** @type {any} */ env) {
-  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有 species 指向物种表行的模板行');
+  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有模板行');
+  assert.ok(SAPIENT_SPECIES_ID, '物种表应有 classes 含 comp_sapient 的有心智物种行');
   const before = new Set(Object.keys(env.state.created ?? {}));
-  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: {} }] });
+  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: { species: SAPIENT_SPECIES_ID } }] });
   assert.equal(r.ok, true, `create 应成功：${JSON.stringify(r)}`);
   const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id));
   assert.equal(added.length, 1, 'create 应恰好新增一个实体');

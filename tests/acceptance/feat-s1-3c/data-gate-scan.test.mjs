@@ -1,6 +1,6 @@
 // S1-3c（开局化身建档派生）黑盒验收：卡文第 7、9、10 条。出题方：Claude Haiku 5.5（Orca 会员会话），标识 haiku-orca-test-s13c。
 // 依据见 docs/卡档案/feat-s1-3c/出题.md（卷:行 为依据）。
-// 第 7 条：临时副本里改写来历模板行（删 species、指向不存在的物种行），候选应恰为基线候选去掉这两行。
+// 第 7 条（S1-3d 改写为正向断言）：临时副本里改写来历模板行（删 species、指向不存在的物种行），候选仍与基线相同（门已删）。
 // 第 9 条：扫描式——规则层代码不出现物种与文化的 id 字面量；adultMassKg 只出现在 instantiatePerson 所在文件。
 // 第 10 条：kernel/files.json 仍为 15 个文件（门禁与闭包的其余部分由 CI 与 tsc 核，见出题.md 说明）。
 import { test, after } from 'node:test';
@@ -56,7 +56,9 @@ function mjsUnder(/** @type {string} */ dir, /** @type {string} */ rel = '') {
 
 // ---------- 第 7 条 ----------
 
-test('7. 数据门：模板行无 species、或所指物种行不存在的来历，不出现在开局候选里；其余候选不变', async () => {
+// S1-3d：origin.ready 数据门已删（种族与来历解耦，来历候选只看 origin.open）。原第 7 条的门，改为正向断言：
+// 模板行无 species、或所指物种行不存在的来历，仍出现在候选里（放开后可建，建档见 feat-s1-3d/origin-open.test.mjs 第 4b、4c 条）。
+test('7. 数据门已删：模板行无 species、或所指物种行不存在的来历，仍出现在开局候选里；候选集与基线相同', async () => {
   const baseRoot = testTempRoot('s13c-gate-base-');
   roots.push(baseRoot);
   const base = await init(express.Router(), { saveRoot: baseRoot });
@@ -77,9 +79,9 @@ test('7. 数据门：模板行无 species、或所指物种行不存在的来历
   const { init: initCopy } = await import(pathToFileURL(join(root, 'server-plugin/index.mjs')).href);
   const world = await initCopy(express.Router(), { saveRoot: root });
   const offered = candidatesOf(world, 'origin');
-  assert.equal(offered.includes(noSpecies), false, '模板行无 species 的来历不应出现在候选');
-  assert.equal(offered.includes(badSpecies), false, '所指物种行不存在的来历不应出现在候选');
-  assert.deepEqual([...offered].sort(), baseOffered.filter((id) => id !== noSpecies && id !== badSpecies).sort(), '其余候选应不变');
+  assert.equal(offered.includes(noSpecies), true, '模板行无 species 的来历应仍在候选里（门已删）');
+  assert.equal(offered.includes(badSpecies), true, '所指物种行不存在的来历应仍在候选里（门已删）');
+  assert.deepEqual([...offered].sort(), [...baseOffered].sort(), '候选集应与基线相同');
 });
 
 // ---------- 第 9 条（扫描式） ----------

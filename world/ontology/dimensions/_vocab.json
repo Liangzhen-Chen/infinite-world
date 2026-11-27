@@ -20,7 +20,8 @@
   }, "prefix": "menu_"},
   "target_filter": {"closed": false, "entries": {
    "tf_open_place": {"slot": "scope", "whenRX": "genOpen", "basis": "卷四 §4.12.3 G-2（出生地须在世界当前开放范围内，开放范围是 place 的静态维度 gen.open，卷十 R10-12.7）；读不到（onUnknown gap）不算开放"},
-   "tf_player_origin": {"slot": "scope", "whenRX": "origin.open && origin.ready", "basis": "设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :218–:220（来历候选按 rules.playerOrigins 两个开关过滤）；读数 origin.open 登记在 state-owners.json rxNamespaces；origin.ready 为未建数据门：模板行 species 可读且是登记物种行才进候选（S1-3c 草案 §3，主会话 R2）"}
+   "tf_player_origin": {"slot": "scope", "whenRX": "origin.open", "basis": "设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :218–:220（来历候选按 rules.playerOrigins 两个开关过滤）；读数 origin.open 登记在 state-owners.json rxNamespaces；种族不由出身文化决定（:217、:228），种族由选来历动作种族槽写入（S1-3d）"},
+   "tf_playable_species": {"slot": "scope", "whenRX": "species.playable", "basis": "卷四 G-2 docs/统一底层设计/卷四-生物身体与人物.md:1085（物种可选集：挂 rules.chargen.playableClass 所指组件类的行）；设计册 docs/世界设计/14-历史传说与玩家来历.md:217（步 0 选种族）；读数 species.playable 登记在 state-owners.json rxNamespaces（S1-3d）"}
   }, "prefix": "tf_"},
   "origin": {"closed": false, "entries": {
    "origin_river_heir": {"placeFilter":null,"grants":[],"gate":null,"startingItems":[{"item":"item_clothes","n":1},{"item":"item_bag","n":1},{"item":"item_ration","n":2}],"startingMoney":30,"basis":"出身条目（卷四 §2.4 origin 族、§4.12；设计册 14 §3.6 背景行 设计册 docs/世界设计/14-历史传说与玩家来历.md:289（§6.5 模板三型））。gate：受 rules.playerOrigins 哪个开关管（设计册 §4.7 :219 兽裔三文化归 allowBeastkin、:220 culture_ms_* 归 allowMonsterSocieties，其余 null）。placeFilter 空（出生地只受开放范围限制，卷四 G-2）；grants 空：出身给予经账本与持有写者（卷四 G-5），待 S2-L、S2-H，起始物与钱先登在 startingItems、startingMoney，本卡不揣上身。startingItems、startingMoney 暂定·待试玩标定（亮圳 11-26 19:24 数量按常理定）：三型给一身衣服、一个包、两三份干粮，学徒另带小刀、行路人另带手杖，书办人家照设计册 :113 加书写用具（goods:writing_kit 到具体物品的换算 01 §4.8 未建，取物品表现有行 item_quill_set 与两张 item_parchment）；startingMoney 为起始铜钱枚数（以出生地通用铜钱计，西陲 coin_river 一枚 5 g，world/rules/tables/currency.json），本业子弟 30、学徒 20、行路人 15，量级为数日口粮钱，无出处"},
@@ -435,6 +436,7 @@
     "comp_livestock": {"enables": [], "requires": [], "table": "item"},
     "comp_readable": {"enables": ["read"], "requires": ["difficulty", "language", "teaches"], "table": "item"},
     "comp_relic": {"enables": [], "requires": [], "table": "item"},
+    "comp_playable": {"enables": [], "requires": [], "table": "species", "basis": "卷四 docs/统一底层设计/卷四-生物身体与人物.md:1209 新组件类（可扮演，表 species，无 requires），代号本卡取（S1-3d 主会话 Q4）；由 rules.chargen.playableClass 指名（卷四 :320），.mjs 不写该代号（:323）"},
     "comp_sapient": {"enables": [], "requires": ["birthIntervalDays", "gestationDays", "litterSize"], "table": "species", "basis": "卷四 :156（sapient 与 classes 含 comp_sapient 等价）、:461（有心智的物种挂 comp_sapient，卷二 §1.8 已登记）；requires 取 species 表 byClass:comp_sapient 必填的三项（:132–:134）；李白 11-22 16:04 补登"},
     "comp_tool": {"enables": ["provide_ability"], "requires": ["abilities", "wearPerUse"], "table": "item"},
     "comp_vehicle": {"enables": [], "requires": ["vform"], "table": "item"},
