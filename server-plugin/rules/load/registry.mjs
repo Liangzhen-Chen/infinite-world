@@ -3,7 +3,7 @@
 //   idIndex: Map<id, kind>（实体行键 → kind）；kindIds: Map<kind, {idPrefix, singletonIds}>；tables: Map<kind, 维度表文档>。
 // 构造时核：前缀/单例 id 各表互斥、rows 的键带本表 idPrefix（或在 singletonIds 里）；违者抛 KernelError。
 // 只按表头登记数据判，不认任何具体 kind、前缀或 id。
-// 另有 loadWorld（S1-1 卡 C）：世界数据按 registry.json 登记组装与核对，kernel 消费的键表按登记声明取值。
+// 另有 loadWorld（S1-1 卡 C）：世界数据按 registry.json 登记组装与核对，kernel 消费的键表按登记声明取值；ruleValue、ruleRow（S2-L）分别取键表一键、行表一行。
 
 import { KernelError } from '../../kernel/errors.mjs';
 import { checkValue } from '../../kernel/validate/types.mjs';
@@ -55,7 +55,7 @@ export function buildRegistry(dimensionDocs) {
   return Object.freeze({ idIndex, kindIds, tables, kindOfLoaded, hasLoaded });
 }
 
-/** registry.json 的一行（只列本文件用到的字段）。 @typedef {{code: string, file: string, type?: Record<string, unknown>, domain?: Record<string, unknown>}} RegistryRow */
+/** registry.json 的一行（只列本文件用到的字段）。 @typedef {{code: string, file: string, structure?: unknown, type?: Record<string, unknown>, domain?: Record<string, unknown>}} RegistryRow */
 /** 键表的一行。 @typedef {{key: string, value?: unknown}} KeyRow */
 
 /**
@@ -128,6 +128,26 @@ export function ruleValue(raw, code, key) {
   const spec = raw.registryRows.find((r) => r.code === code);
   if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
   return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key, vocabEnvOf(raw));
+}
+
+/**
+ * 行表单行取值（S2-L：卷六资源种类表 economyResources 是按词表条目分行的表，structure {rows: …}，ruleValue 只收键表）：取登记代号 code 那张表 key 那一行的 value，
+ * 按登记行 type（整行的类型声明）经公共部件 checkValue 核（引用词表与实体行的环境同 ruleValue）。代号未登记、登记不是行表即 E-DIM-DOMAIN-RANGE；没有这一行即 E-DIM-REF-MISSING。
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: any}} raw @param {string} code @param {string} key @returns {unknown}
+ */
+export function ruleRow(raw, code, key) {
+  const spec = raw.registryRows.find((r) => r.code === code);
+  if (!spec || spec.structure === null || typeof spec.structure !== 'object' || spec.type === null || typeof spec.type !== 'object') {
+    throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no row-table registry declaration`);
+  }
+  const rows = Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined;
+  const row = Array.isArray(rows) ? rows.find((r) => r.key === key) : undefined;
+  if (!row || !Object.hasOwn(row, 'value')) throw new KernelError('E-DIM-REF-MISSING', {}, `rules.${code}: no row ${JSON.stringify(key)}`);
+  /** @type {unknown[]} */
+  const bad = [];
+  checkValue({ ...Object(spec.type), nullable: false }, row.value, vocabEnvOf(raw), {}, (e) => { bad.push(e); });
+  if (bad.length > 0) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}.${key}: ${JSON.stringify(row.value)} violates ${Object(bad[0]).want}`);
+  return row.value;
 }
 
 // 单位表 siFromRule.key 的写法 "rules.<表>.<键>"（卷二 §1.4）。

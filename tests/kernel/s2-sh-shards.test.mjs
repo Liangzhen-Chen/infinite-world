@@ -2,7 +2,7 @@
 // 真实 init 起局的 dataPacksDigest 与「owners 换成主文件原文」重算相等；mount 收齐的登记序列与各系统模块导出的登记项一致。
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import express from 'express';
 import { mergeOwners, mergeEntries, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { init } from '../../server-plugin/index.mjs';
@@ -10,6 +10,7 @@ import { dataPacksDigestOf } from '../../server-plugin/kernel/save.mjs';
 import { SETTLE_BODY_CLEANUP, DIE_BY_DESTROY_TRIGGER } from '../../server-plugin/rules/body/death.mjs';
 import { PERSON_INSTANTIATOR } from '../../server-plugin/rules/body/person.mjs';
 import { testTempRoot, removeTempRoot } from '../accept/temp-root.mjs';
+import { DOMAINS } from '../../server-plugin/rules/load/domains.mjs';
 
 const MAIN = 'world/ontology/state-owners.json';
 const DIR = shardDirOf(MAIN);
@@ -124,17 +125,26 @@ test('entry-registry：主文件原序在前、分片按文件名追加不重排
   assert.throws(() => mergeEntries(m, [{ file: 'tools/accept/entry-registry.d/c.json', doc: { entries: [], kinds: [] } }]), { code: 'E-DIM-STRUCT-FIELD' });
 });
 
-test('真实 init：dataPacksDigest 与 owners 换成主文件原文重算的值相等；mount 收齐的登记项即各系统模块导出的那几项', async () => {
+// S2-L 改（主会话裁定 2 甲）：原断言 owners 即主文件原文、登记项只有 body 那几项，是「尚无分片」的偶然现状；改为 owners = 主文件加磁盘上全部分片的合并结果，
+// 登记项 = DOMAINS 各域 manifest 导出字段按域升序的并集（各域导出值由各系统模块产出，逐项同一对象）。
+test('真实 init：dataPacksDigest 与 owners 换成主文件加全部分片合并结果重算的值相等；mount 收齐的登记项即各域 manifest 导出的并集（按域序）', async () => {
   const dir = testTempRoot('s2-sh-');
   dirs.push(dir);
   const world = await init(express.Router(), { saveRoot: dir });
   const { engine } = world;
-  const owners = JSON.parse(readFileSync(new URL('../../world/ontology/state-owners.json', import.meta.url), 'utf8'));
+  const shardDir = new URL(`../../${DIR}/`, import.meta.url);
+  const names = existsSync(shardDir) ? readdirSync(shardDir).filter((n) => n.endsWith('.json')).sort() : [];
+  const owners = mergeOwners({ file: MAIN, doc: JSON.parse(readFileSync(new URL(`../../${MAIN}`, import.meta.url), 'utf8')) },
+    names.map((n) => shard(n, JSON.parse(readFileSync(new URL(n, shardDir), 'utf8'))))).doc;
   assert.equal(engine.dataPacksDigest, dataPacksDigestOf({ digestCap: engine.digestCap }, { ...engine.docData, owners }));
-  assert.deepEqual(engine.terminationCleanups, [SETTLE_BODY_CLEANUP]);
-  assert.deepEqual(engine.terminationTriggers, [DIE_BY_DESTROY_TRIGGER]);
-  assert.deepEqual(engine.instantiators, [PERSON_INSTANTIATOR]);
-  assert.deepEqual(engine.advanceHooks, []);
+  const union = (/** @type {string} */ field) => DOMAINS.flatMap((d) => /** @type {any} */ (d)[field] || []);
+  assert.deepEqual(DOMAINS.map((d) => d.domain), [...DOMAINS.map((d) => d.domain)].sort());
+  assert.deepEqual(engine.terminationCleanups, union('terminationCleanups'));
+  assert.deepEqual(engine.terminationTriggers, union('terminationTriggers'));
+  assert.deepEqual(engine.instantiators, union('instantiators'));
+  assert.deepEqual(engine.advanceHooks, union('advanceHooks'));
+  assert.ok(union('terminationCleanups').includes(SETTLE_BODY_CLEANUP) && union('terminationTriggers').includes(DIE_BY_DESTROY_TRIGGER) && union('instantiators').includes(PERSON_INSTANTIATOR));
+  assert.deepEqual([...engine.primitiveWriters.values()], union('primitiveWriters').map((e) => e.handler));
 });
 
 test('domains.mjs 只用静态 import（不含动态 import(）', () => {

@@ -11,13 +11,20 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { init } from '../../../server-plugin/index.mjs';
+import { mergeOwners } from '../../../server-plugin/rules/load/registry-shards.mjs';
 import { readPath, writePath, createEntity } from '../../../server-plugin/kernel/storage.mjs';
 import { writeScope } from '../../../server-plugin/kernel/transaction.mjs';
 import { makePathHandles } from '../../../server-plugin/kernel/handles.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const DIM_DIR = join(ROOT, 'world/ontology/dimensions');
-const OWNERS = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
+// 登记口径（S2-L 合入后改）：主文件 + 分片（state-owners.d/，按文件名次序）的合并结果（registry-shards.mjs mergeOwners）；
+// 仓库已有首张真分片 economy.json，只读主文件会漏掉分片登记的 pathTypes（accounts、ledgerTotals 等）。
+const OWNERS = JSON.parse(JSON.stringify(mergeOwners(
+  { file: 'state-owners.json', doc: JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')) },
+  readdirSync(join(ROOT, 'world/ontology/state-owners.d')).filter((f) => f.endsWith('.json')).sort()
+    .map((f) => ({ file: f, doc: JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.d', f), 'utf8')) })),
+).doc)); // 深拷贝成普通对象（mergeOwners 返回冻结的 unknown 类型）
 
 function loadTables() {
   return readdirSync(DIM_DIR)

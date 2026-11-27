@@ -1,0 +1,258 @@
+{
+ "entries": [
+  {
+   "name": "ECONOMY_MANIFEST",
+   "file": "rules/economy/manifest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "endowFromOrigin",
+    "transferWriter"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkLedgerTables",
+   "file": "rules/economy/ledger-check.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "vocabEntry",
+    "resourceRow"
+   ],
+   "rules": []
+  },
+  {
+   "name": "conservationCheck",
+   "file": "rules/economy/ledger-check.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath",
+    "allHolders"
+   ],
+   "rules": []
+  },
+  {
+   "name": "endowFromOrigin",
+   "file": "rules/economy/endow.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "dim",
+    "ruleValue",
+    "openAccount",
+    "post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "accountsOf",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath"
+   ],
+   "rules": []
+  },
+  {
+   "name": "allHolders",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "matchPaths"
+   ],
+   "rules": []
+  },
+  {
+   "name": "balance",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "parseAccount",
+    "readPath",
+    "readPathIn"
+   ],
+   "rules": []
+  },
+  {
+   "name": "openAccount",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "dim",
+    "ruleValue",
+    "vocabEntry",
+    "resourceRow",
+    "parseAccount",
+    "readPath",
+    "writePath"
+   ],
+   "rules": []
+  },
+  {
+   "name": "parseAccount",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "post",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "unitSi",
+    "vocabEntry",
+    "resourceRow",
+    "parseAccount",
+    "readPath",
+    "writePath",
+    "txEmit",
+    "clone"
+   ],
+   "rules": []
+  },
+  {
+   "name": "resourceRow",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleRow"
+   ],
+   "rules": []
+  },
+  {
+   "name": "transfer",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "parseAccount",
+    "post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "transferWriter",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "ruleValue",
+    "parseAccount",
+    "transfer"
+   ],
+   "rules": []
+  },
+  {
+   "name": "vocabEntry",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "assemblePrimitiveWriters",
+   "file": "rules/load/primitive-writers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "handlesOp"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerPrimitiveWriter",
+   "file": "rules/load/primitive-writers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "handlerEntry"
+   ],
+   "rules": []
+  },
+  {
+   "name": "ruleRow",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "checkValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "handlerEntry",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "readPathIn",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError",
+    "readPath"
+   ],
+   "rules": []
+  },
+  {
+   "name": "codesOf",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  }
+ ]
+}

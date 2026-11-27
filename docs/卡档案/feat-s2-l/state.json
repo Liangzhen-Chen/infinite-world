@@ -1,0 +1,64 @@
+{
+  "card": "feat-s2-l",
+  "phase": "pr",
+  "updatedAt": "2026-11-27T07:21:40.972Z",
+  "branches": {
+    "code": "feat/s2-l",
+    "test": "test/s2-l",
+    "pr": "feat/s2-l"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s2l",
+        "session": "ctx_9c116da02813",
+        "commits": [
+          "5dfd1ce82",
+          "4b333e1fe"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s2l",
+        "session": "ctx_cd2b7459c155",
+        "commits": [
+          "21f467e0f",
+          "7b139014e"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s2l",
+          "session": "ctx_4ae5ba1e5838",
+          "commits": [
+            "1b88dd401",
+            "1a2ecf449"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "PR feat/s2-l→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-l）；合后删 s2l、ts-s2l 工作树目录（不删分支）并报李白提交号；主会话5写交接换班，下一张 S2-H"
+}

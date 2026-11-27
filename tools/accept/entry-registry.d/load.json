@@ -52,7 +52,8 @@
    "kind": "part",
    "needs": [
     "KernelError",
-    "BODY_MANIFEST"
+    "BODY_MANIFEST",
+    "ECONOMY_MANIFEST"
    ],
    "rules": []
   }
