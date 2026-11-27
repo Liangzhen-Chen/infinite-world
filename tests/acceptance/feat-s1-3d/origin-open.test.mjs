@@ -77,7 +77,7 @@ test('4b. 非人来历经真实动作可建档：逐个选中受开关管的来�
     assert.ok(oi >= 0, `开关为真的非人来历 ${want} 应在候选里`);
     const species = candidatesOf(world, 'species');
     const place = candidatesOf(world, 'place');
-    const r = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: oi, place: 0 } });
+    const r = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: oi, place: 0, lodge: 0 } });
     assert.equal(isOk(r), true, `选来历 ${want} 应成功：${JSON.stringify(r)}`);
     const ids = avatarIds(world);
     assert.equal(ids.length, 1, `选 ${want} 后应恰有一个化身`);

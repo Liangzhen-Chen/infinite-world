@@ -24,7 +24,7 @@ test('6. 复演一致：选种族+来历建化身 → 推进 60 分钟 → 存�
 
   const species = world.menu(null).affordances.find((/** @type {any} */ x) => (x.act ?? x.id) === 'act_choose_origin').slots.species;
   assert.ok(Array.isArray(species) && species.length > 0, '种族候选不应为空');
-  const picked = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
+  const picked = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0, lodge: 0 } });
   assert.equal(picked.ok === true, true, `选种族+来历应成功：${JSON.stringify(picked)}`);
 
   const ids = avatarIds(world);

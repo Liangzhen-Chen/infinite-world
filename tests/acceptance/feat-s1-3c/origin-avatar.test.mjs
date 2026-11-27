@@ -76,7 +76,7 @@ async function chooseOrigin(world, oi = 0, pi = 0, si = 0) {
   const species = candidatesOf(world, 'act_choose_origin', 'species');
   const origin = candidatesOf(world, 'act_choose_origin', 'origin');
   const place = candidatesOf(world, 'act_choose_origin', 'place');
-  const r = await world.act({ act: 'act_choose_origin', slots: { species: si, origin: oi, place: pi } });
+  const r = await world.act({ act: 'act_choose_origin', slots: { species: si, origin: oi, place: pi, lodge: 0 } });
   assert.equal(isOk(r), true, `选来历应成功：${JSON.stringify(r)}`);
   const id = avatarOf(world);
   assert.ok(id, '选来历后应有化身');

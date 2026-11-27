@@ -59,7 +59,7 @@ test('N-3 domains.mjs 存在且只用静态 import（无 import( 动态导入）
   // 收紧的断言：清单里每个域都至少交一项登记；body 必须在列。
   assert.ok(DOMAINS.some((d) => d.domain === 'body'), '域清单应含 body 域');
   for (const d of DOMAINS) {
-    const fields = ['terminationCleanups', 'terminationTriggers', 'instantiators', 'advanceHooks'];
+    const fields = ['terminationCleanups', 'terminationTriggers', 'instantiators', 'advanceHooks', 'primitiveWriters'];
     const n = fields.filter((k) => /** @type {any} */ (d)[k] && /** @type {any} */ (d)[k].length > 0).length;
     assert.ok(n > 0, `域 ${d.domain} 没有交任何登记项（四个字段都为空）`);
   }

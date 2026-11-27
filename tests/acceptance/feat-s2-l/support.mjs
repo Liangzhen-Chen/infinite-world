@@ -135,7 +135,7 @@ export function offered(world) {
   return a.slots.origin;
 }
 export const chooseOrigin = (world, index) =>
-  world.act({ act: 'act_choose_origin', slots: { species: 0, origin: index, place: 0 } });
+  world.act({ act: 'act_choose_origin', slots: { species: 0, origin: index, place: 0, lodge: 0 } });
 
 export const newPersons = (world, before) => Object.keys(world.state.created ?? {})
   .filter((id) => !before.created.includes(id) && world.state.created[id].kind === 'person');

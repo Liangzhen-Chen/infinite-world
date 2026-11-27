@@ -3,7 +3,8 @@
 // 建 engine（路径句柄 P、host、存档布局、原语目录、依赖闭包、修正来源、推进钩子、摘要能力与两个指纹）与 state、日志簿，
 // 返回 {engine, state, logBook, submitProposal, advance, save, opening, views}（S1-1 卡 B2、卡 C；opening 为 openingOf 的薄闭包，S1-2a；act、menu 为动作入口与菜单投影的薄闭包，S1-3a；views 为 S1-2b 的物种、身体、尸体只读入口）。给了 resume（readSlot 的结果）即由 replayApply 复演得 state 与日志簿，另带 saveDigest。
 // 本文件不读盘（rules 层不许引 node:fs，world 数据由装配层 index.mjs 读入后传入），状态只经登记写者的初始化函数在一笔事务里建，或经复演重建。
-import { loadWorld } from './registry.mjs';
+import { loadWorld, ruleValue } from './registry.mjs';
+import { bakeFootprints, footprintsDigest, checkFootprints } from '../place/footprint.mjs';
 import { makePathHandles } from '../../kernel/handles.mjs';
 import { installNamedStructs } from '../../kernel/named-structs.mjs';
 import { buildState, submitProposal, submitIntent, runTransaction } from '../../kernel/transaction.mjs';
@@ -14,7 +15,7 @@ import { closeInputs } from '../../kernel/memo.mjs';
 import { DIM_DECL } from '../../kernel/dimensions.mjs';
 import { clone, installByteConstants } from '../../kernel/bytes.mjs';
 import { KernelError } from '../../kernel/errors.mjs';
-import { installFixedConstants, installExpTable } from '../../kernel/det-math.mjs';
+import { installFixedConstants, installExpTable, installDetTables } from '../../kernel/det-math.mjs';
 import { checkBodyPlans } from '../body/body-plan.mjs';
 import { speciesView } from '../body/species.mjs';
 import { bodyView } from '../body/body.mjs';
@@ -90,6 +91,9 @@ function fixedConstantsOf(kc) {
 
 // _distributions.json 的摘要口径（该文件 note：sha256 对 values.map(String).join(',') 的 UTF-8 字节；离线由 tools/gen-det-tables.mjs 生成冻结）。
 const DIST_SHA_JOIN = ',';
+// det-math 查表所在规则表与键（卷二十七 §2.2 :171）。
+const DET_NUMERIC = 'detNumeric';
+const FN_TABLES = 'fnTables';
 const UTF8 = 'utf8';
 
 /**
@@ -153,9 +157,16 @@ export function mountKernel(raw, caps, resume) {
   // 采样表（卷二 §1.10 :331–:332）：世界数据带了 _distributions.json 即核分位数表摘要、装入 exp 表；没带时采样（rules/gen/sample.mjs）用到即报错。
   if (docData.distributionsDoc !== undefined) installDistributions(digestCap, docData.distributionsDoc);
   // 烘焙层（卷二十七 R27-4.13、R27-5.9）：由 doc_data 纯函数建出，挂 engine.bake，不进 state 与 doc_*；开局与读档复演同样从空重建。
-  const bake = Object.freeze({ placeTree: bakePlaceTree(registry) });
+  // det-math 查表（卷二十七 §2.2 :171 rules.detNumeric.fnTables）装入：卷五 bearingView 的 atan 用（S2-P）。
+  installDetTables(ruleValue(docData, DET_NUMERIC, FN_TABLES));
+  const placeTree = bakePlaceTree(registry);
+  // 建筑足迹（卷五 §4.1 规则 11；S2-P）：同 place-tree 挂烘焙层，verifyBake 时比两次构建的摘要。
+  const bake = Object.freeze({ placeTree, footprints: bakeFootprints(registry, docData, placeTree) });
   if (verifyBake === true && placeTreeDigest({ digestCap }, bakePlaceTree(registry)) !== placeTreeDigest({ digestCap }, bake.placeTree)) {
     throw new KernelError('E-REPLAY-DIVERGE', { bake: 'place_tree' }, 'baked place tree differs between two builds of the same doc_data');
+  }
+  if (verifyBake === true && footprintsDigest({ digestCap }, bakeFootprints(registry, docData, placeTree)) !== footprintsDigest({ digestCap }, bake.footprints)) {
+    throw new KernelError('E-REPLAY-DIVERGE', { bake: 'footprints' }, 'baked footprints differ between two builds of the same doc_data');
   }
   // 动作目录（卷九 §2.2；S1-3a）：加载期编成冻结目录挂 engine.actions；世界数据未带动作目录（actionDocs 缺）即为空，act/menu 调用即拒 E-ACT-UNKNOWN。
   // 规则层原语写者（S2-L R0）：内核 resolve 在内置处理函数表查不到时回落查它；动作目录加载期核可达原语时一并认它。
@@ -184,6 +195,8 @@ export function mountKernel(raw, caps, resume) {
   // 装配期核持有种类表与来历起始物（S2-H）：种类行字段与处置格、端类型映射、原语写入口、起始物资源与放处；坏数据开局即拒。
   checkHoldingKinds(engine);
   checkOutfitTables(engine);
+  // 装配期核建筑足迹（卷五 §4.1 规则 3；S2-P）：同父兄弟不相交、有足迹的父包住子。
+  checkFootprints(engine);
   // 开局：世界创建事务（genesisMinute 与时钟）→ 开局一步事务（openingMinute 与开放范围），都在 0 号快照之前、不进日志输入（卷十 R10-11.4、卷二十七 :742）；
   // 读档：同一 engine 上复演（不按种类分支，只看有无 resume）。
   /** @type {{state: any, logBook: any, saveDigest?: string}} */
