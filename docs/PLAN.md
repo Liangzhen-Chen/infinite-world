@@ -101,8 +101,8 @@
 
 ### 待办登记（11-27 主会话5 并入，不阻当前卡）
 - 长生种设想（亮圳 11-26 12:27）改动稿与独立审查已出（主会话临时目录 longevity-*.md），待 Gemini 审与亮圳拍板 P1–P7。
-- docs/问题.md 11-24 起停更，仍有效两条挪此：world/meta 未归档（docs/问题.md:4）；卷文出处待判 5 处（docs/问题.md:25–:30）。
-- 规矩读取过渡退路（S2-GOV Q9）：card-archive.mjs readRulesAt 在 ref 上读不到 tools/accept/card-rules.md 时退回 docs/派活卡头规矩.md 第五节，留到 S2-SW 删。
+- docs/问题.md 11-24 起停更，仍有效两条挪此：world/meta 未归档，见 docs/问题.md:4；卷文出处待判 5 处，见 docs/问题.md:25–:30。
+- 规矩读取过渡退路，S2-GOV Q9：card-archive.mjs readRulesAt 在 ref 上读不到 tools/accept/card-rules.md 时退回 docs/派活卡头规矩.md 第五节，留到 S2-SW 删。
 - S1-4 不阻合：holdings 模板 id 无公共读入口（kernel/dimensions.mjs rowId 私有），待开公共 templateOf 后补 self.holdings.template 与显示名；client/ CJK 字面量门禁 S29-1 未落（item_ledger 未登卷二十九），卷二十九转录卡启用；bootstrap 唯一碰宿主全局仅审卡人工核；self.accounts 去批次键后同资源多行无法区分；envelopeDropped/stale 两条提示未用；数字框非整数由服务端拒收；卷二十九 停报项记 :225 过渡。
 - 兽裔开关（李白 11-27 认可 S1-3d Q3）：allowBeastkin 与 9 条兽裔/远族来历 gate 未挪；第一个兽裔物种行入表的卡同时做「9 条 gate 置空 + 种族侧组件词条 gate 由 catalog 通用读」。
 - S1-3d 审卡核旧验收 9 个文件「只改前提、不降门槛」，逐条写明（李白 11-27）。
