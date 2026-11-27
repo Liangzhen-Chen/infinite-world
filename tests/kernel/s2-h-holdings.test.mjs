@@ -295,7 +295,7 @@ test('9 存槽读档复演：选来历、开关边后 saveDigest 相同，holdin
   for (const k of ['holdings', 'holdingCounters', 'accounts', 'created']) assert.deepEqual(r.state[k], g.state[k], k);
 });
 
-test('10 加载期核对：可建实例的起始物找不到放处即开局拒 E-DIM-REF-MISSING；终止格取不动 E-HK-PROTOCOL；起始物资源缺 budget 窗口 E-DIM-REF-MISSING', () => {
+test('10 加载期核对：可建实例的起始物找不到放处即开局拒 E-DIM-REF-MISSING；终止格取不动、exclusive 离任格取不动 E-HK-PROTOCOL；holderMax 非非负整数 E-HK-ROW-FIELDS；起始物资源缺 budget 窗口 E-DIM-REF-MISSING', () => {
   const raw = rawWorld();
   for (const row of Object.values(raw.dimensionDocs.find((d) => d.kind === 'item').rows)) {
     if (Array.isArray(row.classes)) row.classes = row.classes.filter((c) => c !== OUTFIT.containerClass);
@@ -309,6 +309,19 @@ test('10 加载期核对：可建实例的起始物找不到放处即开局拒 E
   const res = Object.keys(VOCAB.resource.entries).find((k) => VOCAB.resource.entries[k][OUTFIT.resourceItemField] === first);
   delete raw3.tableDocs.economyLedger.rows.find((r) => r.key === 'budget').value[res];
   assert.throws(() => mountKernel(raw3, caps('s2h-check-budget-')), code('E-DIM-REF-MISSING'));
+  // holderMax 非空非整数（审卡第一轮必须改 ①）：按字段取一个 holderMax 非空的种类，改成串即开局拒。
+  const raw4 = rawWorld();
+  const capped = Object.keys(KINDS).sort().find((k) => KINDS[k].holderMax !== null);
+  raw4.vocabDoc.families.holding_kind.entries[capped].holderMax = 'one';
+  assert.throws(() => mountKernel(raw4, caps('s2h-check-max-')), code('E-HK-ROW-FIELDS'));
+  const raw5 = rawWorld();
+  raw5.vocabDoc.families.holding_kind.entries[capped].holderMax = -1;
+  assert.throws(() => mountKernel(raw5, caps('s2h-check-max-neg-')), code('E-HK-ROW-FIELDS'));
+  // exclusive 种类离任格取不动（审卡第一轮必须改 ②）：不动的取值取自终止格被拒的同一处置（数据里席位行 exclusive 为真）。
+  const raw6 = rawWorld();
+  const excl = Object.keys(KINDS).sort().find((k) => KINDS[k].exclusive === true && KINDS[k].holdWhile === null);
+  raw6.vocabDoc.families.holding_kind.entries[excl].vacated = 'ho_stay';
+  assert.throws(() => mountKernel(raw6, caps('s2h-check-excl-stay-')), code('E-HK-PROTOCOL'));
 });
 
 test('11 扩展性：给某来历的起始物加一件挂穿戴组件类的现有物品，不改代码即多出一条穿戴边', async () => {
