@@ -10,7 +10,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, rmSync, rmdirSync,
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { repoRoot } from '../../tools/path-segment.mjs';
-import { testTempRoot, writeUnderTempRoot, removeTempRoot } from '../accept/temp-root.mjs';
+import { testTempRoot, writeUnderTempRoot, removeTempRoot, removeUnderTempRoot } from '../accept/temp-root.mjs';
 
 const git = (args) => execFileSync('git', args, { cwd: repoRoot(), stdio: 'ignore' });
 const PREFIX = 'iso-repo-';
@@ -21,11 +21,23 @@ const self = () => norm(realpathSync(repoRoot()));
 /** @type {Set<string>} 本进程还没收尾的临时根 */
 const live = new Set();
 
-// 死目录与退出钩子的收尾（主会话 S2-GOV 裁定乙）：临时根不是本函数里 testTempRoot 得来的，fs 删除只能走登记写入口 removeTempRoot（S12-2）。
-// removeTempRoot 递归删时把 node_modules 联接当链接删、不跟进（tests/accept/isolated-repo.test.mjs 杀进程用例实测宿主文件仍在）；再 prune 清 worktree 登记。
+// 死目录与退出钩子的收尾（主会话 S2-GOV 裁定乙）：临时根不是本函数里 testTempRoot 得来的，fs 删除只能走登记写入口（S12-2）。
+// 先删 repo 子目录（removeUnderTempRoot 递归删时把 node_modules 联接当链接删、不跟进，tests/accept/isolated-repo.test.mjs 杀进程用例实测宿主文件仍在），
+// 再 prune 清 worktree 登记，owner.json 随临时根最后删：中途失败时 owner.json 还在，下次调用仍认得出、接着清，不会留下认不出的半截目录。
+// 刚被杀的进程在 Windows 上句柄可能还没放完（EBUSY/EPERM），每步按 REMOVE_RETRY 重试，重试用尽照抛原错，不吞。
+const REMOVE_RETRY = { tries: 6, delayMs: 100 };
+function retrying(step) {
+  for (let i = 1; ; i++) {
+    try { return step(); } catch (e) {
+      if (i >= REMOVE_RETRY.tries) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, REMOVE_RETRY.delayMs * i);
+    }
+  }
+}
 function dropRoot(stale) {
-  removeTempRoot(stale);
-  try { git(['worktree', 'prune']); } catch { /* 下次再清登记 */ }
+  retrying(() => removeUnderTempRoot(stale, 'repo'));
+  git(['worktree', 'prune']);
+  retrying(() => removeTempRoot(stale));
 }
 
 function alive(pid) {
@@ -43,7 +55,7 @@ function sweepDead() {
     try { owner = JSON.parse(readFileSync(join(stale, OWNER_FILE), 'utf8')); } catch { continue; }
     if (!owner || !Number.isInteger(owner.pid) || typeof owner.repoRoot !== 'string') continue;
     if (norm(owner.repoRoot) !== mine || live.has(stale) || alive(owner.pid)) continue;
-    try { dropRoot(stale); } catch { /* 下次调用再清 */ }
+    dropRoot(stale);
   }
 }
 

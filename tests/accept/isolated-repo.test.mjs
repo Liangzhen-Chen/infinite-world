@@ -66,8 +66,10 @@ test('杀进程残留：下次调用清掉死进程的副本与 worktree 登记�
   writeUnderTempRoot(keep, 'marker.txt', 'no owner');
   try {
     const helper = pathToFileURL(join(ROOT, 'tests/support/isolated-repo.mjs')).href;
-    const code = `import { withIsolatedRepo } from ${JSON.stringify(helper)};
-await withIsolatedRepo((root) => { process.stdout.write(root + '\\n'); setInterval(() => {}, 1000); return new Promise(() => {}); });`;
+    // 子进程把工作目录切进副本并开着副本里的文件（Windows 上被杀后这些句柄的释放有延迟），杀后立刻发起下一次调用。
+    const code = `import { openSync } from 'node:fs';
+import { withIsolatedRepo } from ${JSON.stringify(helper)};
+await withIsolatedRepo((root) => { process.chdir(root); globalThis.held = openSync(root + '/package.json', 'r'); process.stdout.write(root + '\\n'); setInterval(() => {}, 1000); return new Promise(() => {}); });`;
     const child = spawn(process.execPath, ['--input-type=module', '-e', code], { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'] });
     const copyRoot = await new Promise((resolve, reject) => {
       let buf = '';
