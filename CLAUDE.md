@@ -5,7 +5,7 @@
 ## 1. 启动只读 3 文件与六份单一真相源
 - 每次启动、压缩或换班后，只读 3 份文件：`docs/产品原则.md`、`CLAUDE.md`、`docs/状态快照.generated.md`（由 CI 生成，严禁手写），再看 `orca worktree ps` 与在途卡的 `docs/卡档案/<卡>/state.json`。
 - **主会话换班（亮圳原话：『换班是我定的，照做』，出处 李白转 msg_d0e590ac17f8，2026-11-25 20:24；细则 docs/gemini/collab-eval-1125.md 4.5 节）**：每合完 3–5 张卡、或每天一次、或自动压缩两次以上，在批次收尾的空档换新主会话接班。主会话不留未落盘的状态：每张在途卡推进状态时覆盖写 state.json（phase、blocker、nextAction 必填）；下班前确认在途卡都已收尾或已写进 state.json。总台邮箱用 Orca 持久 run（首个主会话 `orca orchestration run-create` 建，接班会话 `orca orchestration run-use --id <run>` 接管，子会话回报发 `--to run:<run>`）。
-- 全仓唯一真相源：① 北极星 `docs/产品原则.md`；② 规矩 `CLAUDE.md` + `docs/派活卡头规矩.md`（<=50 行）；③ 生效裁定 `docs/审查/现行有效裁定.json`（废止即删，不追流水账）；④ 进度 `docs/状态快照.generated.md`；⑤ 契约与入口 `world/ontology/contracts.json` + `tools/accept/entry-registry.json`；⑥ 现行设计 `docs/统一底层设计/` + `docs/世界设计/`。
+- 全仓唯一真相源：① 北极星 `docs/产品原则.md`；② 规矩 `CLAUDE.md` + `docs/派活卡头规矩.md`（<=50 行；门禁机读键值在 tools/accept/card-rules.md）；③ 生效裁定 `docs/审查/现行有效裁定.json`（废止即删，不追流水账）；④ 进度 `docs/状态快照.generated.md`；⑤ 契约与入口 `world/ontology/contracts.json` + `tools/accept/entry-registry.json`；⑥ 现行设计 `docs/统一底层设计/` + `docs/世界设计/`。
 - `archive/` 为物理隔离历史仓：严禁生产代码与现行文档引用，严禁往 `docs/卡回报/`、`docs/当前状态.md`、`docs/统一底层设计/版本快照/`、`world/drafts/` 回写文件。
 
 ## 2. 北极星与落地红线（无特例）

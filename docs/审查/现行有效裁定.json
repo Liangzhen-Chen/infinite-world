@@ -4,27 +4,6 @@
   "note": "只收至今仍生效、未被后文推翻的裁定；推翻即从本文件删除，不追加流水。K1–K4 文化尊重见世界设计与架构设计原文，不在本案卷流水内，故未收。按【重写令1124】与 rewrite-guide-1124.md 第四章 4.2 作废的旧条未收。亮圳原话更正1124 作废①②③",
   "rulings": [
     {
-      "id": "裁定1124b",
-      "summary": "会员额度只给主会话调度；写卡、审卡、测试分析一律走 claude -p 与 DeepSeek API，单项超 5 元先停报；DeepSeek 派卡走 run-card-ds.sh，密钥不打印不提交。",
-      "source": "archive/docs-governance/CLAUDE-至1124.md:16",
-      "status": "active",
-      "decidedBy": "亮圳",
-      "quote": "主会话仅调度 不允许派任何会员额度 让他用claude api和deepseek api，同时你在界面上把它改成opus中",
-      "quoteSource": "亮圳与李白聊天 t855u，2026-11-24 伦敦下午（李白转，仓库外）",
-      "supersedes": ["旧口径-会员额度写码", "旧口径-Claude只用会员额度"]
-    },
-    {
-      "id": "审批闸门5元-1109",
-      "summary": "单项花费超 5 元先停下报亮圳同意；5 元以内常规操作与技术管理决策由李白自定。",
-      "source": "CLAUDE.md:32",
-      "status": "active",
-      "decidedBy": "亮圳",
-      "quote": "",
-      "quoteKind": "转述",
-      "quoteSource": "亮圳 2026-11-09 t219u 长期授权（李白转述：单项5元以内李白直接定，超5元须问他）",
-      "supersedes": []
-    },
-    {
       "id": "写死红线",
       "summary": "写死是绝对红线：除世界设定外，任何系统的数值、规则、种类都放数据表、可单独替换；已有公共部件必须调用，不许另算；审卡必查，检查脚本拦新增写死。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:52",
@@ -913,17 +892,18 @@
     {
       "id": "K1125-QUOTA",
       "summary": "靠实时可用额度派活：会员额度充足时 Sonnet 写、Haiku 出题、Opus（medium）审，Gemini 每日全库审核并可选分审 1–2 张关键卡；额度不足时 DeepSeek 作写码主力，DeepSeek 卡由 Sonnet/Gemini 审。取代 15:48 版审卡口径。",
-      "source": "CLAUDE.md:16",
+      "source": "CLAUDE.md:19",
       "status": "active",
       "decidedBy": "亮圳",
       "quote": "没问题，并且现在就改，要告诉主会话靠额度派活，额度不够就ds主力。",
       "quoteSource": "亮圳 2026-11-25 18:19 伦敦，antigravity 会话 58aa8e3f 原话，李白核（msg_210a029f02f4）；方案 docs/gemini/collab-eval-1125.md",
-      "supersedes": []
+      "supersedes": ["裁定1124b（已删，原文可从 git 6413e8a47 追回：会员额度只给主会话调度，写卡、审卡、测试分析一律走 claude -p 与 DeepSeek API，单项超 5 元先停报）"],
+      "supersedesBasis": "亮圳 11-25 12:31 伦敦否定超5元先问；11-25 13:31、15:26 重申用会员额度（李白 msg 转述）"
     },
     {
       "id": "K1125-PUBLIC",
       "summary": "历史改写抹掉云机 IP 与个人邮箱后仓库公开，并开 master 分支保护（PR + ci.yml 主 job 绿、管理员不豁免、禁强推禁删）；接受旧提交仍可按旧 SHA 取到的风险。",
-      "source": "docs/PLAN.md:23",
+      "source": "docs/PLAN.md:26",
       "status": "active",
       "decidedBy": "亮圳",
       "quote": "ok",
@@ -933,7 +913,7 @@
     {
       "id": "K1125-EVID",
       "summary": "出题.md「依据」的合格出处除卷文行外，也认已入 master 的 docs/gemini 设计文件行（派活卡头规矩第五节「证据 设计文件行」）。",
-      "source": "docs/派活卡头规矩.md:123",
+      "source": "tools/accept/card-rules.md:60",
       "status": "active",
       "decidedBy": "亮圳",
       "quote": "我同意。第二个也没问题。",
@@ -943,11 +923,78 @@
     {
       "id": "K1125-COST",
       "summary": "花费不设单项 5 元停线（亮圳说从没定过「单项超5元必须问他」），按省钱原则做并记账；新骨架卡第二轮花费放行。",
-      "source": "CLAUDE.md:32",
+      "source": "CLAUDE.md:34",
       "status": "active",
       "decidedBy": "亮圳",
       "quote": "我同意。第二个也没问题。",
       "quoteSource": "李白转亮圳 Orca 消息 msg_81259953138a（2026-11-25 12:31 伦敦）",
+      "supersedes": ["裁定1124b（已删，原文可从 git 6413e8a47 追回：会员额度只给主会话调度，写卡、审卡、测试分析一律走 claude -p 与 DeepSeek API，单项超 5 元先停报）", "审批闸门5元-1109（已删，原文可从 git 6413e8a47 追回：单项花费超 5 元先停下报亮圳同意，5 元以内由李白自定）"],
+      "supersedesBasis": "亮圳 11-25 12:31 伦敦否定超5元先问；11-25 13:31、15:26 重申用会员额度（李白 msg 转述）"
+    },
+    {
+      "id": "K1126-WTDEL",
+      "summary": "合入 master 后的临时工作树核净可删，只删目录不删分支；其他删除仍须亮圳点头。",
+      "source": "docs/卡档案/chore-s2-gov/开发.md:6",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-26 12:13 伦敦，消息号 t1017s4613（李白 11-27 18:45 回复转述，主会话转 msg_13c5c67e7be8；仓库内无原话）",
+      "supersedes": []
+    },
+    {
+      "id": "K1126-DEFAULTS",
+      "summary": "挡不住「能玩」的小默认值不问亮圳，按主会话建议定，事后一句话告诉他。",
+      "source": "docs/卡档案/chore-s2-gov/开发.md:7",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-26 19:24 伦敦，消息号 t1029u（李白 11-27 18:45 回复转述，主会话转 msg_13c5c67e7be8；仓库内无原话）",
+      "supersedes": []
+    },
+    {
+      "id": "K1126-PATROL",
+      "summary": "同意兜底巡查两小时一次。",
+      "source": "docs/卡档案/chore-s2-gov/开发.md:8",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-26 21:25 伦敦，无消息号（李白 11-27 18:45 回复转述，主会话转 msg_13c5c67e7be8；仓库内无原话）",
+      "supersedes": []
+    },
+    {
+      "id": "K1126-LABEL",
+      "summary": "Orca 会话标签按「主会话N｜起止时间｜在岗/已交班」命名。",
+      "source": "docs/卡档案/chore-s2-gov/开发.md:9",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-26，无消息号、无时刻（李白 11-27 18:45 回复转述，主会话转 msg_13c5c67e7be8；仓库内无原话）",
+      "supersedes": []
+    },
+    {
+      "id": "K1127-RACE",
+      "summary": "开局由玩家自己挑种族（设计册 14 §4.7 加步 0，S1-3d 落地）。",
+      "source": "docs/PLAN.md:100",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-27 01:16（PLAN 记为「玩家自己挑种族」，仓库内为主会话转录，非逐字核对原话）",
+      "supersedes": []
+    },
+    {
+      "id": "K1127-WXSTATION",
+      "summary": "天气站按设定文字挑，做完给亮圳看（S2-T2）。",
+      "source": "docs/PLAN.md:97",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-27 17:16（李白转；PLAN 记为「按设定文字挑站、做完给我看」，仓库内为转录，非逐字核对原话）",
       "supersedes": []
     }
   ]

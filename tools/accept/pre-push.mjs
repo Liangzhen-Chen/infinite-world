@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { gitOut, gitOk, gitRepo, preCommitGate } from './commit-hook.mjs';
-import { CARD_ARCHIVE_CODE, CARD_RULES_DOC, loadRules, judgeCommit } from './lib/card-archive.mjs';
+import { CARD_ARCHIVE_CODE, CARD_RULES_DOC, loadRules, readRulesAt, judgeCommit } from './lib/card-archive.mjs';
 
 const ZERO = /^0+$/;
 
@@ -15,7 +15,7 @@ const ZERO = /^0+$/;
 function rulesFor(root, remoteSha) {
   if (remoteSha && !ZERO.test(remoteSha)) {
     try {
-      const remote = loadRules(gitOut(root, ['show', `${remoteSha}:${CARD_RULES_DOC}`]));
+      const remote = readRulesAt(remoteSha, (spec) => gitOut(root, ['show', spec]));
       if (!remote.error) return remote;
     } catch { /* 远端没有该文件，用本地 */ }
   }
