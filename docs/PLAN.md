@@ -51,7 +51,24 @@
 
 阶段 2 首卡（已定，亮圳 11-26 12:35）：**S2-0 终止协议与 NPC 死亡**（die/settleBody/requestRevive），依赖 S1-2b 的 bodyView/carcassOf 与最小 status 写者；终止协议落规则层 rules/、卷二:633 记勘误（技术口径）；排在伤害、医疗、屠宰之前，可与 S1-3 并行开写。长生种设想（亮圳 11-26 12:27）改动稿与独立审查已出（主会话临时目录 longevity-*.md），待 Gemini 审与亮圳拍板 P1–P7。（11-27 收尾：S2-0a 终止协议骨架 + S2-0b 死亡与 destroy 玩家入口、尸体走 carcassOf、去留表与覆盖核对；验收 7 例前提改为真实 create 建人，11b 改为「去日志簿后世界状态逐位相同 + 日志只多推进输入与事件」；Opus 审两卡必须改 3/1 → API 第二轮可合，S2-0b 二轮后变更 API 第三轮可合。第 3、4 步与复生归 S2-0c1/c2。前置插卡 **S1-3c 开局化身建档派生**：create 建 person 同事务经 instantiatePerson 补齐 species/adultMassKg/birthMinute 等，新建确定性采样公共部件 rules/gen/sample.mjs（种子键唯一出处，门禁遗留例外路径等数替换），开局年龄取成年下界派生；Opus 审第一轮可合。亮圳 11-27 拍板「玩家自己挑种族」，设计册 14 §4.7 加步 0；来历行 species 暂为开局缺省，**下一张 S1-3d 开局选种族**：菜单种族槽、删缺省列、文化与种族解耦放开 27 条非人文化来历、S2-0b 验收改 facts 给 species。三卡一个 PR，头 feat/s1-3c。）
 
-阶段 2 及以后（文化圈桥接等）等阶段 1 全绿后再排。
+## 阶段 2（计划第四版，李白 11-27 认可；对外收尾日期按中位 12-05，区间 12-03/12-05/12-08，不做分片 12-10 以后）
+
+- 全文为主会话计划稿第四版（不入库：稿内列 archive 旧零件复用清单；Gemini 11-26 审核五项已改：S2-D/0c1/N1 死锁、拆大卡、登记分片、实测重估日期、规矩清理卡））；MVP 52 张 + 非玩法 2 张（S2-SH 登记分片、S2-GOV 规矩清理），生产代码+数据约 3.1 万行。实测：CI 成功运行中位 11.4 分钟、返工率 58%（7/12）。
+- 产品拍板（亮圳 11-27 02:54 原话）：N2a「修仙先只做前3个境界，行善积德和道门授箓留到阶段3」（S2-X1b2 缩为出神加天劫约 250 行，不足 150 行并回 X1b1）；N2b「第一批法术做火、风雷、水三类」（S2-SP1 元素技能类数据）。此前 P1–P4（11-26 20:02）、N1（11-26 20:12，玩家死后整体挂长生种之后）已拍板。
+- 第 1 批合入顺序：S2-SH → S2-L（带 R0）→ S2-H → S2-P → S2-T → S1-4 → S2-GOV → S2-D + S2-0c1（同一 PR）。S2-SH 合入后新登记一律写本域分片，不改主登记文件。
+- 派卡须知：卡文写「提交前跑 check-push-archive.mjs 自验通过」；派卡前核基线含全部依赖卡；建树与对比一律以 origin/master 为底。
+- S2-GOV：产品原则.md 第三节第 6 条旧模型分工删掉（李白 11-27 裁定，模型分工只在 CLAUDE.md 写一处）；派活卡头规矩压回 ≤50 行并修合并提交免查自相矛盾；11-26 裁定同步进现行有效裁定.json；瘦身本文件；gen-status-snapshot 自动把已合卡归 merged；tests/support/isolated-repo.mjs 修临时仓库泄漏（亮圳 11-27 准删的 F:/temp/iso-repo-* 已删 10 个）。
+- [x] S1-3d 开局选种族（亮圳 11-27 01:16「玩家自己挑种族」）：选来历菜单加步 0 种族槽，候选为挂 rules.chargen.playableClass（comp_playable）的物种行，槽值写 create.facts.species；删来历行 species 列与 origin.ready，54 条来历全开；旧验收 9 文件前提改写。Sonnet 写一轮、Haiku 出题、Opus 审第一轮可合（旧验收逐条核只改前提）。不阻合：person.mjs:54 注释残留 origin.ready、origin-avatar 第 1 条标题过期。PR 头 feat/s1-3d。
+
+### 待办登记（11-27 主会话5 并入，不阻当前卡）
+- 兽裔开关（李白 11-27 认可 S1-3d Q3）：allowBeastkin 与 9 条兽裔/远族来历 gate 未挪；第一个兽裔物种行入表的卡同时做「9 条 gate 置空 + 种族侧组件词条 gate 由 catalog 通用读」。
+- S1-3d 审卡核旧验收 9 个文件「只改前提、不降门槛」，逐条写明（李白 11-27）。
+- S1-3d 可扮演判据直读物种数据表行，运行期新建物种行（state 内）读不到，待运行期建物种的卡改经公共读入口。
+- S1-3c 不阻合：卷二:346 drawByKey 签名与落点 rules/gen 勘误；state-owners kernelApi 三行与 scanclasses 四处仍引旧树 kernel/sample.mjs、kernel/handles/keys.mjs 一次清理；kernel-constants.json prngHexDigits 补 basis；person.mjs attributes 部分键不补齐口径待定。
+- S2-0a/0b 不阻合：terminate.mjs 直读 state.terminated 与卷二:585 读者限定冲突需勘误；markDayField 待提公共部件；relMaturity 负值；mind/beast 与 sapient 类别未互核。
+- S1-3a 不阻合：化身靠模板行 origin 派生会误算用来历模板建的 NPC，待 S2-H 席位边；bg_beast_exile 出生地限制未做；§4.7 派生项（语言/熟人/传闻）未做。
+- 门禁：V-2.b（anyType 9 条）另立修门禁卡；S12-3 全卷登记卡（48 条孤儿、5 条无类别、卷十二 §2.4 对照表补 S12-8/9/10）后 S12-3 升必过；门禁封口 A 合并自身改动按文件粗算致合并角色同步 master 被拒，后续改按块 combined diff；card-archive.mjs 字段名与正则宜进规矩键值行；call_edge 豁免面宜进现行有效裁定.json。
+- S1-1c 后续：index.mjs 点名 digest-exclude.json（未登 registry.json）；closeInputs 返回 Map 宜冻结；state-owners.json declareInputs 预登残留；part_by_unit 未消费 unitOfPath。
 
 
 ### 勘误（主会话 11-26）

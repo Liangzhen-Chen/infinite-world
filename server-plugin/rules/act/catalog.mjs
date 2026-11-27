@@ -10,7 +10,6 @@ import { dim } from '../../kernel/dimensions.mjs';
 import { handlesOp } from '../../kernel/transaction.mjs';
 import { ruleValue } from '../load/registry.mjs';
 import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
-import { speciesOf } from '../body/person.mjs';
 
 // 卷九 §2.2 动作行全部字段 → S1 处置：use 本阶段实现；empty 本阶段未实现，行上必须写空（null、[] 或 {}），非空即 E-ACT-ROW（草案 §1 第 20 行）。
 const ROW_FIELDS = Object.freeze({
@@ -39,8 +38,12 @@ const PATH_SEP = '.';
 const ACT_RULES = 'act';
 const ADVANCE_MAX = 'advanceMaxMinutes';
 const ORIGINS = 'playerOrigins';
+// 可扮演组件类经 rules.chargen.playableClass 指名（卷四 :320、:323 代号从键取，G-2 :1085）。
+const CHARGEN = 'chargen';
+const PLAYABLE_CLASS = 'playableClass';
+const CLASSES_FIELD = 'classes';
 // 本模块提供读数的命名空间（登记行在 state-owners.json rxNamespaces；读数含义见那里的 entry 列）。
-const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', originReady: 'origin.ready' });
+const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', speciesPlayable: 'species.playable' });
 const RX_TYPE = Object.freeze({ type: 'rx' });
 const UNKNOWN_READ = 'E-DIM-UNKNOWN-READ';
 
@@ -319,8 +322,13 @@ export function nsReadsFor(engine, state, at) {
       const origin = originOf(engine, state, at.candidate);
       return origin !== null && catalogOf(engine).origins.open.has(origin);
     } });
-    // 候选能否建档（S1-3c 未建数据门）：与建档补全同一判断 rules/body/person.mjs#speciesOf。
-    Object.defineProperty(reads, NS.originReady, { enumerable: true, get: () => speciesOf(engine, state, String(at.candidate)) !== null });
+    // 候选物种可否扮演（卷四 G-2 :1085）：候选数据行 classes 含 rules.chargen.playableClass 所指组件类；表取登记（不写表名）。可扮演判据只在此一处。
+    Object.defineProperty(reads, NS.speciesPlayable, { enumerable: true, get: () => {
+      const kind = engine.registry.kindOfLoaded(at.candidate);
+      const doc = kind === undefined ? undefined : engine.registry.tables.get(kind);
+      const row = doc && isObj(doc.rows) ? doc.rows[String(at.candidate)] : undefined;
+      return isObj(row) && Array.isArray(row[CLASSES_FIELD]) && row[CLASSES_FIELD].includes(ruleValue(engine.docData, CHARGEN, PLAYABLE_CLASS));
+    } });
   }
   for (const [name, v] of Object.entries(at.slots || {})) reads[`${NS.slot}${PATH_SEP}${name}`] = v;
   return reads;

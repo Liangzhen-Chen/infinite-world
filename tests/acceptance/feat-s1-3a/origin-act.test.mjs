@@ -23,6 +23,8 @@ const loadJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 const CULTURES = loadJson(join(WORLD, 'lore/cultures.json'));
 const PERSON_ROWS = loadJson(join(WORLD, 'ontology/dimensions/person.json')).rows;
 const PLACE_ROWS = loadJson(join(WORLD, 'ontology/dimensions/place.json')).rows;
+// S1-3d：act_choose_origin 补 species 槽，下标 0 取开局菜单种族候选的第一个（可扮演候选，feat-s1-3d/species-menu.test.mjs 第 1 条）。
+const SWITCHES = Object.fromEntries(loadJson(join(WORLD, 'rules/tables/player-origins.json')).rows.map((r) => [r.key, r.value]));
 const ORIGIN_VOCAB = loadJson(join(WORLD, 'ontology/dimensions/_vocab.json')).families.origin.entries;
 const DESIGN_14 = readFileSync(join(ROOT, 'docs/世界设计/14-历史传说与玩家来历.md'), 'utf8');
 const PER_CULTURE = Number(/"backgroundsPerCulture":\s*(\d+)/.exec(DESIGN_14)?.[1]);
@@ -119,13 +121,12 @@ test('1. 来历行齐全：菜单选来历的候选 = person 表中的来历行�
   assert.equal(ids.length, CULTURES.length * PER_CULTURE);
 
   const { world } = await fresh();
-  // 数据门（S1-3c 草案 §3）：来历模板行的 species 须是物种表里的行才进候选；无物种行的来历（非人来历）被隐藏。开关开的行均照常入列。
-  const SPECIES_ROWS = loadJson(join(WORLD, 'ontology/dimensions/species.json')).rows;
-  const gated = ids.filter((id) => typeof PERSON_ROWS[id].species === 'string' && Object.hasOwn(SPECIES_ROWS, PERSON_ROWS[id].species));
-  assert.ok(gated.length > 0, '物种门后应仍有来历候选');
+  // S1-3d（种族与来历解耦）：来历候选只看 origin.open（开关），不再按 species 数据门过滤；候选 = 全部开放来历行（feat-s1-3d/origin-open.test.mjs 第 4a 条）。
+  const open = ids.filter((id) => gateOf(id) === null || SWITCHES[gateOf(id)] === true);
+  assert.ok(open.length > 0, '开放来历应仍有候选');
   const offered = candidatesOf(world, 'act_choose_origin', 'origin');
-  assert.equal(offered.length, gated.length, '来历候选数应等于通过数据门的行数');
-  assert.deepEqual([...offered].sort(), [...gated].sort(), '来历候选集应与通过数据门的 person 来历行逐个相等');
+  assert.equal(offered.length, open.length, '来历候选数应等于 origin.open 的来历行数');
+  assert.deepEqual([...offered].sort(), [...open].sort(), '来历候选集应恰为 origin.open 的 person 来历行');
 });
 
 test('2. 选来历后化身存在、birthplace 指向所选的开放地点（候选编号经 act 提交）', async () => {
@@ -139,7 +140,7 @@ test('2. 选来历后化身存在、birthplace 指向所选的开放地点（候
     const before = snap(world);
     const visibleBefore = JSON.stringify(menuOf(world).visible);
 
-    const r = await world.act({ act: 'act_choose_origin', slots: { origin: oi, place: pi } });
+    const r = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: oi, place: pi } });
     assert.equal(isOk(r), true, JSON.stringify(r));
     assert.equal(newInputs(world, before).length, 1, '成功提交应记一条输入条目');
 
@@ -159,7 +160,7 @@ test('3. 已有化身后选来历不可用：菜单不列或带 blocked，提交
   const origin = candidatesOf(world, 'act_choose_origin', 'origin');
   const place = candidatesOf(world, 'act_choose_origin', 'place');
   const first = snap(world);
-  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } })), true);
+  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } })), true);
   assert.equal(newAvatars(world, first).length, 1, '前提：第一次选来历应建出化身');
 
   // 已有化身后 act_choose_origin 不可用：菜单可以不列出，若列出则须带 blocked（提交拒收由下面断言）。
@@ -167,7 +168,7 @@ test('3. 已有化身后选来历不可用：菜单不列或带 blocked，提交
   if (listed) assert.ok(listed.blocked, '已有化身时 act_choose_origin 若被列出，须带 blocked 拒因');
 
   const before = snap(world);
-  const r = await world.act({ act: 'act_choose_origin', slots: { origin: origin.length - 1, place: place.length - 1 } });
+  const r = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: origin.length - 1, place: place.length - 1 } });
   assertRejected(world, before, r, 'E-ACT-PRECONDITION');
 });
 
@@ -183,7 +184,7 @@ test('4. 未有化身时等待不可用：开局菜单不列 act_wait，提交�
 
 test('5. 等待推进时钟 = 所给分钟；日志多一条输入；结果 advancedMinutes 等于所给分钟', async () => {
   const { world } = await fresh();
-  const r0 = await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } });
+  const r0 = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
   assert.equal(isOk(r0), true, '前提：选来历应成功');
   const actor = avatarOf(world);
   const max = waitMax();
@@ -202,7 +203,7 @@ test('5. 等待推进时钟 = 所给分钟；日志多一条输入；结果 adva
 
 test('6. 越界分钟被拒：0、负数、小数、字串、上限+1 → E-ACT-SLOT；时钟与 state 不动，日志只多输入', async () => {
   const { world } = await fresh();
-  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } })), true);
+  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } })), true);
   const max = waitMax();
   const actor = avatarOf(world);
   const bad = [0, -5, 1.5, '30', max + 1];
@@ -215,14 +216,14 @@ test('6. 越界分钟被拒：0、负数、小数、字串、上限+1 → E-ACT-
 
 test('7. 存槽→读档→replay_apply：化身与时钟一致；已有化身后的被拒意图在复演中同处同样被拒，saveDigest 一致', async () => {
   const { world, root } = await fresh();
-  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } })), true);
+  assert.equal(isOk(await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } })), true);
   assert.equal(isOk(await world.act({ act: 'act_wait', actor: avatarOf(world), numbers: { minutes: Math.min(45, waitMax()) } })), true);
   const avatarIds = Object.keys(world.state.created).filter((id) => world.state.created[id].kind === 'person');
   assert.equal(avatarIds.length, 1, '存前应有一个化身');
 
   // 已有化身再选来历：被拒的意图必须进日志（请求编号留在日志，卷二:545）。
   const before = snap(world);
-  const rej = await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } });
+  const rej = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
   assertRejected(world, before, rej, 'E-ACT-PRECONDITION');
 
   const manifest = world.save(0);

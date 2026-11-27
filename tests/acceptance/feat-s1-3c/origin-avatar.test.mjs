@@ -39,10 +39,11 @@ const minutesPerYear = (() => {
 const ADULT = LIFE.stages.find((s) => /adult$/.test(s.stage));
 
 // 开局年龄（卷四 :631 成年年龄 = species.maturityYears；L-1 成年行 relMaturityMin）：模板行有 startAgeYears 时取它，否则取成年下界。
-const startAgeOf = (/** @type {string} */ tmplId) => {
+// S1-3d：种族由开局菜单所选（不再挂在来历行上），故成年下界按所选物种行算。
+const startAgeOf = (/** @type {string} */ tmplId, /** @type {string} */ speciesId) => {
   const row = PERSON_ROWS[tmplId];
   if (typeof row.startAgeYears === 'number') return row.startAgeYears;
-  const sp = SPECIES_ROWS[row.species];
+  const sp = SPECIES_ROWS[speciesId];
   return ADULT.relMaturityMin * sp.maturityYears;
 };
 
@@ -70,32 +71,32 @@ const candidatesOf = (world, /** @type {string} */ act, /** @type {string} */ sl
 const avatarOf = (world) =>
   Object.keys(world.state.created ?? {}).find((id) => world.state.created[id].kind === 'person');
 
-// 选来历（真实动作）：返回 {id, template}。
-async function chooseOrigin(world, oi = 0, pi = 0) {
+// 选来历（真实动作）：返回 {id, template, species}。S1-3d：种族槽取下标 si（默认 0，即开局菜单种族候选的第一个，可扮演候选）。
+async function chooseOrigin(world, oi = 0, pi = 0, si = 0) {
+  const species = candidatesOf(world, 'act_choose_origin', 'species');
   const origin = candidatesOf(world, 'act_choose_origin', 'origin');
   const place = candidatesOf(world, 'act_choose_origin', 'place');
-  const r = await world.act({ act: 'act_choose_origin', slots: { origin: oi, place: pi } });
+  const r = await world.act({ act: 'act_choose_origin', slots: { species: si, origin: oi, place: pi } });
   assert.equal(isOk(r), true, `选来历应成功：${JSON.stringify(r)}`);
   const id = avatarOf(world);
   assert.ok(id, '选来历后应有化身');
-  return { id, template: origin[oi], place: place[pi] };
+  return { id, template: origin[oi], place: place[pi], species: species[si] };
 }
 
 // ---------- 用例 ----------
 
 test('1. 玩家入口零 mock：经 act_choose_origin 建化身；species、adultMassKg、birthMinute 可读且非空；species 等于该来历模板行的 species', async () => {
   const { world } = await fresh();
-  const { id, template } = await chooseOrigin(world, 0, 0);
+  const { id, template, species } = await chooseOrigin(world, 0, 0);
   const rec = world.state.created[id];
 
-  const want = PERSON_ROWS[template].species;
-  assert.ok(typeof want === 'string' && want.length > 0, '来历模板行应写 species（设计册 14 :228：species 取文化的物种）');
+  // S1-3d：species 为开局菜单所选的种族候选（设计册 14 §4.7 步 0），写在化身 props 上。
+  const want = species;
+  assert.ok(typeof want === 'string' && want.length > 0, '种族候选应为非空物种 id');
   assert.ok(Object.hasOwn(SPECIES_ROWS, want), 'species 应指向物种表中的行');
 
   assert.equal(rec.template, template, '化身应以所选来历行为模板');
-  // species 不写进化身 props：经 rec.template 指向的来历行读入（与 kernel readBase 同序：先 props，再实体行）。
-  const speciesRead = Object.hasOwn(rec.props, 'species') ? rec.props.species : PERSON_ROWS[rec.template].species;
-  assert.equal(speciesRead, want, '化身 species 应等于来历模板行的 species');
+  assert.equal(rec.props.species, want, '化身 props.species 应等于所选的种族候选');
   assert.equal(typeof rec.props.adultMassKg, 'number', 'adultMassKg 应为数');
   assert.ok(Number.isFinite(rec.props.adultMassKg), 'adultMassKg 应为有限数');
   assert.equal(typeof rec.props.birthMinute, 'number', 'birthMinute 应为数');
@@ -117,7 +118,7 @@ test('2. 采样确定且落在分布内：同一来历两次独立 init，化身
   const vb = second.world.state.created[b.id].props.adultMassKg;
   assert.ok(Object.is(va, vb), `两次独立 init 的 adultMassKg 应逐位相同：${va} 对 ${vb}`);
 
-  const sp = SPECIES_ROWS[PERSON_ROWS[a.template].species];
+  const sp = SPECIES_ROWS[a.species];
   const [lo, hi] = sp.bodyMassKg.clamp;
   assert.ok(va >= lo && va <= hi, `adultMassKg ${va} 应落在 bodyMassKg.clamp [${lo}, ${hi}] 内`);
 });
@@ -130,7 +131,7 @@ test('6. 年龄：birthMinute = 建行分钟 − 开局年龄折算分钟（年�
   const rec = world.state.created[id];
 
   // 选来历不推进时钟，建行分钟即选来历前的时钟读数。
-  const exact = before - startAgeOf(template) * minutesPerYear;
+  const exact = before - startAgeOf(template, rec.props.species) * minutesPerYear;
   // 折分钟取整的口径卡文未定，允许 1 分钟内误差；仍须是整数（上面已验）。
   assert.ok(Math.abs(rec.props.birthMinute - exact) < 1, `birthMinute ${rec.props.birthMinute} 应接近 ${exact}（建行分钟 ${before} − 年龄折分钟）`);
   assert.ok(rec.props.birthMinute <= before, '出生时刻不应晚于建行时刻');
