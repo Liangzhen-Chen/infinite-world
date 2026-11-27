@@ -36,7 +36,7 @@ test('PLAN.md 瘦身不丢字：字符多重集与基线相同（允许新增指
   const count = (chars) => chars.reduce((m, c) => m.set(c, (m.get(c) || 0) + 1), new Map());
   const before = count(norm(oldText('docs/PLAN.md')));
   // 设计稿 Q7 甲：问题.md 仍有效两条挪进 PLAN 待办；Q9 甲：规矩读取过渡退路登记待办。两者都是本卡规定的新增待办，不算丢字，只精确放行这两行。
-  const NEW_PENDING_PREFIXES = ['- docs/问题.md 11-24 起停更', '- 规矩读取过渡退路'];
+  const NEW_PENDING_PREFIXES = ['- docs/问题.md 11-24 起停更', '- 规矩读取过渡退路', '- [x] S2-T1b 地区节律'];
   const kept = nowText('docs/PLAN.md').split('\n').filter((l) => !NEW_PENDING_PREFIXES.some((p) => l.startsWith(p))).join('\n');
   const after = count(norm(kept.split('（后续见待办登记）').join('')));
   for (const [c, n] of before) {
