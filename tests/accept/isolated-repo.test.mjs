@@ -3,10 +3,11 @@
 // fn 抛错时副本与 worktree 登记都被清掉，调用方工作区与依赖目录不受影响。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { ROOT, writeUnderTempRoot } from './temp-root.mjs';
+import { ROOT, writeUnderTempRoot, testTempRoot, removeTempRoot } from './temp-root.mjs';
+import { pathToFileURL } from 'node:url';
 import { withIsolatedRepo, runGate } from '../support/isolated-repo.mjs';
 
 const norm = (p) => p.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
@@ -57,4 +58,38 @@ test('fn 抛错时副本仍被清理，worktree 登记无残留，错误原样�
   );
   assert.ok(!existsSync(copyRoot), '抛错后副本目录也应删除');
   assert.ok(!worktrees().includes(norm(copyRoot)), '抛错后 worktree 登记也应清掉');
+});
+
+// S2-GOV 设计稿 §7：进程被杀时清理段不跑；下次调用先清本仓库名下、属主进程已死的副本（先断联接再摘 worktree），没有 owner.json 的目录不碰。
+test('杀进程残留：下次调用清掉死进程的副本与 worktree 登记，宿主 node_modules 仍在；无 owner.json 的目录保留', async () => {
+  const keep = testTempRoot('iso-repo-');
+  writeUnderTempRoot(keep, 'marker.txt', 'no owner');
+  try {
+    const helper = pathToFileURL(join(ROOT, 'tests/support/isolated-repo.mjs')).href;
+    // 子进程把工作目录切进副本并开着副本里的文件（Windows 上被杀后这些句柄的释放有延迟），杀后立刻发起下一次调用。
+    const code = `import { openSync } from 'node:fs';
+import { withIsolatedRepo } from ${JSON.stringify(helper)};
+await withIsolatedRepo((root) => { process.chdir(root); globalThis.held = openSync(root + '/package.json', 'r'); process.stdout.write(root + '\\n'); setInterval(() => {}, 1000); return new Promise(() => {}); });`;
+    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'] });
+    const copyRoot = await new Promise((resolve, reject) => {
+      let buf = '';
+      child.stdout.on('data', (d) => { buf += d; const i = buf.indexOf('\n'); if (i >= 0) resolve(buf.slice(0, i).trim()); });
+      child.on('exit', (c) => reject(new Error(`子进程提前退出 ${c}`)));
+    });
+    const tempRoot = dirname(copyRoot);
+    assert.ok(existsSync(join(tempRoot, 'owner.json')), '临时根应写 owner.json');
+    assert.ok(worktrees().includes(norm(copyRoot)), '杀之前 worktree 已登记');
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    child.kill('SIGKILL');
+    await exited;
+    assert.ok(existsSync(tempRoot), '被杀后清理段没跑，副本残留（本用例要验的前提）');
+
+    await withIsolatedRepo(() => {});
+    assert.ok(!existsSync(tempRoot), '死进程的副本应被下次调用清掉');
+    assert.ok(!worktrees().includes(norm(copyRoot)), '死进程的 worktree 登记应被清掉');
+    assert.ok(existsSync(join(ROOT, 'node_modules/typescript/package.json')), '联接指向的宿主 node_modules 里的已知文件清理后仍在（removeTempRoot 不跟进联接）');
+    assert.equal(readFileSync(join(keep, 'marker.txt'), 'utf8'), 'no owner', '没有 owner.json 的目录不碰');
+  } finally {
+    removeTempRoot(keep);
+  }
 });

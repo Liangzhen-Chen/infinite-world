@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { testTempRoot, writeUnderTempRoot, removeTempRoot } from './temp-root.mjs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderSnapshot } from '../../tools/gen-status-snapshot.mjs';
+import { renderSnapshot, readMergedCards } from '../../tools/gen-status-snapshot.mjs';
 
 const SCRIPT = fileURLToPath(new URL('../../tools/gen-status-snapshot.mjs', import.meta.url));
 const SNAPSHOT_REL = join('docs', '状态快照.generated.md');
@@ -82,7 +82,7 @@ test('renderSnapshot 五段齐全、顺序固定、≤80 行，数字按输入�
   assert.deepEqual(sectionOf(text, '## 最近提交'), ['1 第一条', `2 ${'字'.repeat(60)}`], '主题截到 60 字');
   assert.deepEqual(sectionOf(text, '## 入口接通'), ['- 条目总数 4；file 非空 2；接通率 50%']);
   assert.deepEqual(sectionOf(text, '## 门禁基线'), ['- 分量总数 3；current 之和 9；未锁定 2']);
-  assert.deepEqual(sectionOf(text, '## 在途卡'), ['（无）']);
+  assert.deepEqual(sectionOf(text, '## 在途卡'), ['（无）', '（缺：完整历史）']);
   assert.ok(lineCount(text) <= 80);
 });
 
@@ -99,14 +99,14 @@ test('缺文件或缺字段写（缺：…），不抛错', () => {
   assert.deepEqual(sectionOf(text, '## 最近提交'), ['（缺：commits）']);
   assert.deepEqual(sectionOf(text, '## 入口接通'), ['（缺：tools/accept/entry-registry.json）']);
   assert.deepEqual(sectionOf(text, '## 门禁基线'), ['（缺：tools/accept/baseline.json）']);
-  assert.deepEqual(sectionOf(text, '## 在途卡'), ['（缺：cards）']);
+  assert.deepEqual(sectionOf(text, '## 在途卡'), ['（缺：cards）', '（缺：完整历史）']);
 
   const partial = renderSnapshot({
     registry: {}, baseline: {}, cards: [{ card: 'c1', phase: 'x' }],
   });
   assert.deepEqual(sectionOf(partial, '## 入口接通'), ['（缺：entries）']);
   assert.deepEqual(sectionOf(partial, '## 门禁基线'), ['（缺：rows）']);
-  assert.deepEqual(sectionOf(partial, '## 在途卡'), ['（缺：failCount、nextAction）']);
+  assert.deepEqual(sectionOf(partial, '## 在途卡'), ['（缺：failCount、nextAction）', '（缺：完整历史）']);
 });
 
 test('在途卡按 card 名排序，_template 由调用方跳过', () => {
@@ -121,6 +121,7 @@ test('在途卡按 card 名排序，_template 由调用方跳过', () => {
     'alpha | writing | 失败 2 | 下一步 继续写',
     'mid | dispatched | 失败 0 | 下一步 等出题',
     'zeta | review_r1 | 失败 0 | 下一步 合并',
+    '（缺：完整历史）',
   ]);
 });
 
@@ -141,7 +142,7 @@ test('CLI：生成、跳过 _template、--check 只比受检段', (t) => {
   const snapshotPath = join(root, SNAPSHOT_REL);
   const text = readFileSync(snapshotPath, 'utf8');
   assert.match(text, /^# 状态快照（机器生成，禁止手改）/);
-  assert.deepEqual(sectionOf(text, '## 在途卡'), ['two | review_r1 | 失败 1 | 下一步 等审卡']);
+  assert.deepEqual(sectionOf(text, '## 在途卡'), ['two | review_r1 | 失败 1 | 下一步 等审卡', '已合 0 张：（无）（git 派生）']);
   assert.doesNotMatch(text, /模板卡/, '_template 不是卡');
   assert.deepEqual(sectionOf(text, '## 入口接通'), ['- 条目总数 2；file 非空 1；接通率 50%']);
   assert.deepEqual(sectionOf(text, '## 门禁基线'), ['- 分量总数 2；current 之和 7；未锁定 1']);
@@ -173,4 +174,115 @@ test('CLI：--out 写到指定路径，--check 也认该路径', (t) => {
   assert.ok(existsSync(join(root, outPath)));
   assert.ok(!existsSync(join(root, SNAPSHOT_REL)), '--out 不应写默认路径');
   assert.equal(run(root, ['--check', '--out', outPath]).status, 0);
+});
+
+// S2-GOV Q3：已合判据只读 HEAD 历史——state.json 现版本随说明含整行「角色：合并」的真合并进了 HEAD 某父提交的历史（不含 HEAD 自己）。
+function gitIn(cwd, args) {
+  return execFileSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=', ...args], {
+    cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, GIT_AUTHOR_DATE: '2026-11-27T00:00:00Z', GIT_COMMITTER_DATE: '2026-11-27T00:00:00Z' },
+  });
+}
+const mergedNow = (repoDir) => readMergedCards(repoDir, [{ dir: 'x-card', state: card('x-card', 'pr', 0, '合') }, { dir: 'y-card', state: card('y-card', 'pr', 0, '合') }]);
+
+test('已合派生：卡分支改 state.json → 在途；「角色：合并」真合并本身 → 在途；其后再一次提交 → merged；「角色：写码」同步合并不算', (t) => {
+  const root = testTempRoot('snapshot-merged-');
+  t.after(() => removeTempRoot(root));
+  gitIn(root, ['init', '-q', '-b', 'master']);
+  writeUnderTempRoot(root, 'base.txt', 'base\n');
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['commit', '-q', '-m', 'base']);
+
+  gitIn(root, ['checkout', '-q', '-b', 'card/x']);
+  writeUnderTempRoot(root, 'docs/卡档案/x-card/state.json', JSON.stringify(card('x-card', 'pr', 0, '合')));
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['commit', '-q', '-m', 'x state']);
+  assert.deepEqual(mergedNow(root), [], '第一步：卡分支上改 state.json，在途');
+
+  gitIn(root, ['checkout', '-q', 'master']);
+  gitIn(root, ['merge', '-q', '--no-ff', 'card/x', '-m', '合入 x', '-m', '卡分支：card/x\n角色：合并\n标识：main-test']);
+  assert.deepEqual(mergedNow(root), [], '第二步：HEAD 就是合并提交，不算自己，在途');
+
+  writeUnderTempRoot(root, 'after.txt', 'after\n');
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['commit', '-q', '-m', 'after']);
+  assert.deepEqual(mergedNow(root), ['x-card'], '第三步：合并提交进了父提交历史，merged');
+
+  // 「角色：写码」的同步合并（卡分支合主线）不是合入。
+  gitIn(root, ['checkout', '-q', '-b', 'card/y', 'master~1']);
+  writeUnderTempRoot(root, 'docs/卡档案/y-card/state.json', JSON.stringify(card('y-card', 'pr', 0, '合')));
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['commit', '-q', '-m', 'y state']);
+  gitIn(root, ['merge', '-q', '--no-ff', 'master', '-m', '同步主线', '-m', '卡分支：card/y\n角色：写码\n标识：w']);
+  writeUnderTempRoot(root, 'y-more.txt', 'more\n');
+  gitIn(root, ['add', '-A']);
+  gitIn(root, ['commit', '-q', '-m', 'y more']);
+  assert.deepEqual(mergedNow(root), ['x-card'], '同步合并写「角色：写码」，y-card 仍在途');
+
+  // 同一 HEAD 生成两次逐字节相同。
+  writeUnderTempRoot(root, 'tools/accept/entry-registry.json', JSON.stringify({ version: 1, entries: [] }));
+  const first = run(root, ['--out', 'a.md']);
+  const second = run(root, ['--out', 'b.md']);
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(second.status, 0, second.stderr);
+  const a = readFileSync(join(root, 'a.md'), 'utf8');
+  assert.equal(a, readFileSync(join(root, 'b.md'), 'utf8'));
+  // 已合的 x-card 只出现在末行名单里，不在在途列表。
+  assert.deepEqual(sectionOf(a, '## 在途卡'), ['y-card | pr | 失败 0 | 下一步 合', '已合 1 张：x-card（git 派生）']);
+});
+
+test('已合派生：浅克隆写（缺：完整历史），不静默判定', (t) => {
+  const src = testTempRoot('snapshot-shallow-src-');
+  const dst = testTempRoot('snapshot-shallow-dst-');
+  t.after(() => { removeTempRoot(src); removeTempRoot(dst); });
+  gitIn(src, ['init', '-q', '-b', 'master']);
+  for (const n of ['1', '2']) {
+    writeUnderTempRoot(src, `f${n}.txt`, n);
+    gitIn(src, ['add', '-A']);
+    gitIn(src, ['commit', '-q', '-m', n]);
+  }
+  gitIn(dst, ['clone', '-q', '--depth', '1', `file://${src.split('\\').join('/')}`, 'c']);
+  assert.equal(readMergedCards(join(dst, 'c'), []), null);
+  assert.deepEqual(sectionOf(renderSnapshot({ cards: [], merged: null }), '## 在途卡'), ['（无）', '（缺：完整历史）']);
+  // 纯渲染正例：已合名单里的卡不进在途列表。
+  const both = renderSnapshot({ cards: [card('a-card', 'pr', 0, '合'), card('b-card', 'pr', 0, '等')], merged: ['a-card'] });
+  assert.deepEqual(sectionOf(both, '## 在途卡'), ['b-card | pr | 失败 0 | 下一步 等', '已合 1 张：a-card（git 派生）']);
+});
+
+// 主会话 11-27 裁定：生成取 HEAD 本身（含 HEAD），--check 取被检提交的各父提交；提交前生成的结果 = 提交后在新提交上 --check 的结果。
+test('已合派生：从「角色：合并」合并提交开新分支，提交前生成 → 提交 → 新提交上 --check 通过，不需要再重生成', (t) => {
+  const repoDir = testTempRoot('snapshot-pending-');
+  t.after(() => removeTempRoot(repoDir));
+  gitIn(repoDir, ['init', '-q', '-b', 'master']);
+  writeUnderTempRoot(repoDir, 'tools/accept/entry-registry.json', JSON.stringify({ version: 1, entries: [] }));
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'base']);
+  gitIn(repoDir, ['checkout', '-q', '-b', 'card/a']);
+  writeUnderTempRoot(repoDir, 'docs/卡档案/a-card/state.json', JSON.stringify(card('a-card', 'pr', 0, '合')));
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'a state']);
+  gitIn(repoDir, ['checkout', '-q', 'master']);
+  gitIn(repoDir, ['merge', '-q', '--no-ff', 'card/a', '-m', '合入 a', '-m', '卡分支：card/a\n角色：合并\n标识：main-test']);
+
+  // 从合并提交开新卡分支：提交前生成，生成时 HEAD 就是合并提交本身，a-card 已合。
+  gitIn(repoDir, ['checkout', '-q', '-b', 'card/b']);
+  writeUnderTempRoot(repoDir, 'docs/卡档案/b-card/state.json', JSON.stringify(card('b-card', 'dispatched', 0, '写')));
+  const gen = run(repoDir, []);
+  assert.equal(gen.status, 0, gen.stderr);
+  const text = readFileSync(join(repoDir, SNAPSHOT_REL), 'utf8');
+  assert.deepEqual(sectionOf(text, '## 在途卡'), ['b-card | dispatched | 失败 0 | 下一步 写', '已合 1 张：a-card（git 派生）']);
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'b 首个提交']);
+  const check = run(repoDir, ['--check']);
+  assert.equal(check.status, 0, check.stdout + check.stderr);
+
+  // 已合卡的 state.json 随下一个提交改动：生成时按在途（新提交成为 S），提交后 --check 照样通过。
+  writeUnderTempRoot(repoDir, 'docs/卡档案/a-card/state.json', JSON.stringify(card('a-card', 'merged', 0, '已合入')));
+  assert.equal(run(repoDir, []).status, 0);
+  const reopened = readFileSync(join(repoDir, SNAPSHOT_REL), 'utf8');
+  assert.deepEqual(sectionOf(reopened, '## 在途卡'), ['a-card | merged | 失败 0 | 下一步 已合入', 'b-card | dispatched | 失败 0 | 下一步 写', '已合 0 张：（无）（git 派生）']);
+  gitIn(repoDir, ['add', '-A']);
+  gitIn(repoDir, ['commit', '-q', '-m', 'a 记账']);
+  const recheck = run(repoDir, ['--check']);
+  assert.equal(recheck.status, 0, recheck.stdout + recheck.stderr);
 });

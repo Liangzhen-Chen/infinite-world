@@ -1,11 +1,13 @@
 // 卡档案与自我反思检查（亮圳 11-22「留档反思1122」；卡头第二节第 11 条）：纯函数，不碰 git。
-// 小节名、证据判据、触发目录、例外、最少条数等一律从 docs/派活卡头规矩.md 第五节读，本文件不另抄一份（红线第 10 条）。
+// 小节名、证据判据、触发目录、例外、最少条数等一律从 tools/accept/card-rules.md（原卡头规矩第五节）读，本文件不另抄一份（红线第 10 条）。
 
 import { matchGlobs } from '../read.mjs';
 import { checkReceipt } from './receipt.mjs';
 
 export const CARD_ARCHIVE_CODE = 'E-ACC-CARD-ARCHIVE';
-export const CARD_RULES_DOC = 'docs/派活卡头规矩.md';
+export const CARD_RULES_DOC = 'tools/accept/card-rules.md';
+// 过渡退路（S2-GOV Q9）：远端还没有 CARD_RULES_DOC 时读旧人读文件的第五节；登记待办，S2-SW 删。
+export const CARD_RULES_LEGACY_DOC = 'docs/派活卡头规矩.md';
 const NONE = new Set(['—', '-', '']);
 
 // markdown 表格行拆格：首尾的管道不算格；没有首管道的不算表格行。
@@ -580,4 +582,16 @@ export function loadRules(docText) {
   const rules = archiveRules(docText);
   if (rules.error) return rules;
   return { rules };
+}
+
+// 读某提交上的规矩（远端规矩读取的唯一入口）：先读 <ref>:CARD_RULES_DOC，没有就读 <ref>:CARD_RULES_LEGACY_DOC 第五节。
+// show(spec) 返回 `git show <spec>` 的文本，取不到时抛错（本文件不碰 git）。两处都取不到时抛错，由调用方按各自原有口径处理。
+/**
+ * @param {string} ref
+ * @param {(spec: string) => string} show
+ */
+export function readRulesAt(ref, show) {
+  let text;
+  try { text = show(`${ref}:${CARD_RULES_DOC}`); } catch { text = show(`${ref}:${CARD_RULES_LEGACY_DOC}`); }
+  return loadRules(text);
 }

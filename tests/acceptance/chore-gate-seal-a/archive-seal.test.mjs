@@ -13,7 +13,7 @@ import { tempRepo } from '../../accept/temp-repo.mjs';
 import { ROOT, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 const CLI = join(ROOT, 'tools/accept/check-push-archive.mjs');
-const DOC = readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8');
+const DOC = readFileSync(join(ROOT, 'tools/accept/card-rules.md'), 'utf8');
 const VOL12 = readFileSync(join(ROOT, 'docs/统一底层设计/卷十二-验收与自动扫描.md'), 'utf8');
 const RULES = loadRules(DOC).rules;
 const PASS_GATE = async () => ({ verdict: 'pass' });

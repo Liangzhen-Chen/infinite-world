@@ -13,7 +13,7 @@ import { ROOT, tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 
 const setEffective = (doc, v) => doc.replace(/^(- 门禁生效提交：).*?(\r?)$/m, `$1${v}$2`);
-const DOC = setEffective(readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8'), '待回填');
+const DOC = setEffective(readFileSync(join(ROOT, 'tools/accept/card-rules.md'), 'utf8'), '待回填');
 const { rules: RULES, error: LOAD_ERROR } = loadRules(DOC);
 const PASS_GATE = async () => ({ verdict: 'pass' });
 const has = (reasons, ...parts) => reasons.some((r) => parts.every((p) => r.includes(p)));
@@ -238,7 +238,7 @@ function commit(dir, files, lines) {
 function repo() {
   const dir = testTempRoot('card-archive-seal-');
   git(dir, ['init', '-q', '-b', 'master']);
-  commit(dir, { 'docs/派活卡头规矩.md': DOC, ...BASE_FILES }, ['base']);
+  commit(dir, { 'tools/accept/card-rules.md': DOC, ...BASE_FILES }, ['base']);
   return dir;
 }
 const pushRange = (dir, head, base) => prePush(dir, `refs/heads/x ${head} refs/heads/master ${base}\n`, { runGate: PASS_GATE });
@@ -333,8 +333,8 @@ test('合并自身改动：卡分支同步主线带进别卡验收文件放行�
 test('派前自检：--stage 提交 --only 派卡.md 对缺行号的设计依据非零退出并带示例；合格放行且不读开发.md', () => {
   const dir = tempRepo();
   git(dir, ['init', '-q', '-b', 'master']);
-  for (const [rel, text] of Object.entries({ 'docs/派活卡头规矩.md': DOC, 'docs/统一底层设计/卷十二-验收与自动扫描.md': BASE_FILES['docs/统一底层设计/卷十二-验收与自动扫描.md'] })) writeUnderTempRoot(dir, rel, text);
-  git(dir, ['add', 'docs']);
+  for (const [rel, text] of Object.entries({ 'tools/accept/card-rules.md': DOC, 'docs/统一底层设计/卷十二-验收与自动扫描.md': BASE_FILES['docs/统一底层设计/卷十二-验收与自动扫描.md'] })) writeUnderTempRoot(dir, rel, text);
+  git(dir, ['add', 'docs', 'tools/accept/card-rules.md']);
   git(dir, ['commit', '-q', '-m', 'base']);
   git(dir, ['update-ref', 'refs/remotes/origin/master', 'HEAD']);
   const run = () => spawnSync(process.execPath, [join(ROOT, 'tools/accept/check-push-archive.mjs'), dir, 'ds/x', '--stage', '提交', '--only', '派卡.md'], { encoding: 'utf8' });

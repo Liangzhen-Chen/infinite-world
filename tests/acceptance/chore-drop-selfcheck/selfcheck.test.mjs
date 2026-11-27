@@ -80,7 +80,7 @@ test('自查表单测文件已删除', () => {
 });
 
 test('派活卡头规矩不再含自查表相关的节名与键，但仍保留反思.md 两节', () => {
-  const doc = readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8');
+  const doc = readFileSync(join(ROOT, 'tools/accept/card-rules.md'), 'utf8');
   for (const gone of ['交卷前自查', '开头自查表文件', '自查表证据种类', '自查表可填否项', '否项原因前缀']) {
     assert.ok(!doc.includes(gone), `规矩文件仍含「${gone}」`);
   }

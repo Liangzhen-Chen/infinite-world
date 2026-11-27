@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { chmodSync, readFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { loadRules, checkArchive, judgeCommit, archiveDirOf, modelFamilies } from '../../tools/accept/lib/card-archive.mjs';
+import { loadRules, checkArchive, judgeCommit, archiveDirOf, modelFamilies, archiveRules, readRulesAt, CARD_RULES_DOC } from '../../tools/accept/lib/card-archive.mjs';
 import { prePush } from '../../tools/accept/pre-push.mjs';
 import { cardArchiveCheck } from '../../tools/accept/commit-hook.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
@@ -14,7 +14,7 @@ import { testTempRoot, writeUnderTempRoot, removeTempRoot } from './temp-root.mj
 
 // 门禁生效提交一行在真实规矩里会被合入后回填，测试不依赖它的现值：先统一设成「待回填」，要用具体值的用例自己再设。
 const setEffective = (doc, v) => doc.replace(/^(- 门禁生效提交：).*?(\r?)$/m, `$1${v}$2`);
-const DOC = setEffective(readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8'), '待回填');
+const DOC = setEffective(readFileSync(join(ROOT, 'tools/accept/card-rules.md'), 'utf8'), '待回填');
 const { rules: RULES, error: LOAD_ERROR } = loadRules(DOC);
 const PASS_GATE = async () => ({ verdict: 'pass' });
 
@@ -281,7 +281,7 @@ function git(dir, args, env = {}) {
 function repo() {
   const dir = testTempRoot('card-archive-');
   git(dir, ['init', '-q']);
-  writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', DOC);
+  writeUnderTempRoot(dir, 'tools/accept/card-rules.md', DOC);
   for (const [rel, text] of Object.entries(FILES)) writeUnderTempRoot(dir, rel, text);
   git(dir, ['add', '-A']);
   git(dir, ['-c', 'core.hooksPath=', 'commit', '-q', '-m', 'base']);
@@ -442,7 +442,7 @@ test('回归 5：门禁生效线——生效提交及其祖先不查，之后的
     const before = await push(dir, c2);
     assert.equal(before.ok, false);
     assert.ok(before.reasons.some((x) => x.includes(c1.slice(0, 9))), '没回填：祖先提交也查');
-    writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', setEffective(DOC, c1));
+    writeUnderTempRoot(dir, 'tools/accept/card-rules.md', setEffective(DOC, c1));
     const after = await push(dir, c2);
     assert.equal(after.ok, false);
     assert.ok(after.reasons.every((x) => !x.includes(c1.slice(0, 9))), '生效提交本身不查');
@@ -489,7 +489,7 @@ test('回归 6：PR 真合并写「卡分支/角色：合并/标识」放行；�
 function hookRepo() {
   const dir = tempRepo();
   git(dir, ['init', '-q']);
-  writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', DOC);
+  writeUnderTempRoot(dir, 'tools/accept/card-rules.md', DOC);
   for (const [rel, text] of Object.entries(FILES)) if (!rel.startsWith('tools/')) writeUnderTempRoot(dir, rel, text);
   // 钩子必须有执行位：Linux 上 git 会跳过不可执行的钩子（Windows 不看执行位，本机才通过）。
   chmodSync(writeUnderTempRoot(dir, '.githooks/commit-msg', readFileSync(join(ROOT, '.githooks/commit-msg'))), 0o755);
@@ -521,4 +521,33 @@ test('回归 7：真钩子走提交——主会话真合并带三行放行；缺
     git(dir, ['commit', '-q', ...MERGE.flatMap((m) => ['-m', m])]);
     assert.equal(git(dir, ['log', '-1', '--format=%s']).trim(), '合并 ds/x');
   } finally { removeTempRoot(dir); }
+});
+
+// S2-GOV Q1：机读规矩原样迁到 tools/accept/card-rules.md，解析结果与迁移前（6413e8a47 的 docs/派活卡头规矩.md 第五节）逐字相等。
+const rulesJson = (r) => JSON.stringify(r, (_k, v) => (v instanceof Set ? [...v] : v));
+test('规矩迁移等价：新文件解析结果与 6413e8a47 旧文件第五节逐字相等', () => {
+  const before = execFileSync('git', ['show', '6413e8a47:docs/派活卡头规矩.md'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
+  const after = readFileSync(join(ROOT, CARD_RULES_DOC), 'utf8');
+  const a = archiveRules(before);
+  const b = archiveRules(after);
+  assert.equal(a.error, undefined, a.error);
+  assert.equal(rulesJson(b), rulesJson(a));
+});
+
+test('readRulesAt：ref 上有新文件读新文件，没有退回旧人读文件第五节，两处都没有抛错', () => {
+  const NEW = '## 五、x\n- 推送目标：new\n';
+  const OLD = '## 五、x\n- 推送目标：old\n';
+  const seen = [];
+  const store = (files) => (spec) => { seen.push(spec); if (spec in files) return files[spec]; throw new Error(`no ${spec}`); };
+  const fakeLoad = (files) => { try { return readRulesAt('R', store(files)); } catch (e) { return { thrown: e.message }; } };
+  // 只比读到的是哪份：两份都缺其它必填键，错误信息里带不出差别，所以换成看 show 被问了哪些路径。
+  fakeLoad({ [`R:${CARD_RULES_DOC}`]: NEW, 'R:docs/派活卡头规矩.md': OLD });
+  assert.deepEqual(seen.splice(0), [`R:${CARD_RULES_DOC}`]);
+  fakeLoad({ 'R:docs/派活卡头规矩.md': OLD });
+  assert.deepEqual(seen.splice(0), [`R:${CARD_RULES_DOC}`, 'R:docs/派活卡头规矩.md']);
+  assert.ok(fakeLoad({}).thrown);
+  // 真实规矩：旧路径上放迁移前全文，经退路读出的规则与新文件相同。
+  const before = execFileSync('git', ['show', '6413e8a47:docs/派活卡头规矩.md'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
+  const viaLegacy = readRulesAt('R', store({ 'R:docs/派活卡头规矩.md': before }));
+  assert.equal(rulesJson(viaLegacy.rules), rulesJson(loadRules(readFileSync(join(ROOT, CARD_RULES_DOC), 'utf8')).rules));
 });
