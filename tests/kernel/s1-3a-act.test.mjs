@@ -135,7 +135,7 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
   const { spawn, pass, rows } = rowsOf(raw);
   const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-wait-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 1 } }).code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0, lodge: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(avatar);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
@@ -174,7 +174,7 @@ test('4 候选编号越界被拒；存档读档复演 saveDigest 一致，复演
   const a = g.menu(null).affordances[0];
   const over = Object.fromEntries(Object.keys(a.slots).map((n) => [n, a.slots[n].length]));
   assert.equal(g.act({ act: spawn, slots: over }).code, 'E-ACT-SLOT');
-  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 1, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 1, place: 0, lodge: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 45 } }).ok, true);
   const saved = saveSlot(g);
@@ -216,7 +216,7 @@ test('6 动作表加一行（复制等待行改代号与上限）：不改任何
   const r = clone(raw);
   r.actionDocs.push({ [added]: extra });
   const g = mount(r, 's3a-addrow-');
-  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0, lodge: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const aff = g.menu(avatar).affordances;
   assert.deepEqual(aff.map((a) => a.act), [pass, added]);
@@ -280,7 +280,7 @@ test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被
   const g = await init(express.Router(), { saveRoot: dir });
   const r0 = g.act({ act: pass, numbers: { minutes: 5 } });
   assert.equal(r0.code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0, lodge: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const r1 = g.act({ act: pass, actor: avatar, numbers: { minutes: 0 } });
   assert.equal(r1.code, 'E-ACT-SLOT');
@@ -299,7 +299,7 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   const { spawn, pass } = rowsOf(raw);
   const g = await init(express.Router(), { saveRoot: testTempRoot('s3a-noactor-') });
   assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-PRECONDITION');
-  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0 } }).ok, true);
+  assert.equal(g.act({ act: spawn, slots: { species: 0, origin: 0, place: 0, lodge: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);

@@ -40,5 +40,33 @@
   "params": {},
   "cooldownDays": 0,
   "basis": "入座：给本提案第 0 个产物（同一提案里 eff_spawn_from_template 建出的化身）开玩家席位边，持有者与标的都是它（卷九 §2.5 :321 rules.control.seatKind、R9-3.9 :721 一个实体由玩家出意图当且仅当它有一条在世的玩家席位边；卷九 :630 holding.open）。持有者、标的经 idParams 明文来源 produced.<k>（本事务产物引用，S2-H 主会话 Q1 甲，卷九 R9-2.9 勘误扩到任一原语的 id 型参数）；种类经 paramsRX 读 rules.control.seatKind（不写种类代号）。与 spawn 族分开：spawn 族将来 NPC 生成也复用，不附带席位（S2-H 草案 §5）；数值参数为空，显式声明 {}"
+ },
+ "eff_place_avatar": {
+  "family": "eff_place_avatar",
+  "targetSelector": {
+   "scope": "self"
+  },
+  "requirement": null,
+  "magnitudeRX": null,
+  "outputs": [
+   {
+    "kind": "primitive",
+    "op": "move",
+    "idParams": {
+     "subject": "produced.0"
+    },
+    "paramsRX": {
+     "to": "slot.lodge"
+    }
+   }
+  ],
+  "consent": {
+   "mode": "none",
+   "power": null
+  },
+  "cost": null,
+  "params": {},
+  "cooldownDays": 0,
+  "basis": "落位：把本提案第 0 个产物（同一提案里 eff_spawn_from_template 建出的化身）安置到所选落脚处（卷九 :639 move，写者卷十七 placeSubject；S2-P 主会话 Q1 甲，Q6 甲 subject 必填、经 idParams 明文来源 produced.0 给出）；目标经 paramsRX 读 slot.lodge；数值参数为空，显式声明 {}"
  }
 }

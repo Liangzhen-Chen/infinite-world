@@ -1,0 +1,17 @@
+{
+ "rxNamespaces": [
+  {"ns": "place.lodgeable", "type": "boolean", "entry": "被筛的地点候选可否作开局落脚处：有建筑足迹（挂 rules.gen.roleFacility 所指组件类）、某个祖先是已开放地点（genOpen），且 accessClass 读得到时所指 access 条目 needsGrant 不为真（rules/act/catalog.mjs 读数；对象筛选 tf_lodge_place 读它）", "shape": "boolean", "volume": "卷五 §4.1 规则 2、11（建筑足迹）、§4.13 :1171（accessClass、needsGrant）；卷十 R10-12.7（开放范围）；卷十七 §3.3 :298（给地点落位）；S2-P 主会话 Q1 甲"}
+ ],
+ "kernelApi": {
+  "exports": [
+   {"export": "rules/place/zone.mjs#zoneAt", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/place/zone.mjs#landCell", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/place/zone.mjs#bearingView", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/place/zone.mjs#placeChainOf", "callers": ["rules"], "acceptsState": true},
+   {"export": "kernel/det-math.mjs#installDetTables", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
+   {"export": "rules/place/footprint.mjs#bakeFootprints", "callerFiles": ["rules/load/mount.mjs"]},
+   {"export": "rules/place/footprint.mjs#footprintsDigest", "callerFiles": ["rules/load/mount.mjs"]},
+   {"export": "rules/place/footprint.mjs#checkFootprints", "callerFiles": ["rules/load/mount.mjs"]}
+  ]
+ }
+}

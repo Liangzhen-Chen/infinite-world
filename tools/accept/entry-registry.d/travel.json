@@ -1,0 +1,55 @@
+{
+ "entries": [
+  {
+   "name": "seedKeyHex",
+   "file": "rules/gen/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeSubject",
+   "file": "rules/travel/position.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "readPath",
+    "dim",
+    "ruleValue",
+    "seedKeyHex",
+    "zoneAt",
+    "landCell",
+    "bearingView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "moveWriter",
+   "file": "rules/travel/position.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "placeSubject"
+   ],
+   "rules": []
+  },
+  {
+   "name": "TRAVEL_MANIFEST",
+   "file": "rules/travel/manifest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "moveWriter"
+   ],
+   "rules": []
+  }
+ ]
+}

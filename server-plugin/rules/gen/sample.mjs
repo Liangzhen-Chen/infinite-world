@@ -129,6 +129,24 @@ function clamped(d, v) {
 }
 
 /**
+ * 种子键（卷二 §1.10 :346；卷二十七 R27-8.5 五段）：键 = sha256(utf8(世界种子、流代号、对象、世界时刻、抽取点代号 五段文本))，与 drawByKey 同一取法，
+ * 供按种子键求散列而不取分布值的调用方（如卷五 landCell 的 hash(seedKey, 格序号)）。实参次序同 drawByKey：流代号与抽取点代号在前，调用处写字面量。
+ * @param {string} streamCode 流代号 @param {string} drawSiteCode 抽取点代号 @param {SampleEngine} engine
+ * @param {number} worldSeed 世界种子 @param {string | string[]} subjectId 对象 id，或 [id, 限定成分…] @param {number} worldTime 世界分钟 @returns {string}
+ */
+export function seedKeyHex(streamCode, drawSiteCode, engine, worldSeed, subjectId, worldTime) {
+  return engine.digestCap.sha256Hex(diceKeyText(engine, worldSeed, streamCode, subjectId, worldTime, drawSiteCode), UTF8);
+}
+
+/**
+ * 种子键下的一项散列（卷五 §4.1 规则 14 landCell 的 hash(seedKey, 格序号)；取法同卷二 :330 第 i 个均匀数对「键 | i」取 sha256）：sha256(键 | 项)，项是调用方给的规范文本。
+ * @param {SampleEngine} engine @param {string} seedKey 种子键（seedKeyHex 的结果或调用方给的键） @param {string} part 项 @returns {string}
+ */
+export function keyedHex(engine, seedKey, part) {
+  return engine.digestCap.sha256Hex([seedKey, part].join(GRAMMAR_TOKENS.joinSep), UTF8);
+}
+
+/**
  * kernelApi `drawByKey`（卷二 §1.10 :346 骰值键按分布取值；卷二十七 R27-8.5 五段）：键 = (worldSeed, streamCode, subjectId, worldTime, drawSiteCode)，
  * PRNG 与分布求值照卷二 :329–:335。数值分布返回 SCALE 标度（4 位）的 JS 数，已按分布自带 clamp 夹取，调用方写回目标维度时再按该维度 precision 截断；
  * categorical 返回所中的键。只认 normal、lognormal、uniform、categorical；其余种类（含 curve、joint、ref、truncate）报 E-DIM-SAMPLE-PARAM。不写状态。

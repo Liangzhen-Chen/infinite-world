@@ -7,10 +7,12 @@ import { KernelError } from '../../kernel/errors.mjs';
 import { evaluateRX } from '../../kernel/rx.mjs';
 import { checkValue } from '../../kernel/validate/types.mjs';
 import { dim } from '../../kernel/dimensions.mjs';
+import { kindOfEntity } from '../../kernel/storage.mjs';
 import { handlesOp } from '../../kernel/transaction.mjs';
 import { ruleValue } from '../load/registry.mjs';
 import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
 import { controlledByPlayer, controlledEntities } from '../social/control.mjs';
+import { placeChainOf } from '../place/zone.mjs';
 
 // 卷九 §2.2 动作行全部字段 → S1 处置：use 本阶段实现；empty 本阶段未实现，行上必须写空（null、[] 或 {}），非空即 E-ACT-ROW（草案 §1 第 20 行）。
 const ROW_FIELDS = Object.freeze({
@@ -50,7 +52,11 @@ const CHARGEN = 'chargen';
 const PLAYABLE_CLASS = 'playableClass';
 const CLASSES_FIELD = 'classes';
 // 本模块提供读数的命名空间（登记行在 state-owners.json rxNamespaces；读数含义见那里的 entry 列）。
-const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', speciesPlayable: 'species.playable' });
+const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', speciesPlayable: 'species.playable', lodgeable: 'place.lodgeable' });
+// 落脚处判据读的维度（卷五 §2.1 :144 accessClass；access 族条目字段 needsGrant，卷五 :1171）与化身位置维度（卷五 §4.1 规则 14）。
+const ACCESS_DIM = 'accessClass';
+const NEEDS_GRANT = 'needsGrant';
+const POS_DIM = 'pos';
 const RX_TYPE = Object.freeze({ type: 'rx' });
 const UNKNOWN_READ = 'E-DIM-UNKNOWN-READ';
 
@@ -330,9 +336,44 @@ export function nsReadsFor(engine, state, at) {
       const row = doc && isObj(doc.rows) ? doc.rows[String(at.candidate)] : undefined;
       return isObj(row) && Array.isArray(row[CLASSES_FIELD]) && row[CLASSES_FIELD].includes(ruleValue(engine.docData, CHARGEN, PLAYABLE_CLASS));
     } });
+    // 候选可否作开局落脚处（S2-P 主会话 Q1 甲）：有建筑足迹（卷五规则 2、11）、某个祖先是已开放地点（卷十 R10-12.7），且不是已知要许可才能进的地点
+    // （accessClass 读得到且所指 access 条目 needsGrant 为真即筛掉，卷五 §4.13；读不到不筛，进入权判定待 S2-R2）。落脚处判据只在此一处。
+    Object.defineProperty(reads, NS.lodgeable, { enumerable: true, get: () => lodgeable(engine, state, String(at.candidate)) });
   }
   for (const [name, v] of Object.entries(at.slots || {})) reads[`${NS.slot}${PATH_SEP}${name}`] = v;
   return reads;
+}
+
+/**
+ * 地点候选可否作开局落脚处（place.lodgeable 读数，见 nsReadsFor）。不是地点行即假。
+ * @param {string} id @returns {boolean}
+ */
+function lodgeable(engine, state, id) {
+  const { placeTree, footprints } = engine.bake;
+  if (!placeTree.parentOf.has(id) || footprints.cellsOf(id).length === 0) return false;
+  const open = new Set(openPlacesOf(engine, state));
+  if (!placeTree.ancestorsOf(id).some((/** @type {string} */ p) => open.has(p))) return false;
+  let access;
+  try { access = dim(engine, state, placeTree.kind, id, ACCESS_DIM).value; } catch (e) {
+    if (e instanceof KernelError && e.code === UNKNOWN_READ) return true;
+    throw e;
+  }
+  const fam = Object(Object(engine.registry.tables.get(placeTree.kind).dimensions)[ACCESS_DIM]).vocab;
+  return Object(Object(Object(engine.vocab.families[fam]).entries)[access])[NEEDS_GRANT] !== true;
+}
+
+/**
+ * 化身此刻所在（菜单 here）：{place: zoneAt(pos), chain: [place, …祖先]}；pos 读不到或不在任何已建足迹里为 null。
+ * @param {string} subject @returns {Readonly<{place: string, chain: readonly string[]}> | null}
+ */
+function hereOf(engine, state, subject) {
+  let pos;
+  try { pos = dim(engine, state, kindOfEntity(engine, state, subject), subject, POS_DIM).value; } catch (e) {
+    if (e instanceof KernelError && e.code === UNKNOWN_READ) return null;
+    throw e;
+  }
+  const chain = placeChainOf(engine, state, pos);
+  return chain.length === 0 ? null : Object.freeze({ place: chain[0], chain });
 }
 
 /**
@@ -454,6 +495,8 @@ export function defaultActor(engine, state, code) {
 export function menuOf(engine, state, subjectId) {
   const subject = subjectId === undefined || subjectId === null ? defaultActor(engine, state, 'E-DISPLAY-SUBJECT') : subjectId;
   if (subject !== null && !controlledByPlayer(engine, state, subject)) throw new KernelError('E-DISPLAY-SUBJECT', {}, 'menu subject must be null or a player avatar');
-  const visible = [...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state)];
-  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible) });
+  // 我在哪（S2-P 主会话 Q12 甲）：化身 pos 所在地点与祖先链，只给 id；没有化身或没有 pos 为 null。链并入可见集。
+  const here = subject === null ? null : hereOf(engine, state, subject);
+  const visible = [...new Set([...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state), ...(here === null ? [] : here.chain)])];
+  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible), here });
 }

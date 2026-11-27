@@ -66,7 +66,7 @@ const openable = (r) => !r.concluded && !r.carriesRel && !r.intimate && r.holdWh
 const ENDS = rule('endKinds');
 
 function spawn(g, index = 0) {
-  const r = g.act({ act: 'act_choose_origin', slots: { species: 0, origin: index, place: 0 } });
+  const r = g.act({ act: 'act_choose_origin', slots: { species: 0, origin: index, place: 0, lodge: 0 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   return controlledEntities(g.engine, g.state)[0];
 }

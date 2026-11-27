@@ -62,7 +62,7 @@ const persons = (g) => Object.keys(g.state.created).filter((id) => g.state.creat
 /** 开局选来历（第 0 个种族、第 index 条来历、第 0 个地点），返回化身 id。 */
 function spawn(g, index = 0) {
   const a = g.menu(null).affordances[0];
-  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0 } });
+  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0, lodge: 0 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   return persons(g)[0];
 }

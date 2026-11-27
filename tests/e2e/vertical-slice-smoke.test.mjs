@@ -45,7 +45,7 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
   });
 
   await step(2, 'state.created 新建化身并写另一实体 ref（真实菜单动作）', async () => {
-    const r = await act(B, 'act_choose_origin', { species: 0, origin: 0, place: 0 });
+    const r = await act(B, 'act_choose_origin', { species: 0, origin: 0, place: 0, lodge: 0 });
     assert.equal(r.json?.result, 'ok', `act_choose_origin 未 ok：${r.text}`);
     assert.ok(r.json.events && r.json.events.to >= r.json.events.from, '结果缺事件序号区间 events');
     ctx.seqAfterOrigin = r.json.events.to;
@@ -109,6 +109,17 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
       const res = Object.keys(resources).find((k) => resources[k][outfit.resourceItemField] === x.item);
       assert.equal(Object.values(st.accounts[avatar][outfit.purpose][res]).reduce((s, v) => s + v, 0), x.n, `散货 ${x.item} 余额应等于 n`);
     }
+    // S2-P（草案 §5）：选来历同一提案落位——化身 pos 为泡外代表格（coarse 真），facing 在 [0, grid.facingDirections)；
+    // 界面命令 view 的 here 给「我在哪」：here.place 是挂建筑组件类（rules.gen.roleFacility）的地点行，chain 自它起、含出生地。期望值取导出包 doc_data。
+    const me = rec.props ?? rec;
+    assert.equal(me.pos?.coarse, true, '化身 pos 应为泡外代表格（coarse 真）');
+    assert.ok(Number.isInteger(me.facing) && me.facing >= 0 && me.facing < rowOf('grid', 'facingDirections'), '化身 facing 应在八向序号内');
+    const v = await view(B);
+    assert.equal(v.json?.result, 'ok', `选来历后 view 未 ok：${v.text}`);
+    const placeRows = dd.dimensionDocs.find((d) => d.kind === 'place').rows;
+    assert.ok((placeRows[v.json.here?.place]?.classes ?? []).includes(rowOf('gen', 'roleFacility')), 'view.here.place 应是建筑地点行');
+    assert.equal(v.json.here.chain[0], v.json.here.place, 'here.chain 应自所在地点起');
+    assert.ok(v.json.here.chain.includes(me.birthplace), 'here.chain 应含化身出生地');
     ctx.d1 = pkg.manifest.saveDigest;
     ctx.bytes1 = e1.buf;
     assert.equal(typeof ctx.d1, 'string', '存档清单缺 saveDigest');

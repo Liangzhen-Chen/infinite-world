@@ -11,6 +11,29 @@ import { fixedUnits, fixedScale } from '../../kernel/det-math.mjs';
 
 /** @typedef {{kind?: unknown, entity?: {idPrefix?: unknown, singletonIds?: unknown}, rows?: unknown, dimensions?: unknown}} DimensionDoc */
 
+// 维度表文档里世界生成期偏离行所在的节（卷二 :60、§5.0 :1672）。
+const GENERATED_SECTION = 'generated';
+
+/**
+ * 表级 generated 节叠到同 id 的实体行上（卷二 :169 覆盖顺序：generated 节偏离行高于实体行；卷二 :60 生成偏离行走同一加载器）：
+ * 逐行逐字段整值覆盖（偏离行只写整值，卷二 :128），不改入参文档（docData 原样，dataPacksDigest 不变），返回新文档；
+ * 节里的 id 不是本表 rows 的行即 E-DIM-REF-MISSING。没有该节或节为空即原样返回。不认任何表、字段或 id。
+ * @param {DimensionDoc & {generated?: unknown}} doc @returns {DimensionDoc}
+ */
+function withGenerated(doc) {
+  const gen = doc[GENERATED_SECTION];
+  if (gen === undefined || gen === null || (typeof gen === 'object' && !Array.isArray(gen) && Object.keys(gen).length === 0)) return doc;
+  if (typeof gen !== 'object' || Array.isArray(gen)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `buildRegistry: ${String(doc.kind)}.${GENERATED_SECTION} must be a map of rows`);
+  const rows = doc.rows !== null && typeof doc.rows === 'object' && !Array.isArray(doc.rows) ? doc.rows : {};
+  /** @type {Record<string, unknown>} */
+  const merged = { ...rows };
+  for (const [id, over] of Object.entries(gen)) {
+    if (!Object.hasOwn(rows, id)) throw new KernelError('E-DIM-REF-MISSING', {}, `buildRegistry: ${String(doc.kind)}.${GENERATED_SECTION}.${id} is not a row of the table`);
+    merged[id] = { ...Object(rows[id]), ...Object(over) };
+  }
+  return { ...doc, rows: merged };
+}
+
 /**
  * @param {Array<DimensionDoc>} dimensionDocs 已读入的维度表文档（跳过下划线开头的元表由调用方做）
  * @returns {Readonly<{idIndex: Map<string, string>, kindIds: Map<string, Readonly<{idPrefix: readonly string[], singletonIds: readonly string[]}>>, tables: Map<string, DimensionDoc>, kindOfLoaded: (id: string) => string | undefined, hasLoaded: (id: string) => boolean}>}
@@ -39,7 +62,7 @@ export function buildRegistry(dimensionDocs) {
       prefixOwner.set(p, kind);
     }
     kindIds.set(kind, Object.freeze({ idPrefix: Object.freeze(idPrefix), singletonIds: Object.freeze(singletonIds) }));
-    tables.set(kind, doc);
+    tables.set(kind, withGenerated(doc));
     const rows = doc.rows !== null && typeof doc.rows === 'object' && !Array.isArray(doc.rows) ? doc.rows : {};
     for (const id of Object.keys(rows)) {
       if (!idPrefix.some((p) => id.startsWith(p)) && !singletonIds.includes(id)) {
