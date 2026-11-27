@@ -28,8 +28,11 @@ const DIM_DOCS = readdirSync(DIM_DIR)
   .map((f) => loadJson(join(DIM_DIR, f)));
 const SPECIES_DOC = DIM_DOCS.find((d) => d.kind === 'species');
 const ITEM_DOC = DIM_DOCS.find((d) => d.kind === 'item');
-// 家鸡个体：物种表第一行（按排序，与 S2-0a 同口径）。当前数据里 person 表无行，create 提案拒收无模板的 person，故个体以物种表行为模板建（同 S1-2b）。
-const SPECIES_ID = Object.keys(SPECIES_DOC.rows).sort()[0];
+const PERSON_DOC = DIM_DOCS.find((d) => d.kind === 'person');
+// 人物模板行：person 表里按排序第一条 species 指向物种表登记行的行（来历模板行，S1-3c 草案 §1）。个体由 create 提案 kind=person 建，species 由 instantiatePerson 补齐。
+const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows)
+  .sort()
+  .find((k) => Object.hasOwn(SPECIES_DOC.rows, PERSON_DOC.rows[k].species));
 const ITEM_ID = Object.keys(ITEM_DOC.rows).sort()[0];
 const DEATH = rowsOf(loadJson(join(WORLD, 'rules/tables/death.json')));
 const UNITS = loadJson(join(WORLD, 'ontology/dimensions/_units.json')).units;
@@ -54,10 +57,11 @@ async function bootWorld() {
   return init({ saveRoot: newRoot() });
 }
 
-// 经真实 create 提案建一只家鸡个体，返回新实体 id。
+// 经真实 create 提案建一个人物个体（kind=person，模板行取 PERSON_TEMPLATE_ID），返回新实体 id。
 function createIndividual(env) {
+  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有 species 指向物种表行的模板行');
   const before = new Set(Object.keys(env.state.created ?? {}));
-  const r = env.submitProposal({ effects: [{ op: 'create', kind: SPECIES_DOC.kind, template: SPECIES_ID, facts: {} }] });
+  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: {} }] });
   assert.equal(r.ok, true, `create 应成功：${JSON.stringify(r)}`);
   const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id));
   assert.equal(added.length, 1, 'create 应恰好新增一个实体');
@@ -82,7 +86,7 @@ const materialMap = (/** @type {any} */ list) => Object.fromEntries(list.map((/*
 
 // ---------- 用例 ----------
 
-test('1. 玩家入口零 mock：create 建家鸡个体，destroy 杀掉；terminated 为真、reason 为 verb_death_event；日志簿恰多一条 verb_entity_terminated，mode 为 wreck，successorId 非空', async () => {
+test('1. 玩家入口零 mock：create 建人物个体，destroy 杀掉；terminated 为真、reason 为 verb_death_event；日志簿恰多一条 verb_entity_terminated，mode 为 wreck，successorId 非空', async () => {
   assert.equal(DEATH[CAUSE_ROW], CAUSE, `death.json 的 ${CAUSE_ROW} 行应为 ${CAUSE}（卷二十五:579）`);
   const env = await bootWorld();
   const id = createIndividual(env);
@@ -124,7 +128,10 @@ test('2. 尸体：successorId 所指物品带尸体组件类，ofSpecies/ofPerso
 
   const p = corpse.props;
   assert.ok(classesOf(corpse).includes(DEATH[CORPSE_CLASS_ROW]), `尸体应带 ${DEATH[CORPSE_CLASS_ROW]} 组件类`);
-  assert.equal(p.ofSpecies, SPECIES_ID, 'ofSpecies 应为该个体的物种');
+  const { speciesOf } = await import('../../../server-plugin/rules/body/person.mjs');
+  const speciesId = speciesOf(env.engine, env.state, id);
+  assert.ok(Object.hasOwn(SPECIES_DOC.rows, speciesId), `个体 species 应为物种表登记行，实为 ${speciesId}`);
+  assert.equal(p.ofSpecies, speciesId, 'ofSpecies 应等于该个体的 species');
   assert.equal(p.ofPerson, id, 'ofPerson 应指向该个体');
   assert.equal(p.diedMinute, minute, 'diedMinute 应等于死亡当前分钟');
 
