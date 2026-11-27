@@ -53,7 +53,8 @@
    "needs": [
     "KernelError",
     "BODY_MANIFEST",
-    "ECONOMY_MANIFEST"
+    "ECONOMY_MANIFEST",
+    "SOCIAL_MANIFEST"
    ],
    "rules": []
   }

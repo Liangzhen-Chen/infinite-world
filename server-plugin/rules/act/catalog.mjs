@@ -10,6 +10,7 @@ import { dim } from '../../kernel/dimensions.mjs';
 import { handlesOp } from '../../kernel/transaction.mjs';
 import { ruleValue } from '../load/registry.mjs';
 import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
+import { controlledByPlayer, controlledEntities } from '../social/control.mjs';
 
 // 卷九 §2.2 动作行全部字段 → S1 处置：use 本阶段实现；empty 本阶段未实现，行上必须写空（null、[] 或 {}），非空即 E-ACT-ROW（草案 §1 第 20 行）。
 const ROW_FIELDS = Object.freeze({
@@ -33,6 +34,12 @@ const ITEMS_FIELD = 'startingItems';
 // id 型参数的明文来源前缀（卷二 :1530：target 或 ctx.<字段>）。
 const ID_TARGET = 'target';
 const CTX_PREFIX = 'ctx.';
+// 本提案产物引用（S2-H 主会话 Q1 甲）：produced.<非负整数>。
+const PRODUCED_ROOT = 'produced';
+const isProducedRef = (src) => {
+  const [root, k, ...rest] = typeof src === 'string' ? src.split(PATH_SEP) : [];
+  return root === PRODUCED_ROOT && rest.length === 0 && typeof k === 'string' && Number.isSafeInteger(Number(k)) && String(Math.abs(Number(k))) === k;
+};
 const PATH_SEP = '.';
 // 规则表代号与键（卷九 :324 rules.act.advanceMaxMinutes；设计册 14 §3.6 rules.playerOrigins）。
 const ACT_RULES = 'act';
@@ -131,7 +138,7 @@ const OUTPUT_KINDS = Object.freeze({
         if (!names.has(p.split(PATH_SEP)[0])) throw new KernelError('E-EFF-PARAM', {}, `${at}: ${p} is not a parameter of ${out.op}`);
       }
       for (const [p, src] of Object.entries(idParams)) {
-        if (src !== ID_TARGET && !(typeof src === 'string' && src.startsWith(CTX_PREFIX))) throw new KernelError('E-EFF-PARAM', {}, `${at}: idParams.${p} must be ${ID_TARGET} or ${CTX_PREFIX}<field>`);
+        if (src !== ID_TARGET && !(typeof src === 'string' && src.startsWith(CTX_PREFIX)) && !isProducedRef(src)) throw new KernelError('E-EFF-PARAM', {}, `${at}: idParams.${p} must be ${ID_TARGET}, ${CTX_PREFIX}<field> or ${PRODUCED_ROOT}${PATH_SEP}<k>`);
       }
       const trees = Object.fromEntries(Object.entries(paramsRX).map(([p, text]) => [p, ctx.compile(text, new Map(), 'E-EFF-RX', `${at} paramsRX.${p}`)]));
       return Object.freeze({ kind: out.kind, op: out.op, paramsRX: Object.freeze(trees), idParams: Object.freeze({ ...idParams }) });
@@ -302,22 +309,13 @@ function originOf(engine, state, id) {
 }
 
 /**
- * 本局玩家化身：state.created 中以带出身的实体行为 template 新建的个体（不另存指针；登记见 rxNamespaces player.avatarCount）。
- * 玩家席位边（卷九 R9-3.9 hk_player_seat）随持有写者 S2-H 建成后改由它认定。
- * @returns {string[]}
- */
-function avatarsOf(engine, state) {
-  const created = isObj(state.created) ? state.created : {};
-  return Object.keys(created).filter((id) => isObj(created[id]) && typeof created[id].template === 'string' && originOf(engine, state, created[id].template) !== null).sort();
-}
-
-/**
  * 动作侧 RX 的命名空间读数（唯一来源；行与筛选的 whenRX、效果族 paramsRX 同用）：键即命名空间读数键。
+ * 化身集合 = 有在世玩家席位边的实体（rules/social/control.mjs#controlledEntities；卷九 R9-3.9）。
  * @param {{actor?: string | null, slots?: Record<string, string | number>, candidate?: string}} at
  * @returns {Record<string, string | number | boolean>}
  */
 export function nsReadsFor(engine, state, at) {
-  const avatars = avatarsOf(engine, state);
+  const avatars = controlledEntities(engine, state);
   const reads = { [NS.avatarCount]: avatars.length, [NS.isAvatar]: typeof at.actor === 'string' && avatars.includes(at.actor) };
   // 候选的出身开放与否惰性求（只有读它的筛选才求，别的表的候选不读出身维度）。
   if (typeof at.candidate === 'string') {
@@ -439,11 +437,11 @@ function affordances(engine, state, actor) {
 
 /**
  * 未指名行动者时的缺省行动者（审卡第一轮 ① 选 A）：本局尚无玩家化身即 null（开局建档），恰一个即取它，多于一个不唯一即拒（码由调用方给）。
- * 化身认定沿用 avatarsOf（派生）；待 S2-H 玩家席位边建成后改由席位边取。
+ * 化身认定读玩家席位边（rules/social/control.mjs#controlledEntities；S2-H）。
  * @param {string} code 不唯一时的拒收码 @returns {string | null}
  */
 export function defaultActor(engine, state, code) {
-  const avatars = avatarsOf(engine, state);
+  const avatars = controlledEntities(engine, state);
   if (avatars.length > 1) throw new KernelError(code, {}, 'no actor given and the player avatar is not unique');
   return avatars.length === 1 ? avatars[0] : null;
 }
@@ -455,7 +453,7 @@ export function defaultActor(engine, state, code) {
  */
 export function menuOf(engine, state, subjectId) {
   const subject = subjectId === undefined || subjectId === null ? defaultActor(engine, state, 'E-DISPLAY-SUBJECT') : subjectId;
-  if (subject !== null && !(typeof subject === 'string' && avatarsOf(engine, state).includes(subject))) throw new KernelError('E-DISPLAY-SUBJECT', {}, 'menu subject must be null or a player avatar');
+  if (subject !== null && !controlledByPlayer(engine, state, subject)) throw new KernelError('E-DISPLAY-SUBJECT', {}, 'menu subject must be null or a player avatar');
   const visible = [...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state)];
   return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible) });
 }

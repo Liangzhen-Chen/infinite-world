@@ -95,8 +95,9 @@ test('4c. create 提案给 species 即可建：全部来历行（含非人来历
     const before = new Set(Object.keys(world.state.created ?? {}));
     const r = world.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tmpl, facts: { species: PLAYABLE[0] } }] });
     assert.equal(r.ok, true, `以 ${tmpl} 为模板 create（facts.species 给出）应成功：${JSON.stringify(r)}`);
-    const added = Object.keys(world.state.created ?? {}).filter((id) => !before.has(id));
-    assert.equal(added.length, 1, `以 ${tmpl} 建人应恰新增一个实体`);
+    // Q5 甲（S2-H 起始物实例进 created）：只数 person，其余断言不变。
+    const added = Object.keys(world.state.created ?? {}).filter((id) => !before.has(id) && world.state.created[id].kind === 'person');
+    assert.equal(added.length, 1, `以 ${tmpl} 建人应恰新增一个 person`);
     assert.equal(world.state.created[added[0]].props.species, PLAYABLE[0], '个体 species 应为 facts 所给');
   }
 });

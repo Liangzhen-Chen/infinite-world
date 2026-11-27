@@ -180,7 +180,8 @@ function checkEffect(prim, effect) {
 }
 
 // 原语 → 处理函数 分派表（唯一一处；键取 primitives.json 的 op）。处理函数只做 resolve，不直接写状态。
-/** @type {Record<string, (engine: any, state: any, effect: any, ctx: {seq: number, index: number}) => {write?: (tx: WriteScope) => void, advanceMinutes?: number}>} */
+// 处理结果可带 produced：本原语建出的实体 id（resolve 收进本提案产物列表，供后面原语的 {produced: k} 引用）。
+/** @type {Record<string, (engine: any, state: any, effect: any, ctx: {seq: number, index: number}) => {write?: (tx: WriteScope) => void, advanceMinutes?: number, produced?: string}>} */
 const HANDLERS = {
   time: (engine, state, effect) => {
     if (effect.minutes <= 0) throw new KernelError('E-EFF-PARAM', {}, 'time.minutes must be a positive integer');
@@ -206,6 +207,7 @@ const HANDLERS = {
     const life = engine.lifecycle;
     if (life === null || typeof life !== 'object' || typeof life.instantiate !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'create: engine.lifecycle.instantiate is not assembled');
     return {
+      produced: id,
       write: (tx) => {
         createEntity(state, id, effect.kind, {}, tx, effect.template);
         for (const [field, value] of Object.entries(effect.facts)) setEntityProp(state, id, field, value, tx);
@@ -237,21 +239,44 @@ export function handlesOp(op) {
   return typeof op === 'string' && Object.hasOwn(HANDLERS, op);
 }
 
+// 本事务产物引用（S2-H 主会话 Q1 甲；卷九 R9-2.9 勘误：扩到原语的 id 型参数）：参数写成 {produced: k} 即指本提案第 k 个产物（前面原语处理结果的 produced，按出现序）。
+const PRODUCED = 'produced';
+
+/**
+ * 把 effect 顶层参数里的 {produced: k} 换成本提案第 k 个产物的 id（换后的值是 id 串，随后照常经 checkEffect 按原语条目核类型：落在非 id 型参数上即 E-EFF-PARAM）；
+ * k 不是整数或越界即 E-EFF-PARAM（整笔拒收）。不改原 effect，返回换过的浅拷贝。
+ * @param {string} op @param {any} effect @param {readonly string[]} produced @returns {any}
+ */
+function bindProduced(op, effect, produced) {
+  const out = { ...effect };
+  for (const [name, v] of Object.entries(out)) {
+    if (v === null || typeof v !== 'object' || Array.isArray(v) || !Object.hasOwn(v, PRODUCED) || Object.keys(v).length !== 1) continue;
+    const k = v[PRODUCED];
+    if (!Number.isInteger(k) || k < 0 || k >= produced.length) throw new KernelError('E-EFF-PARAM', {}, `${op}.${name}: produced ${JSON.stringify(k)} is not a product of this proposal (${produced.length} so far)`);
+    out[name] = produced[k];
+  }
+  return out;
+}
+
 /** resolve：逐个 effect 核原语与参数并取处理结果。未登记原语或无处理函数一律拒收。 */
 function resolve(engine, state, proposal, seq) {
   if (proposal === null || typeof proposal !== 'object' || !Array.isArray(proposal.effects)) throw new KernelError('E-EFF-PARAM', {}, 'proposal.effects must be an array');
   const writes = [];
+  /** @type {string[]} */
+  const produced = [];
   let advanceMinutes = 0;
-  proposal.effects.forEach((/** @type {any} */ effect, /** @type {number} */ index) => {
-    if (effect === null || typeof effect !== 'object' || typeof effect.op !== 'string') throw new KernelError('E-EFF-PRIMITIVE', {}, 'effect needs an op');
-    const prim = engine.primitives instanceof Map ? engine.primitives.get(effect.op) : undefined;
-    if (!prim) throw new KernelError('E-EFF-PRIMITIVE', {}, `op ${effect.op}: not in primitives catalog`);
+  proposal.effects.forEach((/** @type {any} */ raw, /** @type {number} */ index) => {
+    if (raw === null || typeof raw !== 'object' || typeof raw.op !== 'string') throw new KernelError('E-EFF-PRIMITIVE', {}, 'effect needs an op');
+    const prim = engine.primitives instanceof Map ? engine.primitives.get(raw.op) : undefined;
+    if (!prim) throw new KernelError('E-EFF-PRIMITIVE', {}, `op ${raw.op}: not in primitives catalog`);
+    const effect = bindProduced(raw.op, raw, produced);
     checkEffect(prim, effect);
     // 内置表查不到即回落查装配层注入的规则层原语写者（engine.primitiveWriters：op → 处理函数，S2-L 草案 §3 R0）；两处都没有照旧拒收。
     const writers = engine.primitiveWriters instanceof Map ? engine.primitiveWriters : undefined;
     const h = Object.hasOwn(HANDLERS, effect.op) ? HANDLERS[effect.op] : writers ? writers.get(effect.op) : undefined;
     if (!h) throw new KernelError('E-EFF-PRIMITIVE', {}, `op ${effect.op}: no handler registered`);
     const out = h(engine, state, effect, { seq, index });
+    if (typeof out.produced === 'string') produced.push(out.produced);
     if (out.write) writes.push(out.write);
     advanceMinutes += out.advanceMinutes || 0;
   });

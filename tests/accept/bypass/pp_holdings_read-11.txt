@@ -1,2 +1,2 @@
-// @file server-plugin/kernel/holdings.mjs
+// @file server-plugin/rules/social/holdings.mjs
 export const edges = (state) => state.holdings;

@@ -271,7 +271,7 @@
       "sources": [
         {
           "file": "docs/统一底层设计/卷二-维度表规范与统一入口.md",
-          "line": 269,
+          "line": 270,
           "excerpt": "要表达\"某键没有\"的，该键写 `null`",
           "role": "conflict"
         },
@@ -493,13 +493,13 @@
         },
         {
           "file": "docs/统一底层设计/卷二-维度表规范与统一入口.md",
-          "line": 283,
+          "line": 284,
           "excerpt": "真实量须 `citation`；世界内量表 `calibrate:true`",
           "role": "basis"
         },
         {
           "file": "docs/统一底层设计/卷二-维度表规范与统一入口.md",
-          "line": 395,
+          "line": 396,
           "excerpt": "3. **索引是投影**：可随时丢弃、由状态全量重建",
           "role": "basis"
         },

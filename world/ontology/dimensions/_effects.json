@@ -26,5 +26,19 @@
   "params": {},
   "cooldownDays": 0,
   "basis": "过时间：输出原语 time(minutes)（卷九 :647），分钟数读动作数值槽 slot.minutes（槽位上下限由动作行核）；数值参数为空，显式声明 {}"
+ },
+ "eff_take_seat": {
+  "family": "eff_take_seat",
+  "targetSelector": {"scope": "self"},
+  "requirement": null,
+  "magnitudeRX": null,
+  "outputs": [
+   {"kind": "primitive", "op": "holding.open", "idParams": {"holder": "produced.0", "subject": "produced.0"}, "paramsRX": {"holdingKind": "rules.control.seatKind"}}
+  ],
+  "consent": {"mode": "none", "power": null},
+  "cost": null,
+  "params": {},
+  "cooldownDays": 0,
+  "basis": "入座：给本提案第 0 个产物（同一提案里 eff_spawn_from_template 建出的化身）开玩家席位边，持有者与标的都是它（卷九 §2.5 :321 rules.control.seatKind、R9-3.9 :721 一个实体由玩家出意图当且仅当它有一条在世的玩家席位边；卷九 :630 holding.open）。持有者、标的经 idParams 明文来源 produced.<k>（本事务产物引用，S2-H 主会话 Q1 甲，卷九 R9-2.9 勘误扩到任一原语的 id 型参数）；种类经 paramsRX 读 rules.control.seatKind（不写种类代号）。与 spawn 族分开：spawn 族将来 NPC 生成也复用，不附带席位（S2-H 草案 §5）；数值参数为空，显式声明 {}"
  }
 }

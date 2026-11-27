@@ -153,9 +153,10 @@
      "moneyField": {"type": "string"},
      "coinField": {"type": "string"}
     }},
-    "account": {"type": "struct", "required": ["sep", "lotPrefix", "holderFlag"], "fields": {
+    "account": {"type": "struct", "required": ["sep", "lotPrefix", "instanceLotPrefix", "holderFlag"], "fields": {
      "sep": {"type": "string"},
      "lotPrefix": {"type": "string"},
+     "instanceLotPrefix": {"type": "string"},
      "holderFlag": {"type": "string"}
     }}
    },
@@ -703,12 +704,35 @@
    "file": "tables/social.json",
    "structure": "keys",
    "type": {
-    "orgTraits": {"type": "map", "key": {"type": "ref", "vocab": "orgkind"}, "value": {"type": "struct", "required": ["descentGroup", "domestic"], "fields": {"domestic": {"type": "boolean"}, "descentGroup": {"type": "boolean"}}}}
+    "orgTraits": {"type": "map", "key": {"type": "ref", "vocab": "orgkind"}, "value": {"type": "struct", "required": ["descentGroup", "domestic"], "fields": {"domestic": {"type": "boolean"}, "descentGroup": {"type": "boolean"}}}},
+    "endKinds": {"type": "map", "key": {"type": "string"}, "value": {"type": "set", "of": {"type": "string"}}},
+    "edgePrefix": {"type": "string"},
+    "events": {"type": "struct", "required": ["verb", "domicileVerb", "change"], "fields": {
+     "verb": {"type": "ref", "vocab": "verb"},
+     "domicileVerb": {"type": "ref", "vocab": "verb"},
+     "change": {"type": "struct", "required": ["established", "ended", "transferred"], "fields": {"established": {"type": "string"}, "ended": {"type": "string"}, "transferred": {"type": "string"}}}
+    }},
+    "primitiveOps": {"type": "map", "key": {"type": "string"}, "value": {"type": "string"}},
+    "outfit": {"type": "struct", "required": ["originDimension", "itemsField", "resourceItemField", "purpose", "source", "reason", "idInfix", "containerClass", "placement"], "fields": {
+     "originDimension": {"type": "string"},
+     "itemsField": {"type": "string"},
+     "resourceItemField": {"type": "string"},
+     "purpose": {"type": "ref", "vocab": "purpose"},
+     "source": {"type": "ref", "vocab": "src"},
+     "reason": {"type": "ref", "vocab": "verb"},
+     "idInfix": {"type": "string"},
+     "containerClass": {"type": "ref", "vocab": "component"},
+     "placement": {"type": "list", "of": {"type": "struct", "required": ["whenClass", "holdingKind", "holder"], "fields": {
+      "whenClass": {"type": "ref", "vocab": "component", "nullable": true},
+      "holdingKind": {"type": "ref", "vocab": "holding_kind"},
+      "holder": {"type": "string"}
+     }}}
+    }}
    },
-   "domain": {"orgTraits": {}},
-   "volume": "卷十八 §2.3 :239（rules.social.orgTraits）；同键与必写核对在 kernel/validate/polity-tables.mjs（E-KIN-ORG-TRAITS，卷十八 :300）",
+   "domain": {"orgTraits": {}, "endKinds": {}, "events": {}, "primitiveOps": {}, "outfit": {}},
+   "volume": "卷十八 §2.3 :239（rules.social.orgTraits）；同键与必写核对在 kernel/validate/polity-tables.mjs（E-KIN-ORG-TRAITS，卷十八 :300）。S2-H 持有写者参数：endKinds（卷十八 §4.1.1 :455 端类型 → 实体表）、edgePrefix（卷二 :721 holdings.<持有者>.<边id>）、events（卷十八 R18-1.10 :526、R18-1.11 :528）、primitiveOps（卷九 :630–:633 holding.* 原语 → 写入口）、outfit（卷四 G-5 出身给予经持有写者）；跨字段核对在 rules/social/holding-check.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"orgTraits": false}
+   "packOverridable": {"orgTraits": false, "endKinds": false, "edgePrefix": false, "events": false, "primitiveOps": false, "outfit": false}
   },
   {
    "code": "fields",

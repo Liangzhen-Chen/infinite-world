@@ -1,0 +1,34 @@
+{
+ "stateKeys": {
+  "holdings": {"writers": {"*": {"create": ["rules/social/holdings.mjs"], "rewrite": "rules/social/holdings.mjs", "rewriteRows": "all", "viaRelocate": false}}},
+  "holdingCounters": {"writers": {"edgeNext": {"create": ["rules/social/holdings.mjs"], "rewrite": "rules/social/holdings.mjs", "rewriteRows": "all", "viaRelocate": false}}}
+ },
+ "systems": {
+  "holdings": {
+   "primitiveWriter": {"ops": ["holding.close", "holding.open", "holding.transfer"], "handler": "rules/social/holdings.mjs#holdingWriter"},
+   "terminationCleanup": {"kinds": ["org", "person"], "handler": "rules/social/holdings.mjs#subjectEndCleanup", "sortKey": 1}
+  },
+  "outfit": {"instantiate": {"kinds": ["person"], "handler": "rules/social/outfit.mjs#outfitFromOrigin", "sortKey": 2}}
+ },
+ "pathTypes": {
+  "holdings.*": "struct:holderHoldings",
+  "holdingCounters.edgeNext": "integer:count"
+ },
+ "keyKinds": {
+  "holdings.*": [["item", "org", "person", "place"]]
+ },
+ "kernelApi": {
+  "exports": [
+   {"export": "rules/social/holdings.mjs#openHolding", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#closeHolding", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#transferHolding", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#holderEnded", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#subjectEnded", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#holdingsOf", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#holdersOf", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/holdings.mjs#holdingsOfKind", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/control.mjs#controlledByPlayer", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/social/control.mjs#controlledEntities", "callers": ["rules"], "acceptsState": true}
+  ]
+ }
+}

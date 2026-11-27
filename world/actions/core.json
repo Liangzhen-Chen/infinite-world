@@ -9,7 +9,7 @@
   "capability": null, "requirement": null,
   "whenRX": "player.avatarCount == 0",
   "consent": [], "answer": null, "intimate": false, "baseMinutes": 0, "workFromEdge": null, "stages": [], "resumable": false, "check": null,
-  "effects": {"critical_failure": null, "failure": null, "partial": null, "success": [{"family": "eff_spawn_from_template", "params": {}}], "critical_success": null},
+  "effects": {"critical_failure": null, "failure": null, "partial": null, "success": [{"family": "eff_spawn_from_template", "params": {}}, {"family": "eff_take_seat", "params": {}}], "critical_success": null},
   "backlash": [], "costRows": [], "skillGain": null, "decision": null,
   "menu": {"group": "menu_chargen", "order": 0},
   "shapeFrom": null, "sourceStrength": {},

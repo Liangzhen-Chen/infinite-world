@@ -81,6 +81,17 @@ function expectedOf(g, id) {
   return { origin, n: ent[ENDOW.moneyField], coin: ent[ENDOW.coinField] };
 }
 
+/** 个体名下开局随身钱的账户（用途、钱种取 endowment 与出身条目，从数据读；S2-H 起化身名下另有起始物账户，不再是唯一账户）。须恰一个。 */
+function moneyAccounts(g, id) {
+  const { coin } = expectedOf(g, id);
+  return g.views.accountsOf(id).filter((a) => a.purpose === ENDOW.purpose && a.resource === coin);
+}
+function moneyOf(g, id) {
+  const list = moneyAccounts(g, id);
+  assert.equal(list.length, 1, `${id}: want exactly one starting-money account`);
+  return list[0];
+}
+
 /** 某个来历模板行（person 表里 origin 维度所指出身条目钱种为 coin 的第一行）。 */
 function templateWithCoin(raw, coin) {
   const rows = raw.dimensionDocs.find((d) => d.kind === 'person').rows;
@@ -92,7 +103,7 @@ test('1 开局入账：选不同来历，化身名下各有一个钱账户，余
     const g = await init(express.Router(), { saveRoot: testTempRoot(`s2l-endow-${index}-`) });
     const id = spawn(g, index);
     const want = expectedOf(g, id);
-    const accts = g.views.accountsOf(id);
+    const accts = moneyAccounts(g, id);
     assert.equal(accts.length, 1);
     assert.equal(accts[0].balance, want.n);
     assert.equal(accts[0].resource, want.coin);
@@ -112,11 +123,11 @@ test('2 transfer 原语经 submitProposal：两边一减一增、ledgerTotals �
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2l-transfer-') });
   const a = spawn(g, 0);
   const species = g.state.created[a].props.species;
-  const from = g.views.accountsOf(a)[0];
+  const from = moneyOf(g, a);
   const tpl = templateWithCoin(raw, from.resource);
   const b = createFrom(g, tpl, species);
   assert.equal(b.r.ok, true, JSON.stringify(b.r));
-  const to = g.views.accountsOf(b.id)[0];
+  const to = moneyOf(g, b.id);
   const totals = clone(g.state.ledgerTotals);
   const r = g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: to.account, qty: 3 }] });
   assert.equal(r.ok, true, JSON.stringify(r));
@@ -131,7 +142,7 @@ test('2 transfer 原语经 submitProposal：两边一减一增、ledgerTotals �
   const other = templateWithCoin(raw, Object.keys(VOCAB.resource.entries).find((k) => k !== from.resource && templateWithCoin(raw, k)));
   const c = createFrom(g, other, species);
   const snap2 = clone(g.state);
-  const cross = g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: g.views.accountsOf(c.id)[0].account, qty: 1 }] });
+  const cross = g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: moneyOf(g, c.id).account, qty: 1 }] });
   assert.equal(cross.code, 'E-EFF-PARAM');
   const missing = g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: `${b.id}/${ENDOW.purpose}/${from.resource}/nope`, qty: 1 }] });
   assert.equal(missing.code, 'E-DIM-REF-MISSING');
@@ -142,7 +153,7 @@ test('2 transfer 原语经 submitProposal：两边一减一增、ledgerTotals �
 test('3 post 拒绝码：不平 E-LEDGER-UNBALANCED、代号不在资源行 E-LEDGER-CODE-UNREGISTERED、转换缺对手 E-LEDGER-PAIR-MISSING；被拒整笔不写', async () => {
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2l-post-') });
   const id = spawn(g, 0);
-  const acc = g.views.accountsOf(id)[0];
+  const acc = moneyOf(g, id);
   const row = json('rules/tables/economy/resources.json').rows.find((r) => r.key === acc.resource).value;
   const notSource = Object.keys(VOCAB.src.entries).find((s) => !row.sources.includes(s));
   const paired = Object.keys(VOCAB.src.entries).find((s) => VOCAB.src.entries[s].pairedWith && row.sources.includes(s) && VOCAB.src.entries[s].budgetMode !== 'bm_capped');
@@ -159,12 +170,12 @@ test('4 转让限制：tr_bound 的资源在两持有人间转 E-LEDGER-TRANSFER
   const raw = rawWorld();
   const g0 = mountKernel(clone(raw), caps('s2l-bound-probe-'));
   const a0 = spawn(g0, 0);
-  const coin = g0.views.accountsOf(a0)[0].resource;
+  const coin = moneyOf(g0, a0).resource;
   raw.tableDocs.economyResources.rows.find((r) => r.key === coin).value.transferable = 'tr_bound';
   const g = mountKernel(raw, caps('s2l-bound-'));
   const a = spawn(g, 0);
   const b = createFrom(g, templateWithCoin(raw, coin), g.state.created[a].props.species);
-  const r = g.submitProposal({ effects: [{ op: 'transfer', from: g.views.accountsOf(a)[0].account, to: g.views.accountsOf(b.id)[0].account, qty: 1 }] });
+  const r = g.submitProposal({ effects: [{ op: 'transfer', from: moneyOf(g, a).account, to: moneyOf(g, b.id).account, qty: 1 }] });
   assert.equal(r.code, 'E-LEDGER-TRANSFER-RESTRICTED');
 });
 
@@ -173,7 +184,7 @@ test('5 budget 窗口：第 0 日从来历模板建 person 入账；推进到第
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2l-window-') });
   const a = spawn(g, 0);
   const species = g.state.created[a].props.species;
-  const coin = g.views.accountsOf(a)[0].resource;
+  const coin = moneyOf(g, a).resource;
   const ok = createFrom(g, templateWithCoin(raw, coin), species);
   assert.equal(ok.r.ok, true);
   // 一日分钟数取单位表（day、minute 两行的 si 之比），推进一整日即到第 1 日。
@@ -250,9 +261,9 @@ test('10 存槽读档复演：开局入账与转移之后 saveDigest 相同，ac
   const dir = testTempRoot('s2l-replay-');
   const g = await init(express.Router(), { saveRoot: dir });
   const a = spawn(g, 0);
-  const from = g.views.accountsOf(a)[0];
+  const from = moneyOf(g, a);
   const b = createFrom(g, templateWithCoin(raw, from.resource), g.state.created[a].props.species);
-  assert.equal(g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: g.views.accountsOf(b.id)[0].account, qty: 2 }] }).ok, true);
+  assert.equal(g.submitProposal({ effects: [{ op: 'transfer', from: from.account, to: moneyOf(g, b.id).account, qty: 2 }] }).ok, true);
   const saved = saveSlot(g);
   const r = replay_apply(loadSlot(saved, { saveRoot: dir }));
   assert.equal(r.saveDigest, saved.saveDigest);
@@ -263,7 +274,7 @@ test('11 readPathIn 通用按段取值：账本 accounts.*（struct:holderAccoun
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2l-readin-') });
   const id = spawn(g, 0);
   const { P } = g.engine;
-  const acc = g.views.accountsOf(id)[0];
+  const acc = moneyOf(g, id);
   assert.equal(readPathIn(g.state, P.accounts(id), [acc.purpose, acc.resource, acc.key]), acc.balance);
   assert.equal(readPathIn(g.state, P.accounts(id), [acc.purpose, acc.resource, 'nope']), undefined);
   assert.equal(readPathIn(g.state, P.accounts(id), [acc.purpose, acc.resource, acc.key, 'deeper']), undefined);

@@ -44,8 +44,9 @@ test('5. create 直调可建非可扮演物种：facts.species 给非可扮演�
     const before = new Set(Object.keys(world.state.created ?? {}));
     const r = world.submitProposal({ effects: [{ op: 'create', kind: 'person', template: TEMPLATE, facts: { species: sp } }] });
     assert.equal(r.ok, true, `非可扮演物种 ${sp} 的 create 应成功：${JSON.stringify(r)}`);
-    const added = Object.keys(world.state.created ?? {}).filter((id) => !before.has(id));
-    assert.equal(added.length, 1, 'create 应恰新增一个实体');
+    // Q5 甲（S2-H 起始物实例进 created）：只数 person，其余断言不变。
+    const added = Object.keys(world.state.created ?? {}).filter((id) => !before.has(id) && world.state.created[id].kind === 'person');
+    assert.equal(added.length, 1, 'create 应恰新增一个 person');
     assert.equal(world.state.created[added[0]].props.species, sp, '个体 species 应为 facts 所给的非可扮演物种');
   }
 });

@@ -3,7 +3,7 @@
 // 世界数据经测试副本改动，不改 world/；存档根目录用 tests/accept/temp-root.mjs#testTempRoot。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
@@ -14,10 +14,20 @@ import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { handlesOp } from '../../server-plugin/kernel/transaction.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 
 const W = new URL('../../world/', import.meta.url);
 const json = (rel) => JSON.parse(readFileSync(new URL(rel, W), 'utf8'));
 const code = (c) => (e) => e.code === c;
+
+// 合并后的 state-owners：主文件并 state-owners.d 分片，经生产合并入口 registry-shards.mjs#mergeOwners（同 index.mjs#readOwners；S2-H 起选来历的席位边经分片登记的原语写者）。返回可改的副本。
+const OWNERS_MAIN = 'world/ontology/state-owners.json';
+function owners() {
+  const dir = new URL(`../../${shardDirOf(OWNERS_MAIN)}/`, import.meta.url);
+  const names = existsSync(dir) ? readdirSync(dir).filter((n) => n.endsWith('.json')).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(OWNERS_MAIN)}/${n}`, doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  return JSON.parse(JSON.stringify(mergeOwners({ file: OWNERS_MAIN, doc: json('ontology/state-owners.json') }, shards).doc));
+}
 
 /** 世界数据原文（与 index.mjs#readWorld 同形）。 */
 function rawWorld() {
@@ -27,7 +37,7 @@ function rawWorld() {
   return {
     dimensionDocs: readdirSync(dims).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dims), 'utf8'))),
     namedStructsDoc: json('ontology/named-structs.json'),
-    owners: json('ontology/state-owners.json'),
+    owners: owners(),
     registryRows,
     tableDocs: Object.fromEntries(registryRows.map((r) => [r.code, json(`rules/${r.file}`)])),
     digestExclude: json('rules/tables/digest-exclude.json').paths,
@@ -229,10 +239,11 @@ test('7 加载即拒：本阶段未实现的字段非空、baseMinutes > 0、未
     ['multi 槽', withRow((row) => { Object.values(row.slots)[0].multi = true; }), 'E-ACT-ROW'],
     ['未知效果族', withRow((row) => { row.effects.success = [{ family: 'eff_not_registered', params: {} }]; }), 'E-EFF-FAMILY-UNKNOWN'],
   ];
-  // 输出种类不是 primitive；原语在目录里但没有处理函数（从原语目录里挑一个处理不了的，不写死）。
+  // 输出种类不是 primitive；原语在目录里但没有处理函数（从原语目录里挑一个内核与分片登记的原语写者都处理不了的，不写死；S2-H 起 holding.* 有规则层写者）。
   const r1 = clone(raw); r1.effectsDoc[famOf(r1)].outputs[0].kind = 'modifier';
   cases.push(['非 primitive 输出', r1, 'E-ACT-ROW']);
-  const noHandler = raw.primitivesDoc.primitives.map((p) => p.op).find((op) => !handlesOp(op));
+  const writerOps = new Set(Object.values(raw.owners.systems).flatMap((sys) => (sys.primitiveWriter ? sys.primitiveWriter.ops : [])));
+  const noHandler = raw.primitivesDoc.primitives.map((p) => p.op).find((op) => !handlesOp(op) && !writerOps.has(op));
   assert.ok(noHandler, '前提：原语目录里有尚无处理函数的原语');
   const r2 = clone(raw); const fam = r2.effectsDoc[famOf(r2)]; fam.outputs[0].op = noHandler; fam.outputs[0].paramsRX = {};
   cases.push(['可达原语无处理函数', r2, 'E-ACT-ROW']);
@@ -297,11 +308,13 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   const r = g.act({ act: pass, numbers: { minutes: 15 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(clockMinute(g.engine, g.state), t0 + 15);
-  // 前提：造出第二个化身（经原语建第二个以带出身的模板行为 template 的个体），缺省行动者不唯一即拒。
+  // 前提：造出第二个化身（S2-H 起化身由玩家席位边认定：同一提案建第二个个体并给它开席位边，种类取 rules.control.seatKind），缺省行动者不唯一即拒。
   const tpl = g.state.created[avatar].template;
   const place = openPlaces(raw)[0];
   const species = g.state.created[avatar].props.species;
-  assert.equal(g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { birthplace: place, species } }] }).ok, true);
+  const seatKind = raw.tableDocs.control.rows.find((x) => x.key === 'seatKind').value;
+  const second = g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { birthplace: place, species } }, { op: 'holding.open', holdingKind: seatKind, holder: { produced: 0 }, subject: { produced: 0 } }] });
+  assert.equal(second.ok, true, JSON.stringify(second));
   assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-SLOT');
   assert.throws(() => g.menu(null), code('E-DISPLAY-SUBJECT'));
   assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 5 } }).ok, true);

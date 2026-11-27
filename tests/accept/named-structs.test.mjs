@@ -1,5 +1,5 @@
 // 卷二 §1.5 命名 struct 机读登记（world/ontology/named-structs.json）与卷文逐条对照。
-// 期望值按卷二 §1.5 :204–:248 原表抄成字面量，不读卷文、不按当前仓库读数反推（块 3 第 3-4 张）。
+// 字段名与单位按卷二 §1.5 :204–:256 原表抄成字面量，不按当前仓库读数反推（块 3 第 3-4 张）；登记表的名字集合与行数从卷二 §1.5 命名 struct 表读（S2-H 主会话裁定【2】）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,6 +9,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const REG = JSON.parse(readFileSync(join(ROOT, 'world/ontology/named-structs.json'), 'utf8'));
 const rows = new Map(REG.rows.map((r) => [r.name, r]));
+// 卷二 §1.5「命名 struct 登记」表的名字列（表行以 | `struct:<名>` | 起头）。
+const VOL2 = readFileSync(join(ROOT, 'docs/统一底层设计/卷二-维度表规范与统一入口.md'), 'utf8');
+const VOL2_NAMES = [...VOL2.matchAll(/^\| `(struct:[^`]+)` \|/gm)].map((m) => m[1]);
 
 // 每个命名 struct 的字段名（按卷文顺序；点号键是判别联合变体内的数值字段，卷二 §1.5 :228 逐项列出）。
 const FIELDS = {
@@ -20,7 +23,7 @@ const FIELDS = {
   'struct:terminated': ['day', 'cause', 'mode'],
   'struct:stockAnchor': ['value', 'at'],
   'struct:holding': ['kind', 'holder', 'subject', 'terms', 'grantedBy'],
-  'struct:holding_terms': ['shares', 'since', 'expires'],
+  'struct:holding_terms': ['since', 'until', 'endReason', 'suspended', 'consentAct', 'grantor'], // 勘误 1127h1：公共键照卷十八 §4.1.1 :461
   'struct:effectCall': ['family', 'params'],
   'struct:statusInstance': ['status', 'severity', 'since', 'source', 'bodyPart'],
   'struct:nameParts': ['bank', 'pattern', 'parts', 'seq'],
@@ -61,6 +64,7 @@ const FIELDS = {
   'struct:holderLots': [],
   'struct:resourceTotals': [],
   'struct:pos': ['w', 'x', 'y', 'z', 'coarse'],
+  'struct:holderHoldings': [], // 勘误 1127h1：卷二 :256 增行，值是 map<EdgeId, struct:holding>，没有 struct 字段
 };
 
 // 数值字段的卷文单位（integer / number 同此；记号按卷二 §1.5 原表）。
@@ -69,7 +73,7 @@ const NUMERIC = {
   'struct:duration': { days: ['integer', 'day'] },
   'struct:terminated': { day: ['integer', 'day'] },
   'struct:stockAnchor': { value: ['number', '<该维度的单位>'], at: ['integer', 'minute'] },
-  'struct:holding_terms': { shares: ['number', 'fraction'], since: ['integer', 'day'], expires: ['integer', 'day'] },
+  'struct:holding_terms': { since: ['integer', 'minute'], until: ['integer', 'minute'] },
   'struct:statusInstance': { severity: ['number', 'score'], since: ['integer', 'day'] },
   'struct:advancePlanItem': { stepMinutes: ['integer', 'minute'], settleTo: ['integer', 'minute'] },
   'struct:fixtureLot': { count: ['integer', 'count'], 'materialKg<value>': ['number', 'kg'] },
@@ -116,7 +120,8 @@ function numericLeaves(node, at, out) {
   return out;
 }
 
-test('命名 struct 登记与卷二 §1.5 表逐条一致：49 行（G1 增 struct:pos；1119k11 增 revivePoint；G6 增 gridCellDiff；G14 增 fieldCellMap）、字段名与出处', () => {
+test('命名 struct 登记与卷二 §1.5 表逐条一致：名字集合同卷二表（G1 增 struct:pos；1119k11 增 revivePoint；G6 增 gridCellDiff；G14 增 fieldCellMap；1127h1 增 holderHoldings）、字段名与出处', () => {
+  assert.deepEqual([...rows.keys()].sort(), [...VOL2_NAMES].sort());
   assert.deepEqual([...rows.keys()].sort(), Object.keys(FIELDS).sort());
   for (const [name, fields] of Object.entries(FIELDS)) {
     const row = rows.get(name);
@@ -172,6 +177,8 @@ test('byState 带类型参数；命名引用都指向已登记的行', () => {
 });
 
 test('登记表只含卷文列出的名字，不给未登记名字开口子', () => {
-  assert.equal(REG.rows.length, 49); // G6 增 struct:gridCellDiff（勘误 1121k1）；G14 增 struct:fieldCellMap（卷二 :254）
-  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 49);
+  // 行数取卷二 §1.5 表（G6 增 struct:gridCellDiff，勘误 1121k1；G14 增 struct:fieldCellMap，卷二 :254；S2-H 增 struct:holderHoldings，勘误 1127h1）。
+  assert.equal(new Set(VOL2_NAMES).size, VOL2_NAMES.length);
+  assert.equal(REG.rows.length, VOL2_NAMES.length);
+  assert.equal(new Set(REG.rows.map((r) => r.name)).size, VOL2_NAMES.length);
 });
