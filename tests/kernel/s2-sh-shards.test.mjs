@@ -14,7 +14,12 @@ import { testTempRoot, removeTempRoot } from '../accept/temp-root.mjs';
 const MAIN = 'world/ontology/state-owners.json';
 const DIR = shardDirOf(MAIN);
 const shard = (name, doc) => ({ file: `${DIR}/${name}`, doc });
-const main = () => ({ file: MAIN, doc: { version: 1, pathTypes: { 'a.*': 'string' }, rxNamespaces: ['x'], stateKeys: { a: { writers: {} } }, phases: ['p'] } });
+const ns = (n, type = 'number') => ({ ns: n, type });
+const main = () => ({ file: MAIN, doc: {
+  version: 1, pathTypes: { 'a.*': 'string' }, rxNamespaces: [ns('x')], stateKeys: { a: { writers: {} }, clock: { writers: { '*': { create: ['rules/a.mjs'] } } } }, phases: ['p'],
+  keyKinds: { 'c.*.props.*': [['item'], 'dimKey'] }, systems: { death: { terminationCleanup: { kinds: ['person'] } } },
+  kernelApi: { exports: [{ export: 'kernel/a.mjs#f', callers: ['rules'] }] }, groupApi: { exports: [{ export: 'textcore/a.mjs#g', callers: ['gate'] }] }, textPaths: ['names.*.text'],
+} });
 const dirs = [];
 after(() => { for (const d of dirs) removeTempRoot(d); });
 
@@ -31,12 +36,12 @@ test('无分片：原样返回主文件对象（同一对象、冻结），origi
 });
 
 test('合并：新键出现、对象逐键递归、数组按 主文件 → a → b 次序；originOf 指出登记文件', () => {
-  const a = shard('a.json', { pathTypes: { 'b.*': 'integer' }, rxNamespaces: ['y'], stateKeys: { a: { subjectRecords: ['r'] } } });
-  const b = shard('b.json', { rxNamespaces: ['z'] });
+  const a = shard('a.json', { pathTypes: { 'b.*': 'integer' }, rxNamespaces: [ns('y')], stateKeys: { a: { subjectRecords: ['r'] } } });
+  const b = shard('b.json', { rxNamespaces: [ns('z')] });
   const r = mergeOwners(main(), [b, a]);
   const doc = Object(r.doc);
   assert.deepEqual(doc.pathTypes, { 'a.*': 'string', 'b.*': 'integer' });
-  assert.deepEqual(doc.rxNamespaces, ['x', 'y', 'z']);
+  assert.deepEqual(doc.rxNamespaces, [ns('x'), ns('y'), ns('z')]);
   assert.deepEqual(doc.stateKeys.a, { writers: {}, subjectRecords: ['r'] });
   assert.equal(r.originOf(['pathTypes', 'b.*']), a.file);
   assert.equal(r.originOf(['pathTypes', 'a.*']), MAIN);
@@ -45,7 +50,7 @@ test('合并：新键出现、对象逐键递归、数组按 主文件 → a →
   // 同一输入两次结果一致；互换文件名，数组次序跟着变，对象内容不变。
   assert.deepEqual(mergeOwners(main(), [a, b]).doc, r.doc);
   const swapped = Object(mergeOwners(main(), [shard('b.json', a.doc), shard('a.json', b.doc)]).doc);
-  assert.deepEqual(swapped.rxNamespaces, ['x', 'z', 'y']);
+  assert.deepEqual(swapped.rxNamespaces, [ns('x'), ns('z'), ns('y')]);
   assert.deepEqual(swapped.pathTypes, doc.pathTypes);
 });
 
@@ -54,8 +59,43 @@ test('拒绝：同一键两处登记、数组重复元素即 E-DIM-DUPLICATE-KEY
   const b = shard('b.json', { pathTypes: { 'b.*': 'integer' } });
   assert.throws(() => mergeOwners(main(), [a, b]), (e) => Object(e).code === 'E-DIM-DUPLICATE-KEY' && String(Object(e).message).includes(b.file));
   assert.throws(() => mergeOwners(main(), [shard('c.json', { pathTypes: { 'a.*': 'string' } })]), { code: 'E-DIM-DUPLICATE-KEY' });
-  assert.throws(() => mergeOwners(main(), [shard('c.json', { rxNamespaces: ['x'] })]), (e) => Object(e).code === 'E-DIM-DUPLICATE-KEY' && String(Object(e).message).includes('c.json'));
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { rxNamespaces: [ns('x')] })]), (e) => Object(e).code === 'E-DIM-DUPLICATE-KEY' && String(Object(e).message).includes('c.json'));
   assert.throws(() => mergeOwners(main(), [shard('c.json', { stateKeys: { a: { writers: [] } } })]), { code: 'E-DIM-DUPLICATE-KEY' });
+});
+
+const dupKey = (file, key) => (e) => Object(e).code === 'E-DIM-DUPLICATE-KEY' && String(Object(e).message).includes(file) && String(Object(e).message).includes(key);
+
+test('拒绝：分片里同 id（同 ns）异内容——rxNamespaces 同 ns 不同内容（主文件已有、或两个分片各登一次）即 E-DIM-DUPLICATE-KEY，主文件不变；新 ns 照常追加', () => {
+  const m = main();
+  assert.throws(() => mergeOwners(m, [shard('c.json', { rxNamespaces: [ns('x', 'string')] })]), dupKey('c.json', '"x"'));
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { rxNamespaces: [ns('y')] }), shard('d.json', { rxNamespaces: [ns('y', 'string')] })]), dupKey('d.json', '"y"'));
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { rxNamespaces: [ns('y'), ns('y', 'string')] })]), dupKey('c.json', '"y"'));
+  assert.deepEqual(m.doc.rxNamespaces, [ns('x')]);
+  assert.deepEqual(Object(mergeOwners(main(), [shard('c.json', { rxNamespaces: [ns('y')] })]).doc).rxNamespaces, [ns('x'), ns('y')]);
+});
+
+test('拒绝：分片里同 id（同 export）异内容——kernelApi.exports、groupApi.exports 同 export 不同内容即 E-DIM-DUPLICATE-KEY', () => {
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { kernelApi: { exports: [{ export: 'kernel/a.mjs#f', callers: ['gate'] }] } })]), dupKey('c.json', 'kernel/a.mjs#f'));
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { groupApi: { exports: [{ export: 'textcore/a.mjs#g', callers: ['rules'] }] } })]), dupKey('c.json', 'textcore/a.mjs#g'));
+  const ok = Object(mergeOwners(main(), [shard('c.json', { kernelApi: { exports: [{ export: 'kernel/b.mjs#h', callers: ['rules'] }] } })]).doc);
+  assert.deepEqual(ok.kernelApi.exports.map((e) => e.export), ['kernel/a.mjs#f', 'kernel/b.mjs#h']);
+});
+
+test('拒绝：textPaths 重复路径即 E-DIM-DUPLICATE-KEY；新路径照常追加', () => {
+  assert.throws(() => mergeOwners(main(), [shard('c.json', { textPaths: ['names.*.text'] })]), dupKey('c.json', 'names.*.text'));
+  assert.deepEqual(Object(mergeOwners(main(), [shard('c.json', { textPaths: ['notes.*.text'] })]).doc).textPaths, ['names.*.text', 'notes.*.text']);
+});
+
+test('拒绝：keyKinds 定长元组被分片追加——表外数组（keyKinds 定长元组、写者 create 列表、systems 种类）被分片追加即 E-DIM-DUPLICATE-KEY，主文件不变', () => {
+  const m = main();
+  for (const doc of [
+    { keyKinds: { 'c.*.props.*': [['species']] } },
+    { stateKeys: { clock: { writers: { '*': { create: ['rules/x.mjs'] } } } } },
+    { systems: { death: { terminationCleanup: { kinds: ['org'] } } } },
+  ]) assert.throws(() => mergeOwners(m, [shard('c.json', doc)]), { code: 'E-DIM-DUPLICATE-KEY' });
+  assert.deepEqual(m.doc.keyKinds['c.*.props.*'], [['item'], 'dimKey']);
+  assert.deepEqual(m.doc.stateKeys.clock.writers['*'].create, ['rules/a.mjs']);
+  assert.deepEqual(m.doc.systems.death.terminationCleanup.kinds, ['person']);
 });
 
 test('拒绝：分片里出现只许在主文件的段、文件名不合文法、分片不是对象即 E-DIM-STRUCT-FIELD', () => {
