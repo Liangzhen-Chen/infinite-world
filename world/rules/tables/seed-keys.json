@@ -4,7 +4,11 @@
    "key": "entries",
    "value": [
     {"file": "rules/body/person.mjs", "stream": "person_instantiate", "site": "person_sample", "role": "role_seed", "prefix": "person_instantiate", "purpose": "个体建档补全（S1-3c）：rules.person.sampleFrom 每行对物种分布抽一次；对象段为复合「个体 id | 目标维度 [| 映射键]」（卷二十七 R27-8.5 :801），时刻取建行分钟"},
-    {"file": "rules/travel/position.mjs", "stream": "travel", "site": "pos_land", "role": "role_seed", "prefix": "travel_pos_land", "purpose": "给地点安置个体（S2-P）：卷十七 :298 placeSubject 给地点时 landCell 的种子键五段（世界种子、travel、被安置个体 id、本事务世界时刻、抽取点；卷二十七 R27-8.5、卷十七 :162），按 hash(seedKey, 格序号) 取代表格"}
+    {"file": "rules/travel/position.mjs", "stream": "travel", "site": "pos_land", "role": "role_seed", "prefix": "travel_pos_land", "purpose": "给地点安置个体（S2-P）：卷十七 :298 placeSubject 给地点时 landCell 的种子键五段（世界种子、travel、被安置个体 id、本事务世界时刻、抽取点；卷二十七 R27-8.5、卷十七 :162），按 hash(seedKey, 格序号) 取代表格"},
+    {"file": "rules/time_env/weather.mjs", "stream": "weather", "site": "weather_state", "role": "role_seed", "prefix": "weather_state", "purpose": "天气单元当日天气（S2-T2；卷二十 §4.3.3 第 2、4 条 :637–:642）：当日天气状态：锚段递推每步按权重（段内乘 persistence/persistBase）categorical 抽一次；对象段为天气单元 id，时刻取该日起始分钟"},
+    {"file": "rules/time_env/weather.mjs", "stream": "weather", "site": "weather_precip", "role": "role_seed", "prefix": "weather_precip", "purpose": "天气单元当日天气（S2-T2；卷二十 §4.3.3 第 2、4 条 :637–:642）：当日降水量：按该状态行 precipMm 分布抽；对象段为天气单元 id，时刻取该日起始分钟"},
+    {"file": "rules/time_env/weather.mjs", "stream": "weather", "site": "weather_windSpeed", "role": "role_seed", "prefix": "weather_windSpeed", "purpose": "天气单元当日天气（S2-T2；卷二十 §4.3.3 第 2、4 条 :637–:642）：当日风速：按该状态行 windMps 分布抽；对象段为天气单元 id，时刻取该日起始分钟"},
+    {"file": "rules/time_env/weather.mjs", "stream": "weather", "site": "weather_windDir", "role": "role_seed", "prefix": "weather_windDir", "purpose": "天气单元当日天气（S2-T2；卷二十 §4.3.3 第 2、4 条 :637–:642）：当日风向偏角：在 ±windDirSpreadDeg 内均匀抽（spread 为 0 不抽）；对象段为天气单元 id，时刻取该日起始分钟"}
    ]
   }
  ]

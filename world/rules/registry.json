@@ -384,7 +384,7 @@
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
    "domain": {"anchorDays": [1, null], "weightScale": [1, null], "persistBase": [1, null], "unbuilt": {}},
-   "volume": "卷二十 §2.9 :395（rules.weather）、§4.3.3 第 2 条（anchorDays 锚段）；weightScale、persistBase 取太原实测换算（6-29 第 2 步，李白 11-19 14:2x），meltCurve 无读者登在 unbuilt（李白 11-19 13:3x ①③），读者 kernel/weather.mjs",
+   "volume": "卷二十 §2.9 :395（rules.weather）、§4.3.3 第 2 条（anchorDays 锚段）；weightScale、persistBase 取太原实测换算（6-29 第 2 步，李白 11-19 14:2x），meltCurve 无读者登在 unbuilt（李白 11-19 13:3x ①③），读者 rules/time_env/weather.mjs",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"anchorDays": false, "weightScale": false, "persistBase": false, "unbuilt": false}
   },
@@ -396,7 +396,7 @@
     "seasonCurve": {"type": "map", "key": {"type": "ref", "vocab": "weather"}, "value": {"type": "curve", "x": "fraction", "y": "fraction"}},
     "tempExtremeC": {"type": "struct", "required": ["max", "min"], "fields": {"min": {"type": "number", "unit": "celsius", "precision": 4}, "max": {"type": "number", "unit": "celsius", "precision": 4}}}
    }},
-   "volume": "气候原型表（李白 11-19 15:5x ⑤：季节曲线挂气候原型，天气单元经 climateProto 引用；卷二十 §4.3.3 第 3 条 weightRX 读静态维度在当前相位的份额）；卷二十 :395 未列此表，6-29 改一轮自定；读者 kernel/weather.mjs（env.seasonCurve）",
+   "volume": "气候原型表（李白 11-19 15:5x ⑤：季节曲线挂气候原型，天气单元经 climateProto 引用；卷二十 §4.3.3 第 3 条 weightRX 读静态维度在当前相位的份额）；卷二十 :395 未列此表，6-29 改一轮自定；读者 rules/time_env/weather.mjs（env.seasonCurve）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": false
   },
