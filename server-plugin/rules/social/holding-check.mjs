@@ -33,6 +33,11 @@ export function checkHoldingKinds(engine) {
     }
     if (row[TRIGGER.gone] === STAY) throw new KernelError('E-HK-PROTOCOL', {}, `${kind}.${TRIGGER.gone}: a holder ending may not keep the edge`);
     if (row[ROW.holdWhile] !== null && (row[TRIGGER.vacated] === null || row[TRIGGER.vacated] === STAY)) throw new KernelError('E-HK-PROTOCOL', {}, `${kind}: holdWhile needs a ${TRIGGER.vacated} disposition other than keep`);
+    // holderMax 只许空或非负整数（卷十八 R18-1.5 :521；否则运行期上限无从核，等于绕过）。
+    const max = row[ROW.holderMax];
+    if (max !== null && !(Number.isSafeInteger(max) && Number(max) >= 0)) throw new KernelError('E-HK-ROW-FIELDS', {}, `${kind}.${ROW.holderMax}: ${JSON.stringify(max)} must be null or a non-negative integer`);
+    // exclusive 种类的离任格不许取「不动」：让出后旧边必须不在（卷十八:678 A18-1.2）。
+    if (row[ROW.exclusive] === true && row[TRIGGER.vacated] === STAY) throw new KernelError('E-HK-PROTOCOL', {}, `${kind}: exclusive needs a ${TRIGGER.vacated} disposition other than keep`);
     for (const inc of Array.isArray(row[ROW.incompatible]) ? row[ROW.incompatible] : []) kindRow(engine, Object(inc).kind);
   }
   const ends = Object(ruleValue(engine.docData, SOCIAL, RULE.endKinds));
