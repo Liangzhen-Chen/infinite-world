@@ -43,9 +43,23 @@ export function ancestorsOf(rows, id) {
 }
 // 开放（genOpen）：自身或某个祖先 genOpen 为真。
 export const isUnderOpen = (rows, id) => [id, ...ancestorsOf(rows, id)].some((k) => rows[k]?.genOpen === true);
-// 期望的落脚处候选：开放地点子树里的建筑（卷五 gen.open 口径；候选从 world 数据推出）。
-export const expectedLodges = (rows) => Object.keys(rows)
-  .filter((k) => rows[k].classes?.includes(BUILDING_CLASS) && isUnderOpen(rows, k))
+// 访问类别（_vocab access 族）：needsGrant 为真者需许可才能进（卷五 §2.1 :144；私宅、议会）。
+const ACCESS_ENTRIES = dimension("_vocab.json").families.access.entries;
+// 建筑的 accessClass 读不到（行上没有该字段）则不筛（裁定 Q1 甲：按现有数据能判则判）。
+export const needsGrantOf = (rows, id) => {
+  const a = rows[id]?.accessClass;
+  return a !== undefined && ACCESS_ENTRIES[a]?.needsGrant === true;
+};
+// 开放子树里的建筑（未筛前）。
+const openBuildings = (rows) => Object.keys(rows)
+  .filter((k) => rows[k].classes?.includes(BUILDING_CLASS) && isUnderOpen(rows, k));
+// 期望的落脚处候选：开放地点子树里的建筑，减去 accessClass 的 needsGrant 为真者（卷五 gen.open 口径；Q1 甲裁定「私宅筛除按现有数据能判则判」；候选从 world 数据推出）。
+export const expectedLodges = (rows) => openBuildings(rows)
+  .filter((k) => !needsGrantOf(rows, k))
+  .sort();
+// 被许可条件筛掉的开放建筑（两向断言用：这些都不得在候选里）。
+export const grantRestrictedLodges = (rows) => openBuildings(rows)
+  .filter((k) => needsGrantOf(rows, k))
   .sort();
 // 朝向档数与整圈角度：grid.json 常数（卷五:102、卷五规则 12）。
 export const FACING_DIRECTIONS = ruleValue('grid.json', 'facingDirections');

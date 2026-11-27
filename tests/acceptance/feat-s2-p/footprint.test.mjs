@@ -36,7 +36,7 @@ test('6b. 夹具：同父两栋建筑的足迹重叠，加载即报 E-GRID-SIBLI
 
 test('6c. 夹具：把一个非开放村设为 genOpen，它的建筑即进入落脚处候选，代码不改（候选从数据推出）', async () => {
   // 找一栋不在开放子树里、且父地点也不在开放子树里的建筑；它的父地点即待开放的村。
-  const b = S.BUILDING_IDS.find((k) => !S.isUnderOpen(S.PLACE_ROWS, k) && !S.isBuilding(S.PLACE_ROWS[k].parent ?? '') && !S.isUnderOpen(S.PLACE_ROWS, S.PLACE_ROWS[k].parent));
+  const b = S.BUILDING_IDS.find((k) => !S.isUnderOpen(S.PLACE_ROWS, k) && !S.needsGrantOf(S.PLACE_ROWS, k) && !S.isBuilding(S.PLACE_ROWS[k].parent ?? '') && !S.isUnderOpen(S.PLACE_ROWS, S.PLACE_ROWS[k].parent));
   assert.ok(b, '前提：数据中应有不在开放子树里的建筑');
   const village = S.PLACE_ROWS[b].parent;
   const fx = S.copyFixture();

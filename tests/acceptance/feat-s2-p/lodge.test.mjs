@@ -13,6 +13,18 @@ test('1a. 落脚处候选恰为开放地点子树里的建筑（候选从 world 
   assert.ok(offered.length > 0, '前提：数据中应有开放子树里的建筑');
 });
 
+test('1c. 被许可条件筛掉的开放建筑（accessClass 的 needsGrant 为真，如私宅）不在候选里；其余开放建筑都在（两向）', async () => {
+  const { world } = await S.freshWorld();
+  const offered = S.lodgeOffer(world);
+  const restricted = S.grantRestrictedLodges(S.PLACE_ROWS);
+  assert.ok(restricted.length > 0, '前提：数据中应有 needsGrant 为真的开放建筑（私宅）');
+  for (const k of restricted) assert.equal(offered.includes(k), false, `被筛掉的 ${k} 不应在落脚处候选里`);
+  const open = S.expectedLodges(S.PLACE_ROWS).length + restricted.length;
+  const allOpen = Object.keys(S.PLACE_ROWS).filter((k) => S.isBuilding(k) && S.isUnderOpen(S.PLACE_ROWS, k));
+  assert.equal(allOpen.length, open, '开放建筑 = 候选 + 被筛（无遗漏、无重复）');
+  for (const k of allOpen.filter((x) => !restricted.includes(x))) assert.equal(offered.includes(k), true, `未被筛的开放建筑 ${k} 应在候选里`);
+});
+
 test('1b. 对每个落脚处候选各开一局：化身 pos 为代表格（coarse 为真），here.place 即所选建筑', async () => {
   const probe = await S.freshWorld();
   const count = S.lodgeOffer(probe.world).length;
