@@ -1,4 +1,46 @@
 {
+ "E-ACT-BUSY": {
+  "label": "正忙"
+ },
+ "E-ACT-PRECONDITION": {
+  "label": "条件不满足"
+ },
+ "E-ACT-SLOT": {
+  "label": "选项或数值不合"
+ },
+ "E-ACT-UNKNOWN": {
+  "label": "没有这个动作"
+ },
+ "E-DISPLAY-SUBJECT": {
+  "label": "看不到该对象"
+ },
+ "E-SAVE-EMPTY": {
+  "label": "槽位为空"
+ },
+ "E-SAVE-IMPORT-SIZE": {
+  "label": "导入文件过大"
+ },
+ "E-SAVE-RULES-MISMATCH": {
+  "label": "存档与当前规则不符"
+ },
+ "E-SAVE-SHARD-DIGEST": {
+  "label": "存档校验不符"
+ },
+ "E-SAVE-SLOT-INVALID": {
+  "label": "槽位不合"
+ },
+ "E-SAVE-TORN": {
+  "label": "存档残缺"
+ },
+ "E-SAVE-WRITE-FAIL": {
+  "label": "写存档失败"
+ },
+ "E-WIRE-ENVELOPE": {
+  "label": "请求格式不合"
+ },
+ "E-WIRE-REPLY": {
+  "label": "回应缺失"
+ },
  "ability_cut": {
   "label": "切"
  },
@@ -22,6 +64,12 @@
  },
  "ability_reap": {
   "label": "割取"
+ },
+ "act_choose_origin": {
+  "label": "选来历"
+ },
+ "act_wait": {
+  "label": "等待"
  },
  "bld_bs_boat": {
   "label": "船户会屋"
@@ -890,6 +938,15 @@
  "bm_physical": {
   "label": "物理律通道"
  },
+ "cal_default": {
+  "label": "常历"
+ },
+ "cal_legacy_30": {
+  "label": "旧三十日历"
+ },
+ "calendar_from": {
+  "label": "历法未定"
+ },
  "category_apparel": {
   "label": "服装"
  },
@@ -1055,11 +1112,23 @@
  "class_wood.appearance.3": {
   "label": "纹理绕节而过，节疤色深近圆"
  },
+ "day_parts": {
+  "label": "时段未定"
+ },
+ "day_start": {
+  "label": "日始未定"
+ },
  "due_recurrence": {
   "label": "周期日到来"
  },
  "due_revive_window": {
   "label": "复生窗口期满"
+ },
+ "hk_player_seat": {
+  "label": "玩家所控"
+ },
+ "hk_wearing": {
+  "label": "穿着"
  },
  "item_acid_moss_gel": {
   "label": "酸苔胶"
@@ -3185,8 +3254,209 @@
  "loc_yp_path": {
   "label": "榆坡路口"
  },
+ "lodge": {
+  "label": "落脚处"
+ },
+ "minute": {
+  "label": "分钟"
+ },
+ "minutes": {
+  "label": "时长"
+ },
+ "no_subject": {
+  "label": "尚无化身"
+ },
+ "npc_bg_beast_exile": {
+  "label": "砾耳兽裔·离群者"
+ },
+ "npc_bg_beast_pack_hunter": {
+  "label": "砾耳兽裔·群猎手"
+ },
+ "npc_bg_beast_scent_witness": {
+  "label": "砾耳兽裔·嗅迹证人"
+ },
+ "npc_bg_canopy_apprentice": {
+  "label": "翡翠架栖林民·外出学徒"
+ },
+ "npc_bg_canopy_heir": {
+  "label": "翡翠架栖林民·本业子弟"
+ },
+ "npc_bg_canopy_wanderer": {
+  "label": "翡翠架栖林民·行路人"
+ },
+ "npc_bg_civic_clerk_child": {
+  "label": "中陆阶庭人·书办人家"
+ },
+ "npc_bg_civic_wanderer": {
+  "label": "中陆阶庭人·行路人"
+ },
+ "npc_bg_civic_ward_market": {
+  "label": "中陆阶庭人·坊市学徒"
+ },
+ "npc_bg_coast_apprentice": {
+  "label": "琥珀泊绳民·外出学徒"
+ },
+ "npc_bg_coast_heir": {
+  "label": "琥珀泊绳民·本业子弟"
+ },
+ "npc_bg_coast_wanderer": {
+  "label": "琥珀泊绳民·行路人"
+ },
+ "npc_bg_far_lignum_apprentice": {
+  "label": "杉根联邑木精·外出学徒"
+ },
+ "npc_bg_far_lignum_heir": {
+  "label": "杉根联邑木精·本业子弟"
+ },
+ "npc_bg_far_lignum_wanderer": {
+  "label": "杉根联邑木精·行路人"
+ },
+ "npc_bg_far_orc_apprentice": {
+  "label": "赭牙诸部人·外出学徒"
+ },
+ "npc_bg_far_orc_heir": {
+  "label": "赭牙诸部人·本业子弟"
+ },
+ "npc_bg_far_orc_wanderer": {
+  "label": "赭牙诸部人·行路人"
+ },
+ "npc_bg_forge_apprentice": {
+  "label": "寒炉楔契氏族·外出学徒"
+ },
+ "npc_bg_forge_heir": {
+  "label": "寒炉楔契氏族·本业子弟"
+ },
+ "npc_bg_forge_wanderer": {
+  "label": "寒炉楔契氏族·行路人"
+ },
+ "npc_bg_ms_huipeng_apprentice": {
+  "label": "灰棚明签俗·外出学徒"
+ },
+ "npc_bg_ms_huipeng_heir": {
+  "label": "灰棚明签俗·本业子弟"
+ },
+ "npc_bg_ms_huipeng_wanderer": {
+  "label": "灰棚明签俗·行路人"
+ },
+ "npc_bg_ms_huixi_apprentice": {
+  "label": "回汐认岸俗·外出学徒"
+ },
+ "npc_bg_ms_huixi_heir": {
+  "label": "回汐认岸俗·本业子弟"
+ },
+ "npc_bg_ms_huixi_wanderer": {
+  "label": "回汐认岸俗·行路人"
+ },
+ "npc_bg_ms_lielu_apprentice": {
+  "label": "裂炉营人·外出学徒"
+ },
+ "npc_bg_ms_lielu_heir": {
+  "label": "裂炉营人·本业子弟"
+ },
+ "npc_bg_ms_lielu_wanderer": {
+  "label": "裂炉营人·行路人"
+ },
+ "npc_bg_ms_taideng_apprentice": {
+  "label": "苔灯坞狐族·外出学徒"
+ },
+ "npc_bg_ms_taideng_heir": {
+  "label": "苔灯坞狐族·本业子弟"
+ },
+ "npc_bg_ms_taideng_wanderer": {
+  "label": "苔灯坞狐族·行路人"
+ },
+ "npc_bg_ms_tanjie_apprentice": {
+  "label": "炭阶灰窟人·外出学徒"
+ },
+ "npc_bg_ms_tanjie_heir": {
+  "label": "炭阶灰窟人·本业子弟"
+ },
+ "npc_bg_ms_tanjie_wanderer": {
+  "label": "炭阶灰窟人·行路人"
+ },
+ "npc_bg_ms_yugen_apprentice": {
+  "label": "榆根里共居者·外出学徒"
+ },
+ "npc_bg_ms_yugen_heir": {
+  "label": "榆根里共居者·本业子弟"
+ },
+ "npc_bg_ms_yugen_wanderer": {
+  "label": "榆根里共居者·行路人"
+ },
+ "npc_bg_north_apprentice": {
+  "label": "星湾覆灯人·外出学徒"
+ },
+ "npc_bg_north_heir": {
+  "label": "星湾覆灯人·本业子弟"
+ },
+ "npc_bg_north_wanderer": {
+  "label": "星湾覆灯人·行路人"
+ },
+ "npc_bg_reed_apprentice": {
+  "label": "镜沼篆汀人·外出学徒"
+ },
+ "npc_bg_reed_heir": {
+  "label": "镜沼篆汀人·本业子弟"
+ },
+ "npc_bg_reed_wanderer": {
+  "label": "镜沼篆汀人·行路人"
+ },
+ "npc_bg_river_apprentice": {
+  "label": "西陲垄渠人·外出学徒"
+ },
+ "npc_bg_river_heir": {
+  "label": "西陲垄渠人·本业子弟"
+ },
+ "npc_bg_river_wanderer": {
+  "label": "西陲垄渠人·行路人"
+ },
+ "npc_bg_salt_apprentice": {
+  "label": "灰盐量影人·外出学徒"
+ },
+ "npc_bg_salt_heir": {
+  "label": "灰盐量影人·本业子弟"
+ },
+ "npc_bg_salt_wanderer": {
+  "label": "灰盐量影人·行路人"
+ },
+ "npc_bg_steppe_apprentice": {
+  "label": "风脊系绳部族·外出学徒"
+ },
+ "npc_bg_steppe_heir": {
+  "label": "风脊系绳部族·本业子弟"
+ },
+ "npc_bg_steppe_wanderer": {
+  "label": "风脊系绳部族·行路人"
+ },
+ "origin": {
+  "label": "来历"
+ },
+ "place": {
+  "label": "出生地"
+ },
+ "purpose_escrow": {
+  "label": "托管"
+ },
+ "purpose_general": {
+  "label": "日常"
+ },
  "purpose_unmaterialized": {
   "label": "未物化预置"
+ },
+ "reply_result.error": {
+  "label": "出错"
+ },
+ "reply_result.ok": {
+  "label": "成"
+ },
+ "reply_result.received": {
+  "label": "已收"
+ },
+ "reply_result.rejected": {
+  "label": "被拒"
+ },
+ "reply_result.save_unavailable": {
+  "label": "存档不可用"
  },
  "res_acid_moss_gel": {
   "label": "酸苔胶"
@@ -4670,6 +4940,24 @@
  "resfam_stock": {
   "label": "地点存量"
  },
+ "save_op.load": {
+  "label": "读档"
+ },
+ "save_op.save": {
+  "label": "存档"
+ },
+ "sea_four_autumn": {
+  "label": "秋"
+ },
+ "sea_four_spring": {
+  "label": "春"
+ },
+ "sea_four_summer": {
+  "label": "夏"
+ },
+ "sea_four_winter": {
+  "label": "冬"
+ },
  "sink_boundary": {
   "label": "边界买走"
  },
@@ -4712,6 +5000,15 @@
  "size_tiny": {
   "label": "微件"
  },
+ "species": {
+  "label": "种族"
+ },
+ "species_chicken": {
+  "label": "鸡"
+ },
+ "species_human": {
+  "label": "人"
+ },
  "src_birth": {
   "label": "出生对平"
  },
@@ -4730,6 +5027,78 @@
  "src_transform": {
   "label": "转换产出"
  },
+ "st_bailu": {
+  "label": "白露"
+ },
+ "st_chunfen": {
+  "label": "春分"
+ },
+ "st_chushu": {
+  "label": "处暑"
+ },
+ "st_dahan": {
+  "label": "大寒"
+ },
+ "st_dashu": {
+  "label": "大暑"
+ },
+ "st_daxue": {
+  "label": "大雪"
+ },
+ "st_dongzhi": {
+  "label": "冬至"
+ },
+ "st_guyu": {
+  "label": "谷雨"
+ },
+ "st_hanlu": {
+  "label": "寒露"
+ },
+ "st_jingzhe": {
+  "label": "惊蛰"
+ },
+ "st_lichun": {
+  "label": "立春"
+ },
+ "st_lidong": {
+  "label": "立冬"
+ },
+ "st_liqiu": {
+  "label": "立秋"
+ },
+ "st_lixia": {
+  "label": "立夏"
+ },
+ "st_mangzhong": {
+  "label": "芒种"
+ },
+ "st_qingming": {
+  "label": "清明"
+ },
+ "st_qiufen": {
+  "label": "秋分"
+ },
+ "st_shuangjiang": {
+  "label": "霜降"
+ },
+ "st_xiaohan": {
+  "label": "小寒"
+ },
+ "st_xiaoman": {
+  "label": "小满"
+ },
+ "st_xiaoshu": {
+  "label": "小暑"
+ },
+ "st_xiaoxue": {
+  "label": "小雪"
+ },
+ "st_xiazhi": {
+  "label": "夏至"
+ },
+ "st_yushui": {
+  "label": "雨水"
+ },
  "tr_bound": {
   "label": "只与发行者往来"
  },
@@ -4738,5 +5107,89 @@
  },
  "tr_restricted": {
   "label": "受限转让"
+ },
+ "uitok_blk_here": {
+  "label": "我在哪"
+ },
+ "uitok_blk_log": {
+  "label": "记录"
+ },
+ "uitok_blk_menu": {
+  "label": "可做的事"
+ },
+ "uitok_blk_now": {
+  "label": "此刻"
+ },
+ "uitok_blk_save": {
+  "label": "存档"
+ },
+ "uitok_blk_self": {
+  "label": "身上"
+ },
+ "uitok_btn_export": {
+  "label": "导出"
+ },
+ "uitok_btn_import": {
+  "label": "导入"
+ },
+ "uitok_btn_load": {
+  "label": "读档"
+ },
+ "uitok_btn_save": {
+  "label": "存档"
+ },
+ "uitok_btn_submit": {
+  "label": "去做"
+ },
+ "uitok_fld_accounts": {
+  "label": "钱与物"
+ },
+ "uitok_fld_calendar": {
+  "label": "历法"
+ },
+ "uitok_fld_day": {
+  "label": "第几日"
+ },
+ "uitok_fld_day_part": {
+  "label": "时段"
+ },
+ "uitok_fld_gaps": {
+  "label": "尚不知道"
+ },
+ "uitok_fld_holdings": {
+  "label": "持有"
+ },
+ "uitok_fld_minute_of_day": {
+  "label": "日内分钟"
+ },
+ "uitok_fld_season": {
+  "label": "季节"
+ },
+ "uitok_fld_slot": {
+  "label": "槽位"
+ },
+ "uitok_fld_solar_term": {
+  "label": "节气"
+ },
+ "uitok_notice_envelope_dropped": {
+  "label": "有内容被丢弃"
+ },
+ "uitok_notice_offline": {
+  "label": "连不上"
+ },
+ "uitok_notice_stale": {
+  "label": "画面可能已过期"
+ },
+ "uitok_notice_waiting": {
+  "label": "等待中"
+ },
+ "uitok_title": {
+  "label": "无限原野"
+ },
+ "weather_unbuilt": {
+  "label": "天气未建"
+ },
+ "zone_unknown": {
+  "label": "地域不明"
  }
 }

@@ -1,0 +1,30 @@
+/* 浏览器菜单前端样式（S1-4；主会话裁定 Q7 甲宽屏三栏、窄屏一栏，Q11 甲正文 Noto Serif、标题文楷，不加载思源黑体）。 */
+@font-face { font-family: "IF Body"; src: url("assets/fonts/NotoSerifSC-Regular.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "IF Title"; src: url("assets/fonts/LXGWWenKai-Regular.woff2") format("woff2"); font-display: swap; }
+
+:root { --ink: #2b2620; --paper: #f6f1e6; --line: #d8cdb8; --accent: #7a4b22; --muted: #8a8172; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "IF Body", serif; color: var(--ink); background: var(--paper); line-height: 1.6; }
+h1, h2, h3 { font-family: "IF Title", serif; font-weight: normal; margin: 0 0 .4em; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.1rem; color: var(--accent); border-bottom: 1px solid var(--line); }
+h3 { font-size: 1rem; }
+header { display: flex; align-items: center; gap: .8rem; padding: .6rem 1rem; border-bottom: 1px solid var(--line); }
+header .logo { width: 2rem; height: 2rem; }
+.notice { margin-left: auto; color: var(--muted); }
+body[data-state="offline"] .logo { filter: grayscale(1); opacity: .5; }
+main { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; padding: 1rem; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+.block { margin-bottom: 1rem; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem .8rem; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+dd span + span::before, li span + span::before { content: " · "; color: var(--muted); }
+ol, ul { margin: 0; padding-left: 1.2rem; }
+.card { border: 1px solid var(--line); border-radius: 4px; padding: .6rem; margin-bottom: .8rem; background: #fffdf8; }
+.card label, .block label { display: block; margin: .3rem 0; }
+.card label > span:first-child, .block label > span:first-child { display: inline-block; min-width: 4em; color: var(--muted); }
+select, input, button { font: inherit; }
+select { max-width: 100%; }
+button { margin: .3rem .3rem 0 0; padding: .2rem .8rem; border: 1px solid var(--accent); background: var(--paper); color: var(--accent); cursor: pointer; }
+.untranslated { text-decoration: underline dotted; }

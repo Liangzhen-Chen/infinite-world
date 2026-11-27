@@ -1,10 +1,10 @@
 // 新骨架入口（S1-1 卡 A/B1/B2；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
 // 装配层：读世界维度表、命名 struct、state-owners、规则表登记 registry.json 及其登记的全部规则表、存档排除表，读源码清单、取摘要能力，
-// 交 mountKernel 组装、核对并建 engine 与 state、日志簿；再由宿主 router 取路由能力挂 menu 与存档两路（S1-3b）。本文件不写状态。
+// 交 mountKernel 组装、核对并建 engine 与 state、日志簿；再由宿主 router 取路由能力挂 menu 与存档两路（S1-3b），并挂浏览器菜单前端的静态路由（S1-4 mountClient）。本文件不写状态。
 // 读文件只在装配层（本文件），kernel 内的规则零件不读世界文件；不引任何归档文件。
 // saveSlot / loadSlot / replay_apply 是进程内的存读档薄壳（saveSlot 调 kernel 的 writeSlot，loadSlot 调 readSlot，replay_apply 经 mountKernel 复演）；玩家经 menu 路由存读档时由 menu-entry 调同一 kernel 函数。
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { mountKernel } from './rules/load/mount.mjs';
 import { mergeOwners, shardDirOf } from './rules/load/registry-shards.mjs';
@@ -13,6 +13,7 @@ import { writeSlot, mountSaveRoutes } from './kernel/save.mjs';
 import { readSlot } from './kernel/load/save.mjs';
 import { createRouterCaps } from './rules/transport/router-caps.mjs';
 import { mountMenuEntry } from './rules/transport/menu-entry.mjs';
+import { mountClient } from './rules/transport/client-route.mjs';
 
 const REPO = new URL('../', import.meta.url);
 const WORLD_ONTOLOGY = new URL('world/ontology/', REPO);
@@ -74,6 +75,27 @@ function readWorld() {
   };
 }
 
+/** 浏览器菜单前端的静态白名单（world/display/client-route.json，S1-4；显示配置，不进 doc_data）。 */
+function readClientRoute() {
+  return JSON.parse(readFileSync(new URL('world/display/client-route.json', REPO), 'utf8'));
+}
+
+/**
+ * 静态路由的读能力（S1-4 主会话补问甲：读盘只在装配层）：仓库相对路径 → 字节；只读不判白名单（白名单映射在 client-route.mjs），
+ * 路径解析到仓库之外、不是已有文件或读盘出错回 null。
+ * @param {string} relPath @returns {Uint8Array | null}
+ */
+function readRepoFile(relPath) {
+  const url = new URL(relPath, REPO);
+  if (!url.href.startsWith(REPO.href)) return null;
+  // 读盘两步任一出错（不存在、路径中段是文件的 ENOTDIR、权限等）都按「没有这个文件」回 null，不让静态请求打崩宿主（S1-4 审卡第一轮必须改 1）。
+  try {
+    return statSync(url).isFile() ? readFileSync(url) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** 目录下全部 .mjs 的 URL（递归，按名字排序只为确定性）。 @param {URL} dir @returns {URL[]} */
 function mjsUnder(dir) {
   return readdirSync(dir, { withFileTypes: true })
@@ -108,7 +130,7 @@ function capsOf(opts) {
 
 /**
  * SillyTavern 服务端插件入口（卷二 :1033 init(router)；主会话裁定 Q2：init(router, opts)）：装配 engine、初始 state 与日志簿，
- * 由宿主 router 取路由能力，挂 menu 路由（mountMenuEntry）与 save_export、save_import 两路（mountSaveRoutes）。返回开局的这一局。
+ * 由宿主 router 取路由能力，挂 menu 路由（mountMenuEntry）与 save_export、save_import 两路（mountSaveRoutes），再挂浏览器菜单前端的静态路由（mountClient）。返回开局的这一局。
  * @param {any} router 宿主交入的 express Router（必传，卷二:1033）
  * @param {{saveRoot?: string | URL}} [opts] saveRoot 覆盖默认存档根目录（仓库 saves/）
  */
@@ -118,6 +140,7 @@ export async function init(router, opts = {}) {
   const { requestCap, replyCap } = createRouterCaps(router);
   mountMenuEntry(requestCap, replyCap, { world, caps });
   mountSaveRoutes(requestCap, replyCap, world);
+  mountClient(router, readClientRoute(), readRepoFile);
   return world;
 }
 

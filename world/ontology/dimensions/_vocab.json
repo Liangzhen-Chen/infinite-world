@@ -216,6 +216,7 @@
   "transport": {"closed": false, "entries": {}, "prefix": "transport_"},
   "usage": {"closed": false, "entries": {}, "prefix": "usage_"},
   "usage_per": {"closed": false, "entries": {}, "prefix": "uper_"},
+  "ui_token": {"closed": false, "entries": {"uitok_blk_here": {}, "uitok_blk_log": {}, "uitok_blk_menu": {}, "uitok_blk_now": {}, "uitok_blk_save": {}, "uitok_blk_self": {}, "uitok_btn_export": {}, "uitok_btn_import": {}, "uitok_btn_load": {}, "uitok_btn_save": {}, "uitok_btn_submit": {}, "uitok_fld_accounts": {}, "uitok_fld_calendar": {}, "uitok_fld_day": {}, "uitok_fld_day_part": {}, "uitok_fld_gaps": {}, "uitok_fld_holdings": {}, "uitok_fld_minute_of_day": {}, "uitok_fld_season": {}, "uitok_fld_slot": {}, "uitok_fld_solar_term": {}, "uitok_notice_envelope_dropped": {}, "uitok_notice_offline": {}, "uitok_notice_stale": {}, "uitok_notice_waiting": {}, "uitok_title": {}}, "prefix": "uitok_"},
   "wear": {"closed": false, "entries": {
    "wear_broken": {"basis": "卷三乙 :310 残；李白 11-19 20:3x ⑥", "rank": 3},
    "wear_damaged": {"basis": "卷三乙 :310 损；李白 11-19 20:3x ⑥", "rank": 2},
