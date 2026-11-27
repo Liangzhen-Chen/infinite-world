@@ -1,0 +1,105 @@
+{
+ "entries": [
+  {
+   "name": "cellKey",
+   "file": "rules/place/footprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bakeFootprints",
+   "file": "rules/place/footprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "cellKey"
+   ],
+   "rules": []
+  },
+  {
+   "name": "footprintsDigest",
+   "file": "rules/place/footprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkFootprints",
+   "file": "rules/place/footprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "cellKey"
+   ],
+   "rules": []
+  },
+  {
+   "name": "zoneAt",
+   "file": "rules/place/zone.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeChainOf",
+   "file": "rules/place/zone.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "landCell",
+   "file": "rules/place/zone.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "cellKey",
+    "zoneAt",
+    "keyedHex"
+   ],
+   "rules": []
+  },
+  {
+   "name": "bearingView",
+   "file": "rules/place/zone.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "cellKey",
+    "ruleValue",
+    "atan"
+   ],
+   "rules": []
+  },
+  {
+   "name": "keyedHex",
+   "file": "rules/gen/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  }
+ ]
+}

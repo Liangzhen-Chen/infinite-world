@@ -36,7 +36,7 @@ function assertRejectedInLog(h, b, r, code) {
 
 // 先选来历，建出化身，使 act_wait 等依赖化身的动作可用。候选编号 0 即菜单里的第一个候选。
 async function withAvatar(base) {
-  const r = await act(base, 'act_choose_origin', { species: 0, origin: 0, place: 0 });
+  const r = await act(base, 'act_choose_origin', { species: 0, origin: 0, place: 0, lodge: 0 });
   assert.equal(r.json?.result, 'ok', `选来历未 ok，无法进入有化身状态：${r.text}`);
 }
 
@@ -57,7 +57,7 @@ test('候选编号越界：候选编号不在菜单候选内即 rejected，除�
   const h = await startHost({ saveRoot: root });
   t.after(async () => { await h.close(); removeTempRoot(root); });
   const b = beforeOf(h);
-  const r = await act(h.base, 'act_choose_origin', { species: 0, origin: 999999, place: 0 });
+  const r = await act(h.base, 'act_choose_origin', { species: 0, origin: 999999, place: 0, lodge: 0 });
   assertRejectedInLog(h, b, r, 'E-ACT-SLOT');
   const v = await view(h.base);
   const origin = (v.json.menu ?? []).find((m) => m.act === 'act_choose_origin');
@@ -83,7 +83,7 @@ test('whenRX 不过：尚无化身时 act_wait 即 rejected（E-ACT-PRECONDITION
 
   await withAvatar(h.base);
   const b = beforeOf(h);
-  const late = await act(h.base, 'act_choose_origin', { species: 0, origin: 0, place: 0 });
+  const late = await act(h.base, 'act_choose_origin', { species: 0, origin: 0, place: 0, lodge: 0 });
   assertRejectedInLog(h, b, late, 'E-ACT-PRECONDITION');
 });
 

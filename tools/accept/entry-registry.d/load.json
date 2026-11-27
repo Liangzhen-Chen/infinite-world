@@ -54,7 +54,8 @@
     "KernelError",
     "BODY_MANIFEST",
     "ECONOMY_MANIFEST",
-    "SOCIAL_MANIFEST"
+    "SOCIAL_MANIFEST",
+    "TRAVEL_MANIFEST"
    ],
    "rules": []
   }

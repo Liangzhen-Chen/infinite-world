@@ -1,0 +1,18 @@
+{
+ "stateKeys": {
+  "created": {"writers": {
+   "*.props.facing": {"create": ["kernel/storage.mjs"], "rewrite": "rules/travel/position.mjs", "rewriteRows": "all", "viaRelocate": false},
+   "*.props.pos": {"create": ["kernel/storage.mjs"], "rewrite": "rules/travel/position.mjs", "rewriteRows": "all", "viaRelocate": false}
+  }}
+ },
+ "systems": {
+  "position": {"primitiveWriter": {"ops": ["move"], "handler": "rules/travel/position.mjs#moveWriter"}}
+ },
+ "kernelApi": {
+  "exports": [
+   {"export": "rules/travel/position.mjs#placeSubject", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/gen/sample.mjs#seedKeyHex", "callers": ["rules"], "acceptsState": false},
+   {"export": "rules/gen/sample.mjs#keyedHex", "callers": ["rules"], "acceptsState": false}
+  ]
+ }
+}

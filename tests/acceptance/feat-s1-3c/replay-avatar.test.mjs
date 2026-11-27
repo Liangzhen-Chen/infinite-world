@@ -29,7 +29,7 @@ test('8. 复演一致：选来历建化身 → 推进 60 分钟 → 存槽 → �
 
   const origin = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.origin;
   const place = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin').slots.place;
-  const picked = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
+  const picked = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0, lodge: 0 } });
   assert.equal(picked.ok === true, true, `选来历应成功：${JSON.stringify(picked)}`);
   assert.ok(origin.length > 0 && place.length > 0, '开局候选不应为空');
 

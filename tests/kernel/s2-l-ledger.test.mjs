@@ -13,7 +13,7 @@ import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { mergeOwners } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { assemblePrimitiveWriters, registerPrimitiveWriter } from '../../server-plugin/rules/load/primitive-writers.mjs';
 import { instantiateEntity, registerInstantiator } from '../../server-plugin/rules/lifecycle/terminate.mjs';
-import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
+import { runTransaction, handlesOp } from '../../server-plugin/kernel/transaction.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { readPath, readPathIn } from '../../server-plugin/kernel/storage.mjs';
 import { post, openAccount } from '../../server-plugin/rules/economy/ledger.mjs';
@@ -62,7 +62,7 @@ const persons = (g) => Object.keys(g.state.created).filter((id) => g.state.creat
 /** 开局选来历（第 0 个种族、第 index 条来历、第 0 个地点），返回化身 id。 */
 function spawn(g, index = 0) {
   const a = g.menu(null).affordances[0];
-  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0 } });
+  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0, lodge: 0 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   return persons(g)[0];
 }
@@ -218,8 +218,12 @@ test('7 R0：同一 op 登两个写者、撞内核已有 op 即 E-DIM-DUPLICATE-
   assert.throws(() => assemblePrimitiveWriters({ systems: { x: sys('time', 'a.mjs#f') } }, [e1]), code('E-DIM-DUPLICATE-KEY'));
   assert.throws(() => assemblePrimitiveWriters({ systems: { x: sys('transfer', 'c.mjs#h') } }, [e1]), code('E-DIM-REF-MISSING'));
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2l-r0-') });
-  // move（卷九 :629 目录内、参数只要 to: id）：既无内核处理函数也无原语写者登记，参数合规后照旧 E-EFF-PRIMITIVE。
-  const r = g.submitProposal({ effects: [{ op: 'move', to: spawn(g, 0) }] });
+  // 原语目录里有、内核无处理函数、合并后 owners 里也没有 systems.*.primitiveWriter 声明的原语（从数据判出；只取必填键全为 id 型的，参数用化身构造即合规），参数合规后照旧 E-EFF-PRIMITIVE。
+  const declared = new Set(Object.values(Object(owners()).systems).flatMap((sys) => (sys && sys.primitiveWriter ? sys.primitiveWriter.ops : [])));
+  const cand = json('ontology/primitives.json').primitives.find((p) => !handlesOp(p.op) && !declared.has(p.op) && p.required && Object.values(p.required).every((t) => t === 'id'));
+  assert.ok(cand, '前提：目录里应有无处理函数、无写者声明、必填键全为 id 的原语');
+  const avatar = spawn(g, 0);
+  const r = g.submitProposal({ effects: [{ op: cand.op, ...Object.fromEntries(Object.keys(cand.required).map((k) => [k, avatar])) }] });
   assert.equal(r.code, 'E-EFF-PRIMITIVE', JSON.stringify(r));
   const raw = rawWorld();
   raw.owners.systems.dup = { primitiveWriter: { ops: ['transfer'], handler: 'rules/economy/ledger.mjs#transferWriter' } };

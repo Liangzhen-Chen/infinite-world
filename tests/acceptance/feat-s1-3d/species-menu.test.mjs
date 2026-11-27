@@ -90,7 +90,7 @@ test('2. 零 mock 端到端：index.mjs#init 后，经真实菜单 act_choose_or
     const species = candidatesOf(world, 'species');
     const origin = candidatesOf(world, 'origin');
     const place = candidatesOf(world, 'place');
-    const r = await world.act({ act: 'act_choose_origin', slots: { species: si, origin: 0, place: 0 } });
+    const r = await world.act({ act: 'act_choose_origin', slots: { species: si, origin: 0, place: 0, lodge: 0 } });
     assert.equal(isOk(r), true, `选种族+来历+出生地应成功：${JSON.stringify(r)}`);
 
     const ids = avatarIds(world);
@@ -104,9 +104,9 @@ test('2. 零 mock 端到端：index.mjs#init 后，经真实菜单 act_choose_or
 
 test('3. 缺 species 槽或候选下标越界：E-ACT-SLOT，state 逐位不变、时钟不动、无新增化身', async () => {
   const cases = [
-    [{ act: 'act_choose_origin', slots: { origin: 0, place: 0 } }, '缺 species 槽'],
-    [{ act: 'act_choose_origin', slots: { species: 1e9, origin: 0, place: 0 } }, 'species 下标越界（大）'],
-    [{ act: 'act_choose_origin', slots: { species: -1, origin: 0, place: 0 } }, 'species 下标为负'],
+    [{ act: 'act_choose_origin', slots: { origin: 0, place: 0, lodge: 0 } }, '缺 species 槽'],
+    [{ act: 'act_choose_origin', slots: { species: 1e9, origin: 0, place: 0, lodge: 0 } }, 'species 下标越界（大）'],
+    [{ act: 'act_choose_origin', slots: { species: -1, origin: 0, place: 0, lodge: 0 } }, 'species 下标为负'],
   ];
   for (const [intent, why] of cases) {
     const { world } = await fresh();

@@ -66,7 +66,7 @@ function u0(seed, stream, subject, time, site) {
 /** 开局建化身（选第 0 个种族、第 index 条来历、第 0 个地点），返回化身 id。 */
 function spawn(g, index = 0) {
   const a = g.menu(null).affordances[0];
-  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0 } });
+  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0, lodge: 0 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   return Object.keys(g.state.created).find((id) => g.state.created[id].kind === 'person');
 }

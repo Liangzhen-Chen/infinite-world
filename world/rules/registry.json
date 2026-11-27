@@ -455,15 +455,16 @@
       "storeyBaseMin": {"type": "integer", "unit": "count"}, "storeyBaseMax": {"type": "integer", "unit": "count"},
       "windowEveryMax": {"type": "integer", "unit": "count"}, "wallThicknessMaxM": {"type": "number", "unit": "m", "precision": 4},
       "aspectMin": {"type": "number", "unit": "dimensionless", "precision": 4}, "aspectMax": {"type": "number", "unit": "dimensionless", "precision": 4}}},
+    "blueprintRotationSteps": {"type": "integer", "unit": "count", "domain": [1, null]},
     "wear": {"type": "struct", "required": ["breachShare", "roofCurve", "wallOrderCode", "roofOrderCode"], "fields": {
       "breachShare": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
       "roofCurve": {"type": "curve", "x": "fraction", "y": "fraction"},
       "wallOrderCode": {"type": "string"}, "roofOrderCode": {"type": "string"}}}
    },
-   "domain": {"thermal": {}, "blueprint": {}, "wear": {}},
+   "domain": {"thermal": {}, "blueprint": {}, "blueprintRotationSteps": [1, null], "wear": {}},
    "volume": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K）：取 GB 50176-2016 表 C.5.3-1 单层窗值（李白 11-19 14:2x 三），读者 kernel/climate.mjs envelopeUaWPerK",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"thermal": false, "blueprint": false, "wear": false}
+   "packOverridable": {"thermal": false, "blueprint": false, "blueprintRotationSteps": false, "wear": false}
   },
   {
    "code": "materials",
@@ -667,6 +668,18 @@
    "volume": "卷九 §2.5 :321（rules.control.seatKind：ref vocab holding_kind，玩家席位边种类）、R9-3.9 :721（一个实体由玩家出意图，当且仅当它有一条在世的玩家席位边；种类行 hk_player_seat 登在 holding_kind 族，:1646）；读点 sim-tiers.mjs 的 bubbleView、inBubble（卷二十七 R27-1.12 :310）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"seatKind": false}
+  },
+  {
+   "code": "travel",
+   "file": "tables/travel.json",
+   "structure": "keys",
+   "type": {
+    "initialFacing": {"type": "integer", "unit": "count", "domain": [0, null]}
+   },
+   "domain": {"initialFacing": [0, null]},
+   "volume": "卷十七 §3.3 :304（placeSubject 朝向；初次落位没有旧位置时的朝向，S2-P 主会话 Q7 甲：先取目标地点行 facing，缺则本键）；取值须小于 rules.grid.facingDirections，读点 rules/travel/position.mjs 核",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"initialFacing": false}
   },
   {
    "code": "perception",

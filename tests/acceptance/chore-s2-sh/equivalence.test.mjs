@@ -78,7 +78,7 @@ test('E-4 带分片的世界：存槽→导出→读档→再存，saveDigest �
     h = await startHost({ plugin, saveRoot: root });
     const B = h.base;
     // S1-3d 起 species 必填（候选为可扮演物种），这里取候选下标 0。
-    const a = await act(B, 'act_choose_origin', { species: 0, origin: 0, place: 0 });
+    const a = await act(B, 'act_choose_origin', { species: 0, origin: 0, place: 0, lodge: 0 });
     assert.equal(a.json?.result, 'ok', `act_choose_origin 未 ok：${a.text}`);
     const s1 = await saveAt(B, 1);
     assert.equal(s1.json?.result, 'ok', `存槽 1 未 ok：${s1.text}`);

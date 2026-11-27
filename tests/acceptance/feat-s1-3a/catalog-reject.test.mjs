@@ -84,8 +84,8 @@ const importCopy = (root) => import(pathToFileURL(join(root, 'server-plugin/inde
 test('8. 进程内拒收：未知动作 E-ACT-UNKNOWN；候选编号越界与负数 E-ACT-SLOT；缺槽 E-ACT-SLOT；均 state/时钟不动、日志只多输入', async () => {
   const cases = [
     [{ act: 'act_no_such_action_zz', slots: {}, numbers: {} }, 'E-ACT-UNKNOWN'],
-    [{ act: 'act_choose_origin', slots: { species: 0, origin: 1e9, place: 0 } }, 'E-ACT-SLOT'],
-    [{ act: 'act_choose_origin', slots: { species: 0, origin: -1, place: 0 } }, 'E-ACT-SLOT'],
+    [{ act: 'act_choose_origin', slots: { species: 0, origin: 1e9, place: 0, lodge: 0 } }, 'E-ACT-SLOT'],
+    [{ act: 'act_choose_origin', slots: { species: 0, origin: -1, place: 0, lodge: 0 } }, 'E-ACT-SLOT'],
     [{ act: 'act_choose_origin', slots: { species: 0, origin: 0 } }, 'E-ACT-SLOT'],
   ];
   for (const [intent, code] of cases) {
@@ -112,7 +112,7 @@ test('9. 动作表加一行（复制 act_wait 改 id 与上限）、不改任何
 
   const { init: initCopy } = await importCopy(root);
   const world = await initCopy(express.Router(), { saveRoot: root });
-  const first = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0 } });
+  const first = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0, lodge: 0 } });
   assert.equal(isOk(first), true, '前提：选来历应成功');
 
   const avatar = Object.keys(world.state.created).find((id) => world.state.created[id].kind === 'person');
