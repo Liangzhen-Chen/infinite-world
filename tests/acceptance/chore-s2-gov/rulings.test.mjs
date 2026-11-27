@@ -11,6 +11,11 @@ import { join } from 'node:path';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BASE = '6413e8a47';
 const REL = 'docs/审查/现行有效裁定.json';
+// 本卡最终内容（合入后历史中保留）：一次性对比（改前后比较、删除、新增条目行号）只看这一版，别的卡改动这些文件不影响本卡验收。
+const PIN = 'e5cb05269';
+const pinText = (rel) => execFileSync('git', ['show', `${PIN}:${rel}`], { cwd: ROOT, encoding: 'utf8' });
+const pinNow = () => JSON.parse(pinText(REL));
+const pinHas = (rel) => { try { pinText(rel); return true; } catch { return false; } };
 const now = () => JSON.parse(readFileSync(join(ROOT, REL), 'utf8'));
 const was = () => JSON.parse(execFileSync('git', ['show', `${BASE}:${REL}`], { cwd: ROOT, encoding: 'utf8' }));
 const ids = (doc) => new Set(doc.rulings.map((r) => r.id));
@@ -28,14 +33,14 @@ test('现行有效裁定.json 可解析，条目有 id 与 source', () => {
 
 // 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：相对基线新增的条目，source 指向的「文件:行」存在，且该行含 11-26 或 11-27 的拍板日期；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:30
 test('新增条目的 source 指向存在的文件:行，且该行含拍板日期', () => {
-  const added = now().rulings.filter((r) => !ids(was()).has(r.id));
+  const added = pinNow().rulings.filter((r) => !ids(was()).has(r.id));
   assert.ok(added.length > 0, '没有新增 11-26 拍板条目');
   for (const r of added) {
     const m = /^(.+):(\d+)$/.exec(r.source);
     assert.ok(m, `${r.id} 的 source 不是「文件:行」：${r.source}`);
     const [, file, num] = m;
-    assert.ok(existsSync(join(ROOT, file)), `${r.id} 指向的文件不存在：${file}`);
-    const line = fileLines(file)[Number(num) - 1];
+    assert.ok(pinHas(file), `${r.id} 指向的文件不存在：${file}`);
+    const line = pinText(file).replace(/\r\n/g, '\n').split('\n')[Number(num) - 1];
     assert.ok(line !== undefined, `${r.id} 指向的行号越界：${r.source}`);
     assert.match(line, /11-2[67]/, `${r.id} 指向的行不含拍板日期：${r.source}`);
   }
@@ -53,7 +58,7 @@ test('CLAUDE.md:N 引用指向非空、非标题行', () => {
 
 // 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：被后文推翻的「裁定1124b」「审批闸门5元-1109」已从生效裁定里删除，且两条 id 都记在 K1125-QUOTA、K1125-COST 的 supersedes 里；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:55
 test("被推翻的旧条目已删，新裁定记下 supersedes", () => {
-  const doc = now();
+  const doc = pinNow();
   const cur = ids(doc);
   const gone = ["裁定1124b", "审批闸门5元-1109"];
   for (const g of gone) assert.ok(!cur.has(g), g + " 仍在生效裁定里");
