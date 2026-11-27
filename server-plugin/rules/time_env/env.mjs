@@ -9,7 +9,7 @@ import { kindOfEntity } from '../../kernel/storage.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
 import { zoneAt } from '../place/zone.mjs';
 import { systemTimeView, calendarFrom, calendarDayIndex, calendarView, dayPartOf } from './calendar.mjs';
-import { normalizedPhase, seasonAt, solarTermAt } from './season.mjs';
+import { localPhase, seasonAt, solarTermAt } from './season.mjs';
 
 // env 键（卷二十 §2.7）。
 const KEY = Object.freeze({ solarPhase: 'env.solarPhase', season: 'env.season', weather: 'env.weather' });
@@ -33,7 +33,7 @@ export function envAt(engine, state, at, minute) {
   const weather = unknown([GAP.weather]);
   if (place === null) return Object.freeze({ [KEY.solarPhase]: unknown([GAP.place]), [KEY.season]: unknown([GAP.place]), [KEY.weather]: weather });
   return Object.freeze({
-    [KEY.solarPhase]: normalizedPhase(engine, state, place, minute),
+    [KEY.solarPhase]: localPhase(engine, state, place, minute),
     [KEY.season]: seasonAt(engine, state, place, minute),
     [KEY.weather]: weather,
   });

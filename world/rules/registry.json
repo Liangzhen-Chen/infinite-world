@@ -228,14 +228,12 @@
     "phaseEpochMinute": {"type": "integer", "unit": "minute"},
     "minutesPerMeterEast": {"type": "number", "unit": "minute", "precision": 0},
     "thermalLagPhase": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [0, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]},
-    "metersPerDegreeNorth": {"type": "number", "unit": "m", "precision": 0},
-    "latitudeOriginDeg": {"type": "number", "unit": "degree", "precision": 4},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"yearDays": {}, "phaseEpochMinute": [null, null], "minutesPerMeterEast": [0, null], "thermalLagPhase": {}, "metersPerDegreeNorth": [1, null], "latitudeOriginDeg": [-90, 90], "unbuilt": {}},
+   "domain": {"yearDays": {}, "phaseEpochMinute": [null, null], "minutesPerMeterEast": [0, null], "thermalLagPhase": {}, "unbuilt": {}},
    "volume": "卷二十 §2.2 :207–:220（rules.astro）；yearDays、phaseEpochMinute 取旧数据、minutesPerMeterEast 与 thermalLagPhase 取卷文明文值；卷文写“标定”或无数值的键、以及只被日照公式读的 axialTiltDeg 登在 unbuilt（李白 11-19 12:4x 丙6、丙7：非核心读数按未知传播并机读登记缺口，不写缺省）；thermalLagPhase 的 num 小于 den 核对在 kernel/calendar.mjs checkCalendarClimateTables（卷文域 [0, 1/4) 的上界 1/4 未核，见回报）；读者只有 kernel/calendar.mjs 的 astroView 与 kernel/climate.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"yearDays": false, "phaseEpochMinute": false, "minutesPerMeterEast": false, "thermalLagPhase": false, "metersPerDegreeNorth": false, "latitudeOriginDeg": false, "unbuilt": false}
+   "packOverridable": {"yearDays": false, "phaseEpochMinute": false, "minutesPerMeterEast": false, "thermalLagPhase": false, "unbuilt": false}
   },
   {
    "code": "climate",

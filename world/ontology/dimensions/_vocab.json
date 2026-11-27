@@ -529,8 +529,10 @@
       "climateProto",
       "diurnalAmpC",
       "perennialSnowMm",
+      "phaseOffset",
       "precipLiquid",
-      "tempAmpC"
+      "tempAmpC",
+      "termScheme"
      ],
      "table": "place"
     },
@@ -2720,32 +2722,41 @@
   "solar_term": {
    "closed": false,
    "entries": {
-    "st_chunfen": {"basis": "S2-T1 主会话 Q3 甲（卷二十勘误：新族 solar_term，二十四节气按半球归一太阳相位切）：平气法——回归年按太阳相位二十四等分，相位 0 为北半球春分（卷二十 §4.4.3 第 1 条 :689），自春分起每气 1/24，夏至 1/4、秋分 1/2、冬至 3/4；读半球归一相位（:690），南半球的冬至行随本地冬至走。现实依据：二十四节气以春分为太阳黄经 0°、每 15° 一气（定气）；平气以回归年时长等分，与定气之差来自地球轨道偏心率（最多约两日）。代号取节气名拼音，显示名交语言包", "order": 0, "phaseFrom": {"num": 0, "den": 24}, "phaseTo": {"num": 1, "den": 24}},
-    "st_qingming": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 1 气", "order": 1, "phaseFrom": {"num": 1, "den": 24}, "phaseTo": {"num": 2, "den": 24}},
-    "st_guyu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 2 气", "order": 2, "phaseFrom": {"num": 2, "den": 24}, "phaseTo": {"num": 3, "den": 24}},
-    "st_lixia": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 3 气", "order": 3, "phaseFrom": {"num": 3, "den": 24}, "phaseTo": {"num": 4, "den": 24}},
-    "st_xiaoman": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 4 气", "order": 4, "phaseFrom": {"num": 4, "den": 24}, "phaseTo": {"num": 5, "den": 24}},
-    "st_mangzhong": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 5 气", "order": 5, "phaseFrom": {"num": 5, "den": 24}, "phaseTo": {"num": 6, "den": 24}},
-    "st_xiazhi": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 6 气", "order": 6, "phaseFrom": {"num": 6, "den": 24}, "phaseTo": {"num": 7, "den": 24}},
-    "st_xiaoshu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 7 气", "order": 7, "phaseFrom": {"num": 7, "den": 24}, "phaseTo": {"num": 8, "den": 24}},
-    "st_dashu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 8 气", "order": 8, "phaseFrom": {"num": 8, "den": 24}, "phaseTo": {"num": 9, "den": 24}},
-    "st_liqiu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 9 气", "order": 9, "phaseFrom": {"num": 9, "den": 24}, "phaseTo": {"num": 10, "den": 24}},
-    "st_chushu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 10 气", "order": 10, "phaseFrom": {"num": 10, "den": 24}, "phaseTo": {"num": 11, "den": 24}},
-    "st_bailu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 11 气", "order": 11, "phaseFrom": {"num": 11, "den": 24}, "phaseTo": {"num": 12, "den": 24}},
-    "st_qiufen": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 12 气", "order": 12, "phaseFrom": {"num": 12, "den": 24}, "phaseTo": {"num": 13, "den": 24}},
-    "st_hanlu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 13 气", "order": 13, "phaseFrom": {"num": 13, "den": 24}, "phaseTo": {"num": 14, "den": 24}},
-    "st_shuangjiang": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 14 气", "order": 14, "phaseFrom": {"num": 14, "den": 24}, "phaseTo": {"num": 15, "den": 24}},
-    "st_lidong": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 15 气", "order": 15, "phaseFrom": {"num": 15, "den": 24}, "phaseTo": {"num": 16, "den": 24}},
-    "st_xiaoxue": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 16 气", "order": 16, "phaseFrom": {"num": 16, "den": 24}, "phaseTo": {"num": 17, "den": 24}},
-    "st_daxue": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 17 气", "order": 17, "phaseFrom": {"num": 17, "den": 24}, "phaseTo": {"num": 18, "den": 24}},
-    "st_dongzhi": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 18 气", "order": 18, "phaseFrom": {"num": 18, "den": 24}, "phaseTo": {"num": 19, "den": 24}},
-    "st_xiaohan": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 19 气", "order": 19, "phaseFrom": {"num": 19, "den": 24}, "phaseTo": {"num": 20, "den": 24}},
-    "st_dahan": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 20 气", "order": 20, "phaseFrom": {"num": 20, "den": 24}, "phaseTo": {"num": 21, "den": 24}},
-    "st_lichun": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 21 气", "order": 21, "phaseFrom": {"num": 21, "den": 24}, "phaseTo": {"num": 22, "den": 24}},
-    "st_yushui": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 22 气", "order": 22, "phaseFrom": {"num": 22, "den": 24}, "phaseTo": {"num": 23, "den": 24}},
-    "st_jingzhe": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 23 气", "order": 23, "phaseFrom": {"num": 23, "den": 24}, "phaseTo": {"num": 24, "den": 24}}
+    "st_chunfen": {"basis": "S2-T1 主会话 Q3 甲（卷二十勘误：新族 solar_term，二十四节气按半球归一太阳相位切）：平气法——回归年按太阳相位二十四等分，相位 0 为北半球春分（卷二十 §4.4.3 第 1 条 :689），自春分起每气 1/24，夏至 1/4、秋分 1/2、冬至 3/4；读单元本地相位（S2-T1b 卷二十勘误，取代 :690 半球归一），本行属方案 tsch_24。现实依据：二十四节气以春分为太阳黄经 0°、每 15° 一气（定气）；平气以回归年时长等分，与定气之差来自地球轨道偏心率（最多约两日）。代号取节气名拼音，显示名交语言包", "scheme": "tsch_24", "order": 0, "phaseFrom": {"num": 0, "den": 24}, "phaseTo": {"num": 1, "den": 24}},
+    "st_qingming": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 1 气", "scheme": "tsch_24", "order": 1, "phaseFrom": {"num": 1, "den": 24}, "phaseTo": {"num": 2, "den": 24}},
+    "st_guyu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 2 气", "scheme": "tsch_24", "order": 2, "phaseFrom": {"num": 2, "den": 24}, "phaseTo": {"num": 3, "den": 24}},
+    "st_lixia": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 3 气", "scheme": "tsch_24", "order": 3, "phaseFrom": {"num": 3, "den": 24}, "phaseTo": {"num": 4, "den": 24}},
+    "st_xiaoman": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 4 气", "scheme": "tsch_24", "order": 4, "phaseFrom": {"num": 4, "den": 24}, "phaseTo": {"num": 5, "den": 24}},
+    "st_mangzhong": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 5 气", "scheme": "tsch_24", "order": 5, "phaseFrom": {"num": 5, "den": 24}, "phaseTo": {"num": 6, "den": 24}},
+    "st_xiazhi": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 6 气", "scheme": "tsch_24", "order": 6, "phaseFrom": {"num": 6, "den": 24}, "phaseTo": {"num": 7, "den": 24}},
+    "st_xiaoshu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 7 气", "scheme": "tsch_24", "order": 7, "phaseFrom": {"num": 7, "den": 24}, "phaseTo": {"num": 8, "den": 24}},
+    "st_dashu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 8 气", "scheme": "tsch_24", "order": 8, "phaseFrom": {"num": 8, "den": 24}, "phaseTo": {"num": 9, "den": 24}},
+    "st_liqiu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 9 气", "scheme": "tsch_24", "order": 9, "phaseFrom": {"num": 9, "den": 24}, "phaseTo": {"num": 10, "den": 24}},
+    "st_chushu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 10 气", "scheme": "tsch_24", "order": 10, "phaseFrom": {"num": 10, "den": 24}, "phaseTo": {"num": 11, "den": 24}},
+    "st_bailu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 11 气", "scheme": "tsch_24", "order": 11, "phaseFrom": {"num": 11, "den": 24}, "phaseTo": {"num": 12, "den": 24}},
+    "st_qiufen": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 12 气", "scheme": "tsch_24", "order": 12, "phaseFrom": {"num": 12, "den": 24}, "phaseTo": {"num": 13, "den": 24}},
+    "st_hanlu": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 13 气", "scheme": "tsch_24", "order": 13, "phaseFrom": {"num": 13, "den": 24}, "phaseTo": {"num": 14, "den": 24}},
+    "st_shuangjiang": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 14 气", "scheme": "tsch_24", "order": 14, "phaseFrom": {"num": 14, "den": 24}, "phaseTo": {"num": 15, "den": 24}},
+    "st_lidong": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 15 气", "scheme": "tsch_24", "order": 15, "phaseFrom": {"num": 15, "den": 24}, "phaseTo": {"num": 16, "den": 24}},
+    "st_xiaoxue": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 16 气", "scheme": "tsch_24", "order": 16, "phaseFrom": {"num": 16, "den": 24}, "phaseTo": {"num": 17, "den": 24}},
+    "st_daxue": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 17 气", "scheme": "tsch_24", "order": 17, "phaseFrom": {"num": 17, "den": 24}, "phaseTo": {"num": 18, "den": 24}},
+    "st_dongzhi": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 18 气", "scheme": "tsch_24", "order": 18, "phaseFrom": {"num": 18, "den": 24}, "phaseTo": {"num": 19, "den": 24}},
+    "st_xiaohan": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 19 气", "scheme": "tsch_24", "order": 19, "phaseFrom": {"num": 19, "den": 24}, "phaseTo": {"num": 20, "den": 24}},
+    "st_dahan": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 20 气", "scheme": "tsch_24", "order": 20, "phaseFrom": {"num": 20, "den": 24}, "phaseTo": {"num": 21, "den": 24}},
+    "st_lichun": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 21 气", "scheme": "tsch_24", "order": 21, "phaseFrom": {"num": 21, "den": 24}, "phaseTo": {"num": 22, "den": 24}},
+    "st_yushui": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 22 气", "scheme": "tsch_24", "order": 22, "phaseFrom": {"num": 22, "den": 24}, "phaseTo": {"num": 23, "den": 24}},
+    "st_jingzhe": {"basis": "区间同 st_chunfen 的算法（平气法，相位 0 为春分，每气 1/24）：本行为自春分起第 23 气", "scheme": "tsch_24", "order": 23, "phaseFrom": {"num": 23, "den": 24}, "phaseTo": {"num": 24, "den": 24}}
    },
    "prefix": "st_"
+  },
+  "term_scheme": {
+   "closed": false,
+   "entries": {
+    "tsch_24": {
+     "basis": "S2-T1b（卷二十勘误：节气按天气单元 termScheme 取方案）：二十四节气平气法一套，即族 solar_term 现有 24 行（主会话 Q3 甲）；单元行 termScheme 指本方案。加一套地区节气只加本族一行与 solar_term 若干 scheme 指它的行，不改代码"
+    }
+   },
+   "prefix": "tsch_"
   },
   "sphere": {
    "closed": false,
