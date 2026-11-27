@@ -1,4 +1,4 @@
 #!/bin/sh
-# 合并门禁（第三层）：推往 master 时重跑卡档案与自我反思检查、重跑 pre_commit，拦住 --no-verify 的提交（规矩第五节）。
+# 合并门禁（第三层）：推往 master 时重跑卡档案与自我反思检查、重跑 pre_commit，拦住 --no-verify 的提交（规矩见 tools/accept/card-rules.md）。
 # 由 git config core.hooksPath .githooks 挂接（与 pre-commit 同一处）；stdin 的 ref 行由 git 传给 node。
 exec node tools/accept/pre-push.mjs

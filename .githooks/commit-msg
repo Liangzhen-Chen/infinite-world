@@ -1,4 +1,4 @@
 #!/bin/sh
-# 卡档案与自我反思检查（第二层，卡头规矩第五节）：pre-commit 阶段读不到提交说明，所以挂在 commit-msg，git 把说明文件路径作第一个参数传进来。
-# 说明里的「卡分支：」行决定找哪个档案目录（主会话 squash 合并某卡分支时必写，见规矩第五节）。由 git config core.hooksPath .githooks 挂接。
+# 卡档案与自我反思检查（第二层，规矩见 tools/accept/card-rules.md）：pre-commit 阶段读不到提交说明，所以挂在 commit-msg，git 把说明文件路径作第一个参数传进来。
+# 说明里的「卡分支：」行决定找哪个档案目录（PR 真合并时必写，见 tools/accept/card-rules.md）。由 git config core.hooksPath .githooks 挂接。
 exec node tools/accept/commit-hook.mjs --msg-file "$1"

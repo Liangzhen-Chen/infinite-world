@@ -226,14 +226,14 @@ test('真实数据：dispatch-config.json 的 clearDeepseek 含 CLAUDE_CODE_OAUT
 });
 
 test('真实数据：派活卡头规矩第五节「合并提交免查」为「否」', () => {
-  const doc = read('docs/派活卡头规矩.md');
+  const doc = read('tools/accept/card-rules.md');
   const sec = doc.slice(doc.indexOf('## 五、'));
   assert.ok(/^- 合并提交免查：否\s*$/m.test(sec), '第五节应有「- 合并提交免查：否」');
   assert.ok(!/^- 合并提交免查：是\s*$/m.test(sec), '第五节不应再有「合并提交免查：是」');
 });
 
 test('真实数据：派活卡头规矩第五节含交接文件必填键，列出九个键', () => {
-  const doc = read('docs/派活卡头规矩.md');
+  const doc = read('tools/accept/card-rules.md');
   const sec = doc.slice(doc.indexOf('## 五、'));
   const line = sec.split('\n').find((l) => l.includes('交接文件必填键：'));
   assert.ok(line, '第五节应有「交接文件必填键：」行');
@@ -243,7 +243,7 @@ test('真实数据：派活卡头规矩第五节含交接文件必填键，列�
 });
 
 test('真实数据：派活卡头规矩不再含「门禁暂只核标识互异」', () => {
-  assert.ok(!read('docs/派活卡头规矩.md').includes('门禁暂只核标识互异'));
+  assert.ok(!read('tools/accept/card-rules.md').includes('门禁暂只核标识互异'));
 });
 
 test('真实数据：ci.yml 主 job 在 test:all 之前有一步调用 pre-push.mjs 或 check-push-archive.mjs', () => {

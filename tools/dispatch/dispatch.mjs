@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { composeCard } from './compose-card.mjs';
 import { budgetValue, MAX_BUDGET_USD } from './budget-check.mjs';
 import { samplingBody } from './sampling-body.mjs';
-import { loadRules, modelFamilies, modelFamilyReasons, partyModelFamilies, checkArchive } from '../accept/lib/card-archive.mjs';
+import { CARD_RULES_DOC, loadRules, modelFamilies, modelFamilyReasons, partyModelFamilies, checkArchive } from '../accept/lib/card-archive.mjs';
 import { buildReceipt } from '../accept/lib/receipt.mjs';
 import { fsRepo } from '../accept/commit-hook.mjs';
 import { ENTRY_REGISTRY_FILE, readEntryRegistry } from '../accept/lib/registry-files.mjs';
@@ -94,7 +94,7 @@ export function checkNeeds(registry, keys) {
 let cachedRules;
 function dispatchRules() {
   if (!cachedRules) {
-    try { cachedRules = loadRules(readFileSync(join(HERE, '..', '..', 'docs', '派活卡头规矩.md'), 'utf8')); } catch (e) { cachedRules = { error: e.message }; }
+    try { cachedRules = loadRules(readFileSync(join(HERE, '..', '..', CARD_RULES_DOC), 'utf8')); } catch (e) { cachedRules = { error: e.message }; }
   }
   return cachedRules;
 }

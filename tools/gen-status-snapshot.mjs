@@ -24,6 +24,10 @@ const SECTION_COMMITS = '## 最近提交';
 const SECTION_REGISTRY = '## 入口接通';
 const SECTION_BASELINE = '## 门禁基线';
 const SECTION_CARDS = '## 在途卡';
+// 在途卡段末尾的已合名单占一行，截断时先留出来。
+const MERGED_LINES = 1;
+// 已合判据（S2-GOV Q3）：state.json 现版本随一次说明含整行「角色：合并」的真合并进了 HEAD 某父提交的历史（门禁保证该行只出现在 PR 真合并上）。
+const MERGE_ROLE_LINE = '角色：合并';
 // 受检段从「入口接通」起到文末；「生成基准」「最近提交」不受检（提交快照本身就会让 HEAD 与提交列表变化）。
 const CHECKED_HEADING = SECTION_REGISTRY;
 
@@ -75,15 +79,24 @@ function cardLine(card) {
   return `${card.card} | ${card.phase} | 失败 ${card.failCount} | 下一步 ${card.nextAction}`;
 }
 
-function cardSectionLines(cards) {
+// merged：已合卡名数组（git 派生）；null 表示历史不全无从判定，此时在途段照列全部卡、末行写缺。
+function cardSectionLines(cards, merged) {
   if (!Array.isArray(cards)) return [missing('cards')];
-  if (cards.length === 0) return ['（无）'];
-  return cards.slice().sort((a, b) => compareText(cardName(a), cardName(b))).map(cardLine);
+  const done = new Set(Array.isArray(merged) ? merged : []);
+  const open = cards.filter((card) => !done.has(cardName(card)));
+  if (open.length === 0) return ['（无）'];
+  return open.slice().sort((a, b) => compareText(cardName(a), cardName(b))).map(cardLine);
+}
+
+function mergedLine(merged) {
+  if (!Array.isArray(merged)) return missing('完整历史');
+  const names = merged.slice().sort(compareText);
+  return `已合 ${names.length} 张：${names.length ? names.join('、') : '（无）'}（git 派生）`;
 }
 
 // 卡文要求每张卡一行，又硬性要求 ≤80 行；卡多到放不下时按行数上限截断并写明省略张数，不静默超限。
-function appendCardLines(lines, cardLines) {
-  const room = MAX_LINES - lines.length;
+function appendCardLines(lines, cardLines, reserve = 0) {
+  const room = MAX_LINES - lines.length - reserve;
   if (room <= 0) return;
   if (cardLines.length <= room) {
     lines.push(...cardLines);
@@ -96,7 +109,7 @@ function appendCardLines(lines, cardLines) {
 
 // 唯一渲染入口：输入为已读好的数据对象，返回字符串（纯函数，不碰盘也不碰 git）。
 export function renderSnapshot(inputs = {}) {
-  const { head, commits, registry, baseline, cards } = inputs || {};
+  const { head, commits, registry, baseline, cards, merged } = inputs || {};
   const lines = [];
   lines.push(SNAPSHOT_TITLE);
   lines.push('');
@@ -119,7 +132,8 @@ export function renderSnapshot(inputs = {}) {
   lines.push(baselineLine(baseline));
   lines.push('');
   lines.push(SECTION_CARDS);
-  appendCardLines(lines, cardSectionLines(cards));
+  appendCardLines(lines, cardSectionLines(cards, merged), MERGED_LINES);
+  lines.push(mergedLine(merged));
   return `${lines.join('\n')}\n`;
 }
 
@@ -159,8 +173,8 @@ function readJson(root, relPath) {
   }
 }
 
-// 只扫 docs/卡档案/<卡>/state.json；_template 是模板不是在途卡。
-function readCards(root) {
+// 只扫 docs/卡档案/<卡>/state.json；_template 是模板不是在途卡。返回 [{ dir, state }]。
+function readCardEntries(root) {
   const base = join(root, CARD_ARCHIVE_DIR);
   if (!existsSync(base)) return null;
   const byName = (a, b) => compareText(a.name, b.name);
@@ -169,11 +183,11 @@ function readCards(root) {
     if (!entry.isDirectory() || entry.name === CARD_TEMPLATE_DIR) continue;
     const statePath = join(base, entry.name, 'state.json');
     if (!existsSync(statePath)) continue;
+    let state = {};
     try {
-      cards.push(JSON.parse(readFileSync(statePath, 'utf8')));
-    } catch {
-      cards.push({});
-    }
+      state = JSON.parse(readFileSync(statePath, 'utf8'));
+    } catch { /* 坏文件照列为缺 */ }
+    cards.push({ dir: entry.name, state });
   }
   return cards;
 }
@@ -187,13 +201,54 @@ function readRegistry(root) {
   }
 }
 
-function collectInputs(root) {
+// 已合卡（S2-GOV Q3）：只读 HEAD 的历史，不联网、不读分支引用。
+// S = 最后改 state.json 的提交；某个基准提交 P 上 S..P 的祖先路径里有说明含整行「角色：合并」的合并提交即已合。
+// 基准提交按模式取（主会话 11-27 裁定，判据同一函数）：--check 查的是已提交的 HEAD，取 HEAD 的各父提交（不含 HEAD 自己）；
+// 生成时 HEAD 就是即将提交的新提交的父提交，取 HEAD 本身（含 HEAD），这样提交前生成的结果 = 提交后在新提交上 --check 的结果。
+// 生成时工作区的 state.json 与 HEAD 不同，说明它将随新提交改动（新提交成为 S），按在途算。
+// 浅克隆或读不了 git 返回 null（渲染为缺），不静默误判。
+export function readMergedCards(root, entries, { pending = false } = {}) {
+  if (!Array.isArray(entries)) return null;
+  try {
+    if (git(root, ['rev-parse', '--is-shallow-repository']) !== 'false') return null;
+    const bases = pending ? [git(root, ['rev-parse', 'HEAD'])] : git(root, ['rev-list', '--parents', '-n', '1', 'HEAD']).split(/\s+/).slice(1);
+    const merged = [];
+    for (const { dir, state } of entries) {
+      const name = cardName(state);
+      if (!name) continue;
+      const path = `${CARD_ARCHIVE_DIR}/${dir}/state.json`;
+      if (pending && !unchangedSinceHead(root, path)) continue;
+      const last = git(root, ['log', '-1', '--format=%H', 'HEAD', '--', path]);
+      if (!last) continue;
+      const hit = bases.some((parent) => git(root, ['rev-list', '--merges', '--ancestry-path', `--grep=^${MERGE_ROLE_LINE}$`, `${last}..${parent}`]) !== '');
+      if (hit) merged.push(name);
+    }
+    return merged;
+  } catch {
+    return null;
+  }
+}
+
+// 工作区文件与 HEAD 相同（git diff --quiet 退出码 0）。
+function unchangedSinceHead(root, path) {
+  try {
+    git(root, ['diff', '--quiet', 'HEAD', '--', path]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// pending：生成模式（为即将提交的新提交生成），见 readMergedCards。
+function collectInputs(root, { pending = false } = {}) {
+  const entries = readCardEntries(root);
   return {
     head: readHead(root),
     commits: readCommits(root),
     registry: readRegistry(root),
     baseline: readJson(root, BASELINE_PATH),
-    cards: readCards(root),
+    cards: entries ? entries.map((entry) => entry.state) : null,
+    merged: readMergedCards(root, entries, { pending }),
   };
 }
 
@@ -239,7 +294,7 @@ function main(argv) {
   const opts = parseArgs(argv);
   const root = process.cwd();
   const target = opts.out ? resolve(root, opts.out) : join(root, SNAPSHOT_PATH);
-  const memoryText = renderSnapshot(collectInputs(root));
+  const memoryText = renderSnapshot(collectInputs(root, { pending: !opts.check }));
   if (opts.check) {
     if (!existsSync(target)) {
       process.stderr.write(`状态快照不存在：${target}\n`);
