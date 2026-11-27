@@ -23,7 +23,11 @@ const DIM_DOCS = readdirSync(DIM_DIR)
   .sort()
   .map((f) => loadJson(join(DIM_DIR, f)));
 const SPECIES_DOC = DIM_DOCS.find((d) => d.kind === 'species');
-const SPECIES_ID = Object.keys(SPECIES_DOC.rows).sort()[0];
+const PERSON_DOC = DIM_DOCS.find((d) => d.kind === 'person');
+// 人物模板行：person 表里按排序第一条 species 指向物种表登记行的行（同 death-entry.test.mjs）。
+const PERSON_TEMPLATE_ID = Object.keys(PERSON_DOC.rows)
+  .sort()
+  .find((k) => Object.hasOwn(SPECIES_DOC.rows, PERSON_DOC.rows[k].species));
 const UNITS = loadJson(join(DIM_DIR, '_units.json')).units;
 const HOST = rowsOf(loadJson(join(WORLD, 'rules/tables/host.json')));
 
@@ -47,8 +51,9 @@ after(() => {
 });
 
 function createIndividual(/** @type {any} */ env) {
+  assert.ok(PERSON_TEMPLATE_ID, 'person 表应有 species 指向物种表行的模板行');
   const before = new Set(Object.keys(env.state.created ?? {}));
-  const r = env.submitProposal({ effects: [{ op: 'create', kind: SPECIES_DOC.kind, template: SPECIES_ID, facts: {} }] });
+  const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: {} }] });
   assert.equal(r.ok, true, `create 应成功：${JSON.stringify(r)}`);
   const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id));
   assert.equal(added.length, 1, 'create 应恰好新增一个实体');
@@ -76,6 +81,49 @@ async function digestAfter(root, segments) {
   return saveSlot(env, 0).saveDigest;
 }
 
+/**
+ * 同 digestAfter 的前提，但返回整个世界（供 11b 分别比 state 与日志簿）。
+ * @param {any} root 存档根
+ * @param {number[]} segments 推进分钟数序列
+ */
+async function worldAfter(root, segments) {
+  const env = await init({ saveRoot: root });
+  const id = createIndividual(env);
+  assert.equal(destroy(env, id).ok, true, '前提：destroy 应成功');
+  for (const m of segments) {
+    const a = env.advance(m);
+    assert.equal(a.ok, true, `推进 ${m} 分钟应成功：${JSON.stringify(a)}`);
+  }
+  return env;
+}
+
+// stateJson 口径同 tests/acceptance/feat-s1-3a/origin-act.test.mjs（bigint 显式标注，比整份 world.state）。
+const stateJson = (/** @type {any} */ s) => JSON.stringify(s, (_k, v) => (typeof v === 'bigint' ? `${v}n` : v));
+
+// 日志簿按首条推进输入切成 prefix（推进之前）与 group（自首条推进起的全部推进相关条目）。
+function splitAtAdvance(/** @type {any} */ world) {
+  const entries = world.logBook.entries;
+  const i = entries.findIndex((/** @type {any} */ e) => e.kind === 'advance');
+  assert.ok(i >= 0, '日志簿应含推进输入');
+  return { prefix: entries.slice(0, i), group: entries.slice(i) };
+}
+
+// 比较用形状：去 seq；推进分钟数（输入的 time 与事件的 advanceMinutes）抹成 '*'，其余字段原样。
+function shapeOf(/** @type {any} */ e) {
+  const { seq, ...rest } = e;
+  if (rest.advanceMinutes !== undefined) rest.advanceMinutes = '*';
+  if (rest.proposal) {
+    rest.proposal = { effects: rest.proposal.effects.map((/** @type {any} */ f) => (f.op === 'time' ? { op: 'time', minutes: '*' } : f)) };
+  }
+  return rest;
+}
+
+// 推进分钟合计：各推进输入里 time 效果的 minutes 之和。
+const movedMinutes = (/** @type {any} */ world) =>
+  world.logBook.entries
+    .filter((/** @type {any} */ e) => e.kind === 'advance')
+    .reduce((/** @type {number} */ s, /** @type {any} */ e) => s + e.proposal.effects.filter((/** @type {any} */ f) => f.op === 'time').reduce((t, f) => t + f.minutes, 0), 0);
+
 // ---------- 用例 ----------
 
 test('11a. 复演一致：建鸡→宰杀→推进 60 分钟→存槽→读档 replay_apply，saveDigest 逐字节相同；terminated、尸体、日志簿里的终止事件逐位相同', async () => {
@@ -102,12 +150,28 @@ test('11a. 复演一致：建鸡→宰杀→推进 60 分钟→存槽→读档 r
   );
 });
 
-test('11b. 推进一致性：一次推进 2 日，与分两次各 1 日、与按心跳步长分段合计 2 日，saveDigest 相同', async () => {
+test('11b. 推进可分段：一次推进 2 日与分两次各 1 日、按心跳步长分段，世界状态逐位相同；日志簿多出的恰为各推进输入+事件', async () => {
   const N = 2 * MINUTES_PER_DAY;
   assert.ok(N % STEP === 0, 'heartbeatStepMinutes 应整除 N 日（否则分段不合计 N 日）');
-  const whole = await digestAfter(newRoot(), [N]);
-  const halves = await digestAfter(newRoot(), [MINUTES_PER_DAY, MINUTES_PER_DAY]);
-  const stepped = await digestAfter(newRoot(), Array.from({ length: N / STEP }, () => STEP));
-  assert.equal(halves, whole, '分两次各 1 日的 saveDigest 应与一次 2 日相同');
-  assert.equal(stepped, whole, '按心跳步长分段推进的 saveDigest 应与一次 2 日相同');
+  // 裁定（主会话 2026-11-27）：saveDigest 含日志簿，分段推进是多条输入、日志本就不同；本例拆成两条断言。
+  const whole = await worldAfter(newRoot(), [N]);
+  const halves = await worldAfter(newRoot(), [MINUTES_PER_DAY, MINUTES_PER_DAY]);
+  const stepped = await worldAfter(newRoot(), Array.from({ length: N / STEP }, () => STEP));
+  // a) 去掉日志簿后的世界状态逐位相同（stateJson 口径：整份 world.state，同 S1-3a 测试）。
+  assert.equal(stateJson(halves.state), stateJson(whole.state), 'a) 分两次各 1 日的世界状态应与一次 2 日逐位相同');
+  assert.equal(stateJson(stepped.state), stateJson(whole.state), 'a) 按心跳步长分段的世界状态应与一次 2 日逐位相同');
+  // b) 分段路的日志簿比一次路恰好多出 k 组「推进输入 1 条 + 推进事件 1 条」，除 seq 与推进分钟数外其余条目逐位相同（卷二:545 输入进日志）。
+  const wholeSplit = splitAtAdvance(whole);
+  assert.deepEqual(wholeSplit.group.map((e) => e.kind), ['advance', 'event'], '一次路的推进部分应恰为一组（输入 + 事件）');
+  for (const { name, w, k } of [{ name: '分两次', w: halves, k: 2 }, { name: '按心跳步长', w: stepped, k: N / STEP }]) {
+    const sp = splitAtAdvance(w);
+    assert.deepEqual(sp.group.map((e) => e.kind), Array.from({ length: k }, () => ['advance', 'event']).flat(), `${name}：推进部分应为 ${k} 组输入+事件`);
+    assert.equal(
+      canonical(sp.group.map(shapeOf)),
+      canonical(Array(k).fill(wholeSplit.group).flat().map(shapeOf)),
+      `${name}：除 seq 与分钟数外，推进条目应与一次路逐位相同`,
+    );
+    assert.equal(canonical(sp.prefix.map(shapeOf)), canonical(wholeSplit.prefix.map(shapeOf)), `${name}：推进之前的日志条目应逐位相同`);
+    assert.equal(movedMinutes(w), movedMinutes(whole), `${name}：推进分钟合计应与一次路相同`);
+  }
 });
