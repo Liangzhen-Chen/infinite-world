@@ -1,16 +1,63 @@
 {
   "card": "feat-s2-t1b",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-27T20:00:00.000Z",
-  "branches": { "code": "feat/s2-t1b", "test": "test/s2-t1b", "pr": "feat/s2-t1b" },
+  "phase": "pr",
+  "updatedAt": "2026-11-27T21:07:25.020Z",
+  "branches": {
+    "code": "feat/s2-t1b",
+    "test": "test/s2-t1b",
+    "pr": "feat/s2-t1b"
+  },
   "pr": null,
   "parties": {
-    "code": { "family": "claude-sonnet", "model": "claude-sonnet-5-5", "receipt": null, "orca": null, "costUsd": null },
-    "test": { "family": "claude-haiku", "model": "claude-haiku-5-5", "receipt": null, "orca": null, "costUsd": null },
-    "review": []
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/t1b",
+        "session": "ctx_4eda84ca7a5f",
+        "commits": [
+          "ee458ddd6"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-t1b",
+        "session": "ctx_96c2c704ec9b",
+        "commits": [
+          "6dfd148e7",
+          "aba48ab56"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-t1b",
+          "session": "ctx_b5473d971733",
+          "commits": [
+            "4d003a7e6",
+            "c4b6af741"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
   },
-  "ci": { "status": "pending", "runUrl": null },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码 Sonnet 于 t1b、出题 Haiku 于 ts-t1b 并行；写码交卷后主会话读 diff，出题合入跑全量，再派 Opus 审卡"
+  "nextAction": "PR feat/s2-t1b→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-t1b）；合后删 t1b、ts-t1b 工作树目录（不删分支）并报李白提交号"
 }
