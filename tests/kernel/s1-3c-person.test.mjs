@@ -53,10 +53,10 @@ function u0(seed, stream, subject, time, site) {
   return BigInt(`0x${sha(`${key}|0`).slice(0, 16)}`);
 }
 
-/** 开局建化身（选第 index 条来历、第 0 个地点），返回 {g, id}。 */
+/** 开局建化身（选第 0 个种族、第 index 条来历、第 0 个地点），返回化身 id。 */
 function spawn(g, index = 0) {
   const a = g.menu(null).affordances[0];
-  const r = g.act({ act: a.act, slots: { origin: index, place: 0 } });
+  const r = g.act({ act: a.act, slots: { species: 0, origin: index, place: 0 } });
   assert.equal(r.ok, true, JSON.stringify(r));
   return Object.keys(g.state.created).find((id) => g.state.created[id].kind === 'person');
 }
@@ -117,11 +117,13 @@ test('5 真实入口选来历：化身补齐 species、adultMassKg、birthMinute
   const raw = rawWorld();
   const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-spawn-') });
   const t0 = clockMinute(g.engine, g.state);
+  const chosen = g.menu(null).affordances[0].slots.species[0];
   const id = spawn(g);
-  const tpl = docOf(raw, 'person').rows[g.state.created[id].template];
   const read = (d) => dim(g.engine, g.state, 'person', id, d).value;
-  assert.equal(read('species'), tpl.species);
-  const sp = SPECIES[tpl.species];
+  // species 是种族槽所选候选，经 create.facts 写入个体（S1-3d），不来自来历模板行。
+  assert.equal(read('species'), chosen);
+  assert.equal(g.state.created[id].props.species, chosen);
+  const sp = SPECIES[chosen];
   const mass = read('adultMassKg');
   assert.ok(mass >= sp.bodyMassKg.clamp[0] && mass <= sp.bodyMassKg.clamp[1], String(mass));
   assert.equal(Math.round(mass * 1e4) / 1e4, mass);
@@ -140,8 +142,9 @@ test('5 真实入口选来历：化身补齐 species、adultMassKg、birthMinute
 test('6 已有值不覆盖：create 的 facts 给了 adultMassKg、birthMinute，结果等于所给值；其余仍补齐', async () => {
   const raw = rawWorld();
   const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-keep-') });
-  const tpl = Object.keys(docOf(raw, 'person').rows).find((k) => Object.hasOwn(SPECIES, String(docOf(raw, 'person').rows[k].species)));
-  const r = g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { adultMassKg: 50, birthMinute: -100 } }] });
+  const tpl = Object.keys(docOf(raw, 'person').rows)[0];
+  const species = Object.keys(SPECIES).find((s) => SPECIES[s].sapient === true);
+  const r = g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { species, adultMassKg: 50, birthMinute: -100 } }] });
   assert.equal(r.ok, true, JSON.stringify(r));
   const id = Object.keys(g.state.created)[0];
   assert.equal(dim(g.engine, g.state, 'person', id, 'adultMassKg').value, 50);
@@ -149,7 +152,7 @@ test('6 已有值不覆盖：create 的 facts 给了 adultMassKg、birthMinute�
   assert.equal(typeof dim(g.engine, g.state, 'person', id, 'lifespanYears').value, 'number');
 });
 
-test('7 缺 species 整笔拒：以无 species 的模板行 create 人物，E-DIM-UNKNOWN-READ，state 不变；建物品不受影响', async () => {
+test('7 缺 species 整笔拒：facts 不给 species、模板行也无 species 时 create 人物，E-DIM-UNKNOWN-READ，state 不变；建物品不受影响', async () => {
   const raw = rawWorld();
   const g = await init(express.Router(), { saveRoot: testTempRoot('s13c-nospecies-') });
   const rows = docOf(raw, 'person').rows;
@@ -165,17 +168,20 @@ test('7 缺 species 整笔拒：以无 species 的模板行 create 人物，E-DI
   assert.deepEqual(g.state.created[made].props, {});
 });
 
-test('8 数据门 origin.ready：候选里没有无物种行的模板；测试副本给一条补上 species 即出现（只改数据）', () => {
+test('8 种族与出身解耦（S1-3d）：来历候选只看出身开关，模板行不写 species；任一来历配所选种族都能建档', () => {
   const raw = rawWorld();
   const rows = docOf(raw, 'person').rows;
-  const ready = (r) => Object.hasOwn(SPECIES, String(r.species));
-  const got = mount(raw, 's13c-ready-').menu(null).affordances[0].slots.origin;
-  assert.ok(got.length > 0 && got.every((id) => ready(rows[id])));
-  const hidden = Object.keys(rows).find((k) => k.startsWith('npc_bg_') && !ready(rows[k]));
-  assert.ok(hidden && !got.includes(hidden));
-  const r = clone(raw);
-  docOf(r, 'person').rows[hidden].species = Object.keys(SPECIES).find((s) => SPECIES[s].sapient === true);
-  assert.ok(mount(r, 's13c-ready2-').menu(null).affordances[0].slots.origin.includes(hidden));
+  const origins = raw.vocabDoc.families.origin.entries;
+  const sw = Object.fromEntries(raw.tableDocs.playerOrigins.rows.map((r) => [r.key, r.value]));
+  const open = Object.keys(rows).filter((k) => origins[rows[k].origin] && (origins[rows[k].origin].gate === null || sw[origins[rows[k].origin].gate] === true)).sort();
+  const g = mount(raw, 's13c-decouple-');
+  const a = g.menu(null).affordances[0];
+  assert.deepEqual([...a.slots.origin], open);
+  assert.ok(a.slots.origin.every((id) => !Object.hasOwn(rows[id], 'species')));
+  // 候选末位（按 id 排序）建档成功，化身 species 是所选种族。
+  const id = spawn(g, a.slots.origin.length - 1);
+  assert.equal(g.state.created[id].template, a.slots.origin[a.slots.origin.length - 1]);
+  assert.equal(dim(g.engine, g.state, 'person', id, 'species').value, a.slots.species[0]);
 });
 
 test('9 同种子同值、换种子不同；sampleFrom 删一行即不再补那一维（只改数据）', () => {

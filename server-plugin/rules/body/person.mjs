@@ -1,10 +1,9 @@
 // 个体建档补全（卷四 §2.3 :208–:232 person 维度、§4.10 P-4 个体实例化；S1-3c 草案 §1、§3、§4、§5）。
 // instantiatePerson 由 create 原语经 engine.lifecycle.instantiate 按 state-owners systems.person.instantiate 路由来，在建行同一事务里补齐经采样的 always 维度：
-//   ① species 须可读且是登记的物种行（模板行写，设计册 14:228「由文化定」在数据层落实），否则整笔拒；
+//   ① species 须可读且是登记的物种行（create.facts 写：选来历动作种族槽，设计册 14 §4.7 步 0 :217；S1-3d），否则整笔拒；
 //   ② 按 rules.person.sampleFrom 逐行（person 维度 ← 物种维度）：已有值不覆盖；物种维度读不到即不写（数据门，读者照旧报未知）；
 //      取值方式由两边表头类型定——分布抽一次、分布映射逐键抽、整数权重映射按 categorical 抽——不按维度名分支；
 //   ③ birthMinute = 建行分钟 − 开局年龄（模板行或 facts 的 startAgeYears，否则 rules.life.stages 首个成年行的 relMaturityMin × 物种 maturityYears）。
-// speciesOf 同时是选来历的数据门 origin.ready 的读数（rules/act/catalog.mjs），同一判断一处。
 
 import { KernelError } from '../../kernel/errors.mjs';
 import { dim, presentEntries } from '../../kernel/dimensions.mjs';
