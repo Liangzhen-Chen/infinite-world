@@ -20,7 +20,7 @@ const UTF8 = 'utf8';
 
 /**
  * 本模块读的 engine 字段：摘要能力 digestCap（卷二 :1054，规则层不 import node:crypto）与世界数据副本 docData（分位数表 distributionsDoc、规则表）。
- * @typedef {{digestCap: {sha256Hex: (data: string, encoding: 'utf8') => string}, docData: any}} SampleEngine
+ * @typedef {{digestCap: {sha256Hex: (data: string, encoding: 'utf8') => string}, docData: Parameters<typeof ruleValue>[0] & {distributionsDoc?: unknown}}} SampleEngine
  */
 
 const isObj = (/** @type {unknown} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v);
