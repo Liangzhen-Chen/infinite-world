@@ -63,6 +63,19 @@
     "setGovernor"
    ],
    "rules": []
+  },
+  {
+   "name": "runOpeningPolity",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "runOpeningGovern",
+    "endowOrgs",
+    "runOpeningCircles"
+   ],
+   "rules": []
   }
  ]
 }
