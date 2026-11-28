@@ -51,10 +51,10 @@ const LIFECYCLE = Object.freeze({ destroy: destroyEntity, instantiate: instantia
 
 // 装配层注入能力的形状（启动强断言；S1-1c 派卡「主会话已定」第 1–3 条）：一张「字段 → 要求 → 判定」表，assertCaps 循环判。
 // unitOfPath 可缺省（卷二十七 :553 只在分片表用到按单元分片时才须有；缺时由 checkShards 同一判定报 E-SAVE-SHARD-UNCOVERED）。
-/** @type {ReadonlyArray<readonly [string, string, (v: any) => boolean]>} */
+/** @type {ReadonlyArray<readonly [string, string, (v: unknown) => boolean]>} */
 const CAPS_SHAPE = Object.freeze([
   ['saveRoot', 'a file: URL ending with /', (v) => v instanceof URL && v.protocol === 'file:' && v.href.endsWith('/')],
-  ['digestCap', 'an object whose sha256Hex is a function', (v) => v !== null && typeof v === 'object' && typeof v.sha256Hex === 'function'],
+  ['digestCap', 'an object whose sha256Hex is a function', (v) => v !== null && typeof v === 'object' && 'sha256Hex' in v && typeof v.sha256Hex === 'function'],
   ['sources', 'a non-empty array of {path: non-empty string, text: string}', (v) => Array.isArray(v) && v.length > 0
     && v.every((x) => x !== null && typeof x === 'object' && typeof x.path === 'string' && x.path !== '' && typeof x.text === 'string')],
   ['modifierSources', 'an array of functions', (v) => Array.isArray(v) && v.every((x) => typeof x === 'function')],
@@ -62,11 +62,11 @@ const CAPS_SHAPE = Object.freeze([
   ['verifyBake', 'undefined or a boolean', (v) => v === undefined || typeof v === 'boolean'],
 ]);
 
-/** 启动断言（唯一一处，建 engine 之前）：caps 逐字段按 CAPS_SHAPE 判，不合即 E-DIM-STRUCT-FIELD，消息带字段名。 @param {any} caps */
+/** 启动断言（唯一一处，建 engine 之前）：caps 逐字段按 CAPS_SHAPE 判，不合即 E-DIM-STRUCT-FIELD，消息带字段名。 @param {unknown} caps */
 function assertCaps(caps) {
   const c = caps !== null && typeof caps === 'object' ? caps : {};
   for (const [name, want, ok] of CAPS_SHAPE) {
-    if (!ok(c[name])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `mountKernel: caps.${name} must be ${want}`);
+    if (!ok(Reflect.get(c, name))) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `mountKernel: caps.${name} must be ${want}`);
   }
 }
 
@@ -131,12 +131,17 @@ function openWorld(engine) {
   return fresh;
 }
 
+/** 本文件从 owners（state-owners 合并结果）取的字段。 @typedef {{stateKeys?: Record<string, unknown>, pathTypes?: Parameters<typeof makePathHandles>[0], keyKinds?: Parameters<typeof makePathHandles>[1], textPaths?: Parameters<typeof makePathHandles>[2]}} WorldOwners */
+/** 本文件另从世界数据原文取的各文档。 @typedef {{namedStructsDoc: Parameters<typeof installNamedStructs>[0], owners: WorldOwners, digestExclude: ReadonlyArray<string>, primitivesDoc: {primitives: ReadonlyArray<{op: string}>}, distributionsDoc?: unknown, actionDocs?: unknown}} WorldDocParts */
+/** 装配层读入的世界数据原文：registry.mjs#loadWorld 与 place/footprint.mjs#bakeFootprints 所收的形状，加本文件取用的各文档。 @typedef {Parameters<typeof loadWorld>[0] & Parameters<typeof bakeFootprints>[1] & WorldDocParts} WorldDoc */
+
 /**
- * @param {any} raw 装配层读入的世界数据原文（形状见 registry.mjs#loadWorld）；整份即存档的世界数据副本 doc_data（卷二十七 :543、:547）
+ * @template {WorldDoc} D 调用方给的世界数据形状（装配层带 wire 等本文件不读的文档，原样随 engine.docData 带出）
+ * @param {D} raw 装配层读入的世界数据原文（形状见 registry.mjs#loadWorld）；整份即存档的世界数据副本 doc_data（卷二十七 :543、:547）
  * @param {{digestCap: {sha256Hex: (data: string, encoding: 'utf8' | 'base64') => string}, saveRoot: URL, sources: Array<{path: string, text: string}>,
  *   modifierSources: ReadonlyArray<Function>, unitOfPath?: Function, verifyBake?: boolean}} caps
  *   装配层注入：摘要能力（卷二 :1060）、存档根目录、源码清单（engineRulesDigest 用）、修正来源（可为空数组）、路径→模拟单元映射（可缺省）、烘焙层两次构建核对开关（可缺省）
- * @param {any} [resume] readSlot 的结果：给了即复演（卷二十七 :740）代替开局建 state
+ * @param {Parameters<typeof replayApply>[1]} [resume] readSlot 的结果：给了即复演（卷二十七 :740）代替开局建 state
  */
 export function mountKernel(raw, caps, resume) {
   assertCaps(caps);
@@ -154,7 +159,7 @@ export function mountKernel(raw, caps, resume) {
   const P = makePathHandles(owners.pathTypes || {}, owners.keyKinds || {}, owners.textPaths || []);
   // 规则表 host（推进步长 :190、槽位数 :191 等）与 saveLayout（快照间隔、保留数、封段条数、分片表、布局名）已由 loadWorld 按登记声明逐键核。
   const { host, saveLayout } = rules;
-  const primitives = new Map(primitivesDoc.primitives.map((/** @type {any} */ p) => [p.op, p]));
+  const primitives = new Map(primitivesDoc.primitives.map((p) => [p.op, p]));
   const { digestCap, saveRoot, sources, modifierSources, unitOfPath, verifyBake } = caps;
   // 采样表（卷二 §1.10 :331–:332）：世界数据带了 _distributions.json 即核分位数表摘要、装入 exp 表；没带时采样（rules/gen/sample.mjs）用到即报错。
   if (docData.distributionsDoc !== undefined) installDistributions(digestCap, docData.distributionsDoc);
@@ -177,7 +182,6 @@ export function mountKernel(raw, caps, resume) {
   // 天气权重式（卷二十 §2.5 weightRX；S2-T2 主会话 Q1 甲）：装配期编一次挂 engine.weather（冻结），编不过即 E-MOD-RX，坏数据开局即拒。
   const weather = compileWeather({ registry, docData, vocab: vocabDoc, bake });
   // 提交后推进由本层注入 engine.advance（transaction 不 import scheduler，免成环）；openStates 记「事务已开」的 state（不嵌套）。
-  /** @type {any} */
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
     stateKeys, P, host, saveLayout, primitives, primitiveWriters, bake, vocab: vocabDoc, actions, weather,
@@ -203,7 +207,7 @@ export function mountKernel(raw, caps, resume) {
   checkFootprints(engine);
   // 开局：世界创建事务（genesisMinute 与时钟）→ 开局一步事务（openingMinute 与开放范围），都在 0 号快照之前、不进日志输入（卷十 R10-11.4、卷二十七 :742）；
   // 读档：同一 engine 上复演（不按种类分支，只看有无 resume）。
-  /** @type {{state: any, logBook: any, saveDigest?: string}} */
+  /** @type {{state: ReturnType<typeof buildState>, logBook: import('../../kernel/save.mjs').LogBook, saveDigest?: string}} */
   const start = resume === undefined ? { state: openWorld(engine), logBook: createLogBook() } : replayApply(engine, resume);
   const { state: built, logBook, saveDigest } = start;
   // 守恒核对（卷六 §4.1 规则 4、A6-1.2；草案 §4 第 7 行）：开局与读档复演后各核一次，有违例即拒（E-LEDGER-UNBALANCED，违例带进消息）。
@@ -215,7 +219,7 @@ export function mountKernel(raw, caps, resume) {
   const live = { engine, state: built, logBook };
   return {
     ...live,
-    submitProposal: (/** @type {any} */ p) => submitProposal(engine, built, logBook, p),
+    submitProposal: (/** @type {Parameters<typeof submitProposal>[3]} */ p) => submitProposal(engine, built, logBook, p),
     advance: (/** @type {number} */ m) => advanceRequest(engine, built, logBook, m),
     opening: () => openingOf(engine, built),
     // 动作入口（S1-3a；S1-3b 菜单入口调）：意图作输入条目先记日志，再经 engine.resolveIntent 换成效果原语提案落事务；被拒也留在日志（卷二:545），不写状态。

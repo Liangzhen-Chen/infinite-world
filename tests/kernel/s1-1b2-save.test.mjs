@@ -55,6 +55,7 @@ test('存读复演：saveDigest 与存盘时逐字相等，时钟相等；心跳
   await withRoot(async (root, url) => {
     const g = await init(express.Router(), { saveRoot: url });
     const step = g.engine.host.heartbeatStepMinutes;
+    assert.ok(typeof step === 'number');
     g.submitProposal({ effects: [{ op: 'time', minutes: 2 * step + 5 }] });
     for (let i = 0; i < 3; i++) g.advance(step);
     const saved = saveSlot(g);
@@ -154,7 +155,9 @@ test('指纹不符（engineRulesDigest 或 dataPacksDigest）即 E-SAVE-RULES-MI
 test('槽位越界（saveSlotCount、-1、1.5）即 E-SAVE-SLOT-INVALID，不写任何文件', async () => {
   await withRoot(async (root, url) => {
     const g = await init(express.Router(), { saveRoot: url });
-    for (const slot of [g.engine.host.saveSlotCount, -1, 1.5]) {
+    const slotCount = g.engine.host.saveSlotCount;
+    assert.ok(typeof slotCount === 'number');
+    for (const slot of [slotCount, -1, 1.5]) {
       assert.throws(() => saveSlot(g, slot), /E-SAVE-SLOT-INVALID/, String(slot));
     }
     assert.deepEqual(readdirSync(root), []);
@@ -191,7 +194,9 @@ test('saveRoot 传路径字串（不带结尾分隔符）：存读复演 saveDig
   const root = testTempRoot('s1b2-path-');
   const g = await init(express.Router(), { saveRoot: root });
   g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
-  g.advance(g.engine.host.heartbeatStepMinutes);
+  const step = g.engine.host.heartbeatStepMinutes;
+  assert.ok(typeof step === 'number');
+  g.advance(step);
   const saved = saveSlot(g);
   assert.ok(readdirSync(root).length > 0);
   const replayed = replay_apply(loadSlot(saved, { saveRoot: root }));

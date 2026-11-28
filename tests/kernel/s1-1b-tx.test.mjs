@@ -17,6 +17,7 @@ const logOf = (g) => g.logBook.entries;
 test('time 原语：推进 25 分钟按步长 10/10/5 分三步，时钟加 25', async () => {
   const g = await init(express.Router());
   const step = g.engine.host.heartbeatStepMinutes;
+  assert.ok(typeof step === 'number');
   const r = g.submitProposal({ effects: [{ op: 'time', minutes: 2 * step + 5 }] });
   assert.equal(r.ok, true);
   assert.equal(r.advancedMinutes, 2 * step + 5);

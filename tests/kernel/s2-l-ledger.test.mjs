@@ -246,7 +246,9 @@ test('8 instantiate 多系统：同一种类按 sortKey（缺省 0）再按系�
     beta: { instantiate: { kinds: ['person'], handler: 'beta.mjs#f', sortKey: 1 } },
     other: { instantiate: { kinds: ['item'], handler: 'other.mjs#f' } },
   };
-  const engine = { ...g.engine, docData: { ...g.engine.docData, owners: { ...g.engine.docData.owners, systems } }, instantiators: ['zeta', 'alpha', 'beta', 'other'].map(mk) };
+  const owners = g.engine.docData.owners;
+  assert.ok(owners !== null && typeof owners === 'object');
+  const engine = { ...g.engine, docData: { ...g.engine.docData, owners: { ...owners, systems } }, instantiators: ['zeta', 'alpha', 'beta', 'other'].map(mk) };
   instantiateEntity(g.state, id, { engine });
   assert.deepEqual(calls, ['zeta', 'beta', 'alpha']);
   systems.beta.instantiate.sortKey = 'x';

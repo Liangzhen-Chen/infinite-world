@@ -145,7 +145,7 @@ function rowKindOf(raw) {
  * 规则表单键取值（S1-2a 起）：从世界数据副本 raw（= doc_data）取登记代号 code 那张键表的 key 一键，按登记声明核（同 tableValue，不另写一份）。
  * 给只读整表中个别键的规则模块用（整表含 ref 等要词表环境的键时不能整表核）；代号未登记即 E-DIM-DOMAIN-RANGE。
  * 值里引用词表条目的（ref vocab、enum vocab），按 raw.vocabDoc 建的环境核（S2-0a）。
- * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: any}} raw @param {string} code @param {string} key @returns {unknown}
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: Parameters<typeof vocabEnvOf>[0]}} raw @param {string} code @param {string} key @returns {unknown}
  */
 export function ruleValue(raw, code, key) {
   const spec = raw.registryRows.find((r) => r.code === code);
@@ -156,7 +156,7 @@ export function ruleValue(raw, code, key) {
 /**
  * 行表单行取值（S2-L：卷六资源种类表 economyResources 是按词表条目分行的表，structure {rows: …}，ruleValue 只收键表）：取登记代号 code 那张表 key 那一行的 value，
  * 按登记行 type（整行的类型声明）经公共部件 checkValue 核（引用词表与实体行的环境同 ruleValue）。代号未登记、登记不是行表即 E-DIM-DOMAIN-RANGE；没有这一行即 E-DIM-REF-MISSING。
- * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: any}} raw @param {string} code @param {string} key @returns {unknown}
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: Parameters<typeof vocabEnvOf>[0]}} raw @param {string} code @param {string} key @returns {unknown}
  */
 export function ruleRow(raw, code, key) {
   const spec = raw.registryRows.find((r) => r.code === code);

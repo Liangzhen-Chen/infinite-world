@@ -184,18 +184,10 @@
    "b0": 7,
    "b0Source": "counted",
    "compCode": "c_escape_hatch",
-   "current": 7,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": true,
-   "rowKeys": [
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|0",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|1",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|2",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|3",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|4",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|5",
-    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|6"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 0,

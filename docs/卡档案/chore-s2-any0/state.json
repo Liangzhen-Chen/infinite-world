@@ -1,0 +1,43 @@
+{
+  "card": "chore-s2-any0",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-28T11:30:00.000Z",
+  "branches": {
+    "code": "chore/s2-any0",
+    "test": "test/s2-any0",
+    "pr": "chore/s2-any0"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/any0",
+        "session": "ctx_1c48abbcb05c",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-any0",
+        "session": "ctx_72c02db91475",
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码与出题并行；写码交卷后主会话读 diff，推 ci-run 跑 cloud-test，通知出题方合 chore/s2-any0，再派 Opus 审卡"
+}
