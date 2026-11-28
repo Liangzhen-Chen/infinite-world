@@ -1,7 +1,7 @@
 {
   "card": "chore-s2-gov2",
-  "phase": "pr",
-  "updatedAt": "2026-11-28T01:30:53.086Z",
+  "phase": "review_r2",
+  "updatedAt": "2026-11-28T02:29:58.156Z",
   "branches": {
     "code": "chore/s2-gov2",
     "test": "test/s2-gov2",
@@ -18,7 +18,8 @@
         "session": "ctx_7f10e269bee5",
         "commits": [
           "b8009e68c",
-          "25f0b723e"
+          "25f0b723e",
+          "ee48e207b"
         ]
       },
       "costUsd": null
@@ -32,7 +33,10 @@
         "session": "ctx_7007096b3b1a",
         "commits": [
           "e9243cd36",
-          "ac7f1b889"
+          "ac7f1b889",
+          "268ed4fff",
+          "dac65785d",
+          "34cda4fbc"
         ]
       },
       "costUsd": null
@@ -59,5 +63,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "推送 chore/s2-gov2 开 PR，CI main 绿即合（合入说明 卡分支：chore/s2-gov2）；合后报李白「Gemini 11-27 全部已改」附提交号，等放行 TP1；删 gov2、ts-gov2 工作树目录（不删分支）"
+  "nextAction": "API 干净复核第二轮（opus-api-review-gov2-r2，带 --archive）；可合后 chore/s2-gov2 快进到 test/s2-gov2，推送更新 PR #48，CI main 绿即合"
 }
