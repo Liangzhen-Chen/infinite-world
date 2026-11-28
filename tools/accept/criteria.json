@@ -2231,15 +2231,19 @@
     {
      "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
      "rev": 40
+    },
+    {
+     "ref": "李白 11-28 裁甲（V-2.b 升必过锁基线 7）：vol1.V-2.b expect zero→le_baseline、state implemented→in_core、baseComp c_escape_hatch；存量 anyType 7 全在 server-plugin/rules/load/mount.mjs，只降不升，清零另开卡",
+     "rev": 41
     }
    ],
    "print": "34ba77a6f7d33a49f0c4a952cd1568db1d8499a0a2a95a9f1cc3aa96ee92d73c",
-   "rev": 40,
+   "rev": 41,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
     "vol1.V-2.b": {
-     "expect": "zero",
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"

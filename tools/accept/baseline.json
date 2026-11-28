@@ -181,6 +181,23 @@
    "rowKeys": []
   },
   {
+   "b0": 7,
+   "b0Source": "counted",
+   "compCode": "c_escape_hatch",
+   "current": 7,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": [
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|0",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|1",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|2",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|3",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|4",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|5",
+    "c_escape_hatch|server-plugin/rules/load/mount.mjs||anyType|6"
+   ]
+  },
+  {
    "b0": 0,
    "b0Source": "counted",
    "compCode": "c_instance_id",
@@ -229,15 +246,11 @@
    "b0": 5,
    "b0Source": "counted",
    "compCode": "c_pp_draw_sites",
-   "current": 5,
+   "current": 1,
    "lastMergeRef": "HEAD",
    "locked": true,
    "rowKeys": [
-    "c_pp_draw_sites|world/rules/tables/clock.json|site.emit.chance|drawsite|0",
-    "c_pp_draw_sites|world/rules/tables/clock.json|site.weather.precip|drawsite|0",
-    "c_pp_draw_sites|world/rules/tables/clock.json|site.weather.state|drawsite|0",
-    "c_pp_draw_sites|world/rules/tables/clock.json|site.weather.windDir|drawsite|0",
-    "c_pp_draw_sites|world/rules/tables/clock.json|site.weather.windSpeed|drawsite|0"
+    "c_pp_draw_sites|world/rules/tables/clock.json|site.emit.chance|drawsite|0"
    ]
   },
   {
@@ -262,16 +275,14 @@
    "b0": 6,
    "b0Source": "counted",
    "compCode": "c_pp_envat_callers_ast",
-   "current": 6,
+   "current": 4,
    "lastMergeRef": "HEAD",
    "locked": true,
    "rowKeys": [
     "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/climate.mjs#climateTempC|callersRules:row|0",
     "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/climate.mjs#dailyMeanTemp|callersRules:row|0",
     "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/climate.mjs#seasonAt|callersRules:row|0",
-    "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/climate.mjs#tempAt|callersRules:row|0",
-    "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/weather.mjs#weatherAt|callersRules:row|0",
-    "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/weather.mjs#weatherCellOf|callersRules:row|0"
+    "c_pp_envat_callers_ast|world/ontology/state-owners.json|kernel/climate.mjs#tempAt|callersRules:row|0"
    ]
   },
   {
@@ -585,6 +596,15 @@
   {
    "b0": 0,
    "b0Source": "counted",
+   "compCode": "c_write_accounts",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
    "compCode": "c_write_clock",
    "current": 0,
    "lastMergeRef": "HEAD",
@@ -604,6 +624,69 @@
    "b0": 0,
    "b0Source": "counted",
    "compCode": "c_write_genesis",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_holdingCounters",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_holdings",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_ledgerCounters",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_ledgerTotals",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_outflowTotals",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_statuses",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_terminated",
    "current": 0,
    "lastMergeRef": "HEAD",
    "locked": true,
