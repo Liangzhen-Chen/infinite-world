@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0c1",
-  "phase": "pr",
-  "updatedAt": "2026-11-28T00:30:39.391Z",
+  "phase": "review_r2",
+  "updatedAt": "2026-11-28T02:15:20.684Z",
   "branches": {
     "code": "feat/s2-0c1",
     "test": "test/s2-0c1",
@@ -32,7 +32,10 @@
         "session": "ctx_cb60c4b9c221",
         "commits": [
           "2c94df4fb",
-          "f46fac008"
+          "f46fac008",
+          "0c8140178",
+          "84022c2b0",
+          "b27b34e9b"
         ]
       },
       "costUsd": null
@@ -57,7 +60,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
+  "failCount": 1,
   "blocker": null,
-  "nextAction": "等 chore/cloud-test 合入、master CI 转绿后推送 feat/s2-0c1 开 PR（T2 之后），CI main 绿即合（合入说明 卡分支：feat/s2-0c1）；合后删 0c1、ts-0c1 工作树目录（不删分支）并报李白"
+  "nextAction": "API 干净复核第二轮（opus-api-review-0c1-r2，带 --archive 写收据）；可合后 feat/s2-0c1 快进到 test/s2-0c1，等 PR #48 合入后再同步一次 master，推送开 PR"
 }
