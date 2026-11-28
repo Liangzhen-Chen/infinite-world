@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-t2",
-  "phase": "pr",
-  "updatedAt": "2026-11-28T00:22:52.035Z",
+  "phase": "review_r2",
+  "updatedAt": "2026-11-28T01:36:41.718Z",
   "branches": {
     "code": "feat/s2-t2",
     "test": "test/s2-t2",
@@ -17,7 +17,8 @@
         "worktree": "F:/dnd-worktrees/dnd/t2",
         "session": "ctx_0c06c70b7825",
         "commits": [
-          "e0f669ef6"
+          "e0f669ef6",
+          "c5d470629"
         ]
       },
       "costUsd": null
@@ -55,7 +56,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
+  "failCount": 1,
   "blocker": null,
-  "nextAction": "等 chore/cloud-test 合入、master CI 转绿后推送 feat/s2-t2 开 PR，CI main 绿即合（合入说明 卡分支：feat/s2-t2）；合后删 t2、ts-t2 工作树目录（不删分支）并报李白"
+  "nextAction": "API 干净复核第二轮（opus-api-review-t2-r2）；可合后 state.json 记收据，推送 feat/s2-t2 更新 PR #47，CI main 绿即合"
 }
