@@ -8,16 +8,16 @@
 - 阶段 0A 落地清单（照 Gemini 开工文件 docs/gemini/kickoff-1125.md 第八章 L-01–L-20，origin/antigravity d16c0ecde；做完一步标 [x] 并写一句结果）：
   - [x] L-01 清理分支合入 master：395986f01（快进，补 1 提交把清理记录挪出 docs 顶层），全量 2239/2239。
   - [x] L-02 旧工作树 new-session-8e4637：git 记录已 prune，Orca 已受理移除；空目录仍被 Orca 自身占用，按李白裁定跳过（分支保留）。P5 deepseek 工作树与分支本已不存在。
-  - [~] L-03 Orca setup 钩子改 npm ci（李白批 P2）：该设置存于 Orca 应用的仓库设置，CLI 无法修改，需在 Orca 界面改一处（已报李白）；改好前派卡建树一律 `--setup skip` 后手跑 `npm ci`。
+  - [~] L-03 Orca setup 钩子改 npm ci（李白批 P2）：该设置存于 Orca 应用的仓库设置，CLI 无法修改，需在 Orca 界面改一处（已报李白）；改好前派卡建树一律 `--setup skip` 后手跑 `npm ci`。结果（S2-GOV2 核）：仓库与交接里未找到改好的记录，11-27 交接仍写建树后手跑 npm ci，保持未完成。
   - 拍板记录：P1/P2/P4/P5 李白批（纯技术）；P3 亮圳 11-25 01:59 拍板（交最小可玩版，5 处卷文按 literature/design_spec 分级）；交付期限待定——亮圳 11-25 20:01 定原 11-30 往后推，新日期等 S1-1 写出看清速度后由李白报亮圳再定（K1125-DATE）。L-13 写入现行有效裁定。
   - [x] L-06/L-08/L-10 收编 chore/step1-tooling：DeepSeek 写四轮（第二轮照验收题造 write 档、删空卡文防线被打回；第三轮进程挂住由主会话代提交）、Haiku 出题含一轮改题、Opus API 审第一轮必须改 3 条、Sonnet API 第二轮复核可合，合入 master。已定 DeepSeek 不加 --max-budget-usd（估价失真）。遗留：clearDeepseek 补 CLAUDE_CODE_OAUTH_TOKEN（本机未设该变量，随 L-07 卡补）；A12-4.5、S12-2、S12-3 为主线既有非必过项。
-  - [ ] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删自查表；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。
-  - [~] L-12 跨卷契约表：Gemini 规格 docs/gemini/contracts-spec-1125.md 已入 master；卡 chore/contracts 写 DeepSeek、出题 Haiku（20 条）、审 Opus 可合（契约表与规格逐字节一致，V1–V14 全实现），34 条全绿，分支 ds/contracts 已推远端。卡住同 L-11：出题.md 14 条依据无卷文行，等亮圳拍板出题依据口径。
+  - [x] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删自查表；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。结果：L-04/L-05 见 9427791c3，L-06/L-08/L-10 见 chore/step1-tooling 行，L-09 见 72074c6cd，L-07 删自查表见 2dcbf3e0d、卡头压到 45 行见 4d56bfab4。
+  - [x] L-12 跨卷契约表：Gemini 规格 docs/gemini/contracts-spec-1125.md 已入 master；卡 chore/contracts 写 DeepSeek、出题 Haiku（20 条）、审 Opus 可合（契约表与规格逐字节一致，V1–V14 全实现），34 条全绿，分支 ds/contracts 已推远端。卡住同 L-11：出题.md 14 条依据无卷文行，等亮圳拍板出题依据口径。结果：出题依据认设计文件行（K1125-EVID）后合入，见 3de13872e。
   - [x] L-13 现行有效裁定.json 写入 K1125-P1～P5 与 K1125-ESC（附原话出处）；Q-14/Q-15（亮圳的留档、门禁规矩）与 B7（世界方向）不由主会话改，附理由/备选/代价报李白，Q-14/Q-15 转亮圳，B7 标「产品拍板」。
   - [x] L-14 docs/卡档案/_template/state.json 模板（照开工文件 5.3 节字段）。
   - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库；至 11-26 会员额度重置前，重置后按亮圳 13:31 改用会员额度并撤此限）。
-  - [~] L-11 状态快照脚本：卡 chore/status-snapshot 写 DeepSeek 两轮（第二轮补定接通率向下取整）、出题 Haiku、审 Sonnet 可合，33 条全绿，分支 ds/status-snapshot 已审未合。卡住：出题.md 17 条依据出自 Gemini 开工文件、29 卷无对应行，合并门禁拒推；放宽「照设计原文（卷:行）出题」属亮圳规矩，已报李白转亮圳（推荐允许 docs/gemini 文件行）。已定：生成基准与最近提交两段不受 --check 比对（提交快照本身会改 HEAD），入口接通、门禁基线、在途卡三段受检。
-  - [~] L-15/L-16 新骨架空仓：Gemini 裁定 msg_82485b7f7ab7——kernel 只留 6 零件的 14 文件 import 闭包、≤15 不放宽；gate/output-gate/textcore 一并归档，S1-3 随真实入口迁回（依赖文件收各自目录，不回 kernel）；tools/accept 自用旧 kernel 读表辅助收进 tools/accept/lib/。
+  - [x] L-11 状态快照脚本：卡 chore/status-snapshot 写 DeepSeek 两轮（第二轮补定接通率向下取整）、出题 Haiku、审 Sonnet 可合，33 条全绿，分支 ds/status-snapshot 已审未合。卡住：出题.md 17 条依据出自 Gemini 开工文件、29 卷无对应行，合并门禁拒推；放宽「照设计原文（卷:行）出题」属亮圳规矩，已报李白转亮圳（推荐允许 docs/gemini 文件行）。已定：生成基准与最近提交两段不受 --check 比对（提交快照本身会改 HEAD），入口接通、门禁基线、在途卡三段受检。结果：K1125-EVID 放行后合入，见 09e73bc1b。
+  - [x] L-15/L-16 新骨架空仓：Gemini 裁定 msg_82485b7f7ab7——kernel 只留 6 零件的 14 文件 import 闭包、≤15 不放宽；gate/output-gate/textcore 一并归档，S1-3 随真实入口迁回（依赖文件收各自目录，不回 kernel）；tools/accept 自用旧 kernel 读表辅助收进 tools/accept/lib/。结果：见下方 L-15/L-16/L-17 行（chore/new-skeleton 已合入）。
     - 卡 chore/new-skeleton 写码第一轮完成并暂存（工作树 new-skel，352 文件，内核 14 文件，测试全绿），但门禁数据（state-owners、items 必过条目、criteria 指纹）仍指旧文件，pre_commit 报错提交不了——L-17 拆到下一轮是拆卡错误。
     - 本轮 DeepSeek 疑超单项 5 元（约 6～7 元），已停报李白，第二轮做法（推荐同卡做完 L-17 再提交）待李白回复。出题 Haiku 题已暂存。
     - 11-25 12:0x 李白令清工作树：两棵树的暂存成果已存为补丁（本机临时目录 staged-1125 下 new-skeleton-r1.patch、ts-new-skeleton.patch，已验证在 ea7812793 上可干净 git apply --index），工作树已删、分支保留；拍板后新建树从 ea7812793 起 apply 恢复再做第二轮。
@@ -26,7 +26,7 @@
   - [x] L-19 master 分支保护：历史已改写抹 IP/邮箱（亮圳 13:58 授权，备份 pre-scrub-1125.bundle），亮圳 15:22 拍板公开；仓库已公开，保护已开（必过检查 main、strict、要求 PR、enforce_admins、禁强推禁删）。此后合入一律走 PR。
   - [x] 门禁补齐卡（每日审核 A3）：PR #8 合入 f5a06ac26——派前核 needs 闭包（卷二:764 行键）与三方模型族、派卡收据、合并提交要查、state.json 校验、CI 逐提交档案检查、CLAUDE.md 一致性测试。
   - [x] L-09 检测器加固 + L-08 扩项：PR #10 合入 72074c6cd。现仓既有命中登只降不升基线待清：c_module_state 4（kernel named-structs/rx 顶层 Map、validate/types 两处 idIndex.get）、c_big_md 3（三份 >500KB 设计卷）。
-  - [ ] 余项：L-07 删九项自查表（亮圳 11-25 20:01 拍板，PR #19 合入中；派活卡头规矩压到 ≤50 行另议）；L-03（李白在 Orca 界面处理）；tools/cloud 长测（李白裁定等 S1-2 后）；notify.py 停用（李白裁定 K1125-NONOTIFY，找李白写在会话回复或 orchestration）；c_module_state 4 处并入 S1-1 验收；c_big_md 已豁免（PR #13）；断链行号与 docLimits 已修（PR #12）；CI 里 tsc 跑两遍保持（见 L-05 规格）；state.json 强制落盘接进档案门禁（K1125-HANDOVER，另卡）。
+  - [~] 余项：L-07 删九项自查表（亮圳 11-25 20:01 拍板，PR #19 合入中；派活卡头规矩压到 ≤50 行另议）；L-03（李白在 Orca 界面处理）；tools/cloud 长测（李白裁定等 S1-2 后）；notify.py 停用（李白裁定 K1125-NONOTIFY，找李白写在会话回复或 orchestration）；c_module_state 4 处并入 S1-1 验收；c_big_md 已豁免（PR #13）；断链行号与 docLimits 已修（PR #12）；CI 里 tsc 跑两遍保持（见 L-05 规格）；state.json 强制落盘接进档案门禁（K1125-HANDOVER，另卡）。结果（S2-GOV2 核）：L-07 见 2dcbf3e0d 与 4d56bfab4，c_module_state 4→0 见 S1-1a 行，state.json 强制见门禁封口 A 行；L-03 与 tools/cloud 长测仍未完成（S1-3b 行记云机长测未跑）。
   - 写审分工：靠实时额度派活，照 CLAUDE.md 第 3 节（亮圳 11-25 18:19，PR #15 合入 1cbad9a12）；合入一律走 PR（master 已保护）。
   - 主会话总台邮箱：Orca 持久 run `run_ff745853fb21`（11-25 21:0x 建）。接班会话启动后先 `orca orchestration run-use --id run_ff745853fb21 --json` 接管，子会话回报发 `--to run:run_ff745853fb21`（CLAUDE.md 第 1 节换班条）。
   - S1-1 拆三张串行卡（主会话 11-25，Sonnet API 勘察 $0.22 + Opus API 接口草案 $0.41；旧内核约 4100 行，超单卡 150–800 行）：
@@ -53,8 +53,8 @@
   - B2 审卡余项（不阻合，登记后续）：卷二十七:557 快照应为四部分分片集合（现只存 doc_state，S1 等价）；分片方式宜做成 kernel/save.mjs 实现表（现 rules/load/mount.mjs SUPPORTED_PARTITION）；卷二十七:740 分歧未报原语序号、事件不带原语列表。
   - 已定（主会话 11-25）：archive_ref 扫描范围排除 tests/acceptance/。理由：验收题职责就是断言旧路径已归位，必须写出归档目录字样；逐文件豁免要写码方知道验收题文件名，破坏三方分离且每卡重复。archive_ref 出自 Gemini 重写指南 Step 1，非亮圳硬规则，属技术口径修正；已报李白可否决。由 chore/new-skeleton 写码第二轮落数据。
   - 11-25 每日全库审核（Gemini，origin/antigravity a11ed4d45 docs/gemini/daily/2026-11-25-audit.md）A 类整改排期：① L-11/L-12 合入；② L-04/L-05 tsc+CI（新骨架合入后）；③ dispatch.mjs 补 needs 闭包核/派前模型族核/收据、clearDeepseek 补 OAuth 令牌、dispatch-consistency 测试、archive_ref 扩项、派活卡头规矩关「合并提交免查」、使用说明.md 更正、notify 三种 JSON、state.json 接 card-archive——合成一张「门禁补齐」卡；④ 新骨架 L-15～L-17 收尾后接 L-18 E2E 桩与 L-09 检测器加固；⑤ L-02/L-03 环境收尾。B 类（L-19 分支保护 403 需升 Pro/公开/替代、Q-14/Q-15、B7、交付日是否顺延）转李白→亮圳。
-  - [ ] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。
-  - [ ] P4 治理：L-19 已完成（见上）；L-20 李白 Routine A/B 上线演练（李白侧）。
+  - [x] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。结果：亮圳 11-25 20:01「自查表删掉」，删表见 2dcbf3e0d，卡头 45 行见 4d56bfab4，反思.md 保留。
+  - [x] P4 治理：L-19 已完成（见上）；L-20 李白 Routine A/B 上线演练（李白侧）。结果：例程已在跑，Gemini 每日全库审核见 docs/gemini/daily/2026-11-25-audit.md （见 0dd2f4e88），11-27 审核见 docs/卡档案/chore-s2-gov2/派卡.md 拆分理由。
   - [x] ~~全部自验后交 antigravity 复核~~ 作废（亮圳 11-25 09:47）：Gemini 只做李白每日例程发起的全库审核，不另交。
 - 阶段 0B Gemini 复审（硬门闩）：独立顾问逐条核验复审勾选清单，给出明确「复审通过」→ 整理 PR 合入 `master` → 开 `master` 分支保护 → 门闩解锁，允许开工 S1-1。
 
@@ -72,7 +72,10 @@
 - 前置插卡 **S1-3c 开局化身建档派生**：create 建 person 同事务经 instantiatePerson 补齐 species/adultMassKg/birthMinute 等，新建确定性采样公共部件 rules/gen/sample.mjs（种子键唯一出处，门禁遗留例外路径等数替换），开局年龄取成年下界派生；Opus 审第一轮可合。
 - 亮圳 11-27 拍板「玩家自己挑种族」，设计册 14 §4.7 加步 0；来历行 species 暂为开局缺省，**下一张 S1-3d 开局选种族**：菜单种族槽、删缺省列、文化与种族解耦放开 27 条非人文化来历、S2-0b 验收改 facts 给 species。三卡一个 PR，头 feat/s1-3c。）
 
-## 阶段 2（计划第四版，李白 11-27 认可；对外收尾日期按中位 12-05，区间 12-03/12-05/12-08，不做分片 12-10 以后）
+## 阶段 2（计划第四版，李白 11-27 认可；11-28 按 Gemini 11-27 审核重估：对外收尾日期按中位 12-07，区间 12-05/12-07/12-08）
+- 11-28 口径收敛（Gemini 11-27 审核采纳，主会话临时目录 draft-stage2-plan.md §3.3、§5）：重估理由是 E2E 进 CI 后单趟中位 11.4→17.2 分、亮圳 11-27 23:28 定本机禁跑全量改云上、MVP 缩范围加 TP1/TP2/T1b 不在关键路径。M03 收到 MVP 范围：镇内换屋、沿路网在白石镇与下辖村之间走、坐法阵去有阵的邻村（持有组织定价付费，最远 30 km，超距村村经镇中转两跳，砾泉无阵）；剧本甲「前往邻镇」改为「走路去下辖村赶集，再坐法阵回镇或去另一有阵村」。S2-R1 升为 S2-TP2 前置；S2-D+S2-0c1 不被 TP1 拖晚（0c1 已写完；S2-D 不再与 0c1 同 PR：复生拆进挂起的 0c2 后 schedule 在 0c1 无生产调用者，改随第 2 批首个登记到期项的卡同 PR，主会话8 提议、李白 11-27 23:16 同意，计划稿 §3.2 的 D+0c1 合卡依赖随之作废）。
+- [x] chore/s2-gov2 规矩清尾（非玩法卡；Gemini 11-27 审核 8 处中的 7 处，第 ④ 产品原则死链属产品拍板）：卡头自检改提交前核盘（写码、出题 --stage 提交，审卡 --stage 推送）；CLAUDE.md 与卡头补登记分片目录；CLAUDE.md 删文件闸门对齐 K1126-WTDEL；裁定表删 K1125-P4/DATE、P3 注明部分取代、Q-14/15 转 active、补录 12 条、106 处归档目录出处改写为归档提交号；PLAN 0A 勾 6 条；card-rules 删过期代拷写法（李白 11-22 f4fb0a84 ②）、改生效线说明；V-2.b 李白 11-28 裁甲：经登记器升必过、基线 c_escape_hatch 锁 7（全在 rules/load/mount.mjs，清零小卡排 TP1 后），同次只降不升下调 T2 遗留两条旧分量，出题补反向验证题。Sonnet 写、Haiku 出题、Opus 审一轮可合，API 干净复核第二轮可合（0.57 美元；该会话提交被权限拦，审查.md 由主会话代提交、内容未改）。
+  - s2-gov2 不阻合：K1127-TPDEFAULTS 开放范围 11→5 村为主会话更正待李白确认、出题.md card-rules 四条行号偏 7 行、rulings 题不查 quoteSource、card-rules 永久钉 4d56bfab4 日后精简会打红；写基线时顺带新增 8 条锁 0 的 c_write_* 分量提交说明未提。
 
 - 全文为主会话计划稿第四版（不入库：稿内列 archive 旧零件复用清单；Gemini 11-26 审核五项已改：S2-D/0c1/N1 死锁、拆大卡、登记分片、实测重估日期、规矩清理卡））；MVP 52 张 + 非玩法 2 张（S2-SH 登记分片、S2-GOV 规矩清理），生产代码+数据约 3.1 万行。实测：CI 成功运行中位 11.4 分钟、返工率 58%（7/12）。
 - 产品拍板（亮圳 11-27 02:54 原话）：N2a「修仙先只做前3个境界，行善积德和道门授箓留到阶段3」（S2-X1b2 缩为出神加天劫约 250 行，不足 150 行并回 X1b1）；N2b「第一批法术做火、风雷、水三类」（S2-SP1 元素技能类数据）。此前 P1–P4（11-26 20:02）、N1（11-26 20:12，玩家死后整体挂长生种之后）已拍板。
