@@ -1,10 +1,11 @@
 // S1-1 卡 B1 单测：事务与推进（卷二 :539–:545、卷二十七 :190/:742）。期望值按卷文与数据表手算。路径一律经 engine.P（卷二 :536）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { init } from '../../server-plugin/index.mjs';
 import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { clockMinute, advance } from '../../server-plugin/kernel/scheduler.mjs';
 import { runTransaction, submitProposal } from '../../server-plugin/kernel/transaction.mjs';
 import { readPath, writePath } from '../../server-plugin/kernel/storage.mjs';
@@ -115,6 +116,18 @@ test('create 的 template 指向别的 kind 或不存在即拒收，状态不变
   assert.equal(Object.keys(g.state.created).length, 0);
 });
 
+/**
+ * state-owners 声明表 = 主文件与 state-owners.d/ 分片的合并（S2-TP1 主会话授权改夹具：开局一步写持有边与账本后须带分片登记）；
+ * 合并只调生产入口 rules/load/registry-shards.mjs 的 shardDirOf、mergeOwners，测试只读文件；合并结果冻结，返回深拷贝供测试副本改动。
+ */
+function ownersOf(o, json) {
+  const main = 'world/ontology/state-owners.json';
+  const dir = new URL(`../../${shardDirOf(main)}/`, o);
+  const names = existsSync(dir) ? readdirSync(dir).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(main)}/${n}`, doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  return JSON.parse(JSON.stringify(mergeOwners({ file: main, doc: json('state-owners.json') }, shards).doc));
+}
+
 // heartbeatStepMinutes 装配期按 registry.json 的 host 声明核（卷二十七:190：integer、≥1，缺或不合即加载失败）；步长防线在 scheduler.advance。
 // 卡 C 起 mountKernel 收世界数据原文（规则表按登记 code 收进 tableDocs，组装在 loadWorld）；本助手只把 host 表的 rows 换成给定值。
 const loadWorld = (hostRows) => {
@@ -127,7 +140,7 @@ const loadWorld = (hostRows) => {
   return {
     dimensionDocs: readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8'))),
     namedStructsDoc: json('named-structs.json'),
-    owners: json('state-owners.json'),
+    owners: ownersOf(o, json),
     registryRows,
     tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,

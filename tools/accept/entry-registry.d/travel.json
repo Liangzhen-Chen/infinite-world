@@ -50,6 +50,67 @@
     "moveWriter"
    ],
    "rules": []
+  },
+  {
+   "name": "circleRuleOf",
+   "file": "rules/travel/circle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "dim",
+    "ruleValue",
+    "vocabEntry"
+   ],
+   "rules": []
+  },
+  {
+   "name": "siteView",
+   "file": "rules/travel/circle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "dim",
+    "ruleValue",
+    "accountsOf",
+    "vocabEntry",
+    "governorOf",
+    "circleRuleOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runOpeningCircles",
+   "file": "rules/travel/circle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "ruleValue",
+    "vocabEntry",
+    "evaluateRX",
+    "rxScopeOf",
+    "compileRuleRX",
+    "openHolding",
+    "settlementOrgsOf",
+    "siteView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "circlesOf",
+   "file": "rules/travel/circle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "holdingsOfKind"
+   ],
+   "rules": []
   }
  ]
 }

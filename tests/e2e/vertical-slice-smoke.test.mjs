@@ -76,26 +76,39 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     const persons = findInShards(pkg, (o) => o.kind === 'person' && (o.birthplace ?? o.props?.birthplace) != null);
     assert.ok(persons.length >= 1, '导出 doc_state 中应有 kind:person 且带 birthplace 的化身');
     // S2-L（草案 §6）：选来历经账本真实入账——化身名下钱账户余额 = 所选来历出身条目的起始钱，ledgerTotals 该钱种开局来源累计同数；期望值取导出包自带的世界数据副本 doc_data。
-    const [st] = findInShards(pkg, (o) => o.accounts !== undefined && o.ledgerTotals !== undefined && typeof o.clock?.minute === 'number');
+    // S2-TP1：开局一步起组织即有公库，0 号快照也带账本键；取时钟等于清单时钟的那份 doc_state。
+    const [st] = findInShards(pkg, (o) => o.accounts !== undefined && o.ledgerTotals !== undefined && o.clock?.minute === pkg.manifest.clockMinute);
     const [dd] = findInShards(pkg, (o) => o.vocabDoc !== undefined && o.tableDocs !== undefined && o.dimensionDocs !== undefined);
     assert.ok(st && dd, '导出包应有带账本键的 doc_state 与 doc_data');
     const endow = dd.tableDocs.economyLedger.rows.find((r) => r.key === 'endowment').value;
-    const holders = Object.keys(st.accounts);
-    assert.equal(holders.length, 1, '开局选来历后账本应只有化身一个持有人');
+    // S2-TP1（主会话授权收窄到化身自己）：开局一步另给组织（作者行，不在 created）开公库，账本持有人里运行期新建的实体恰一个（化身）；全账本守恒另断言。
+    const holders = Object.keys(st.accounts).filter((h) => Object.hasOwn(st.created ?? {}, h));
+    assert.equal(holders.length, 1, '开局选来历后账本里运行期新建的持有人应只有化身一个');
     const rec = st.created[holders[0]];
     const table = dd.dimensionDocs.find((d) => d.kind === rec.kind);
     const ent = dd.vocabDoc.families[table.dimensions[endow.originDimension].vocab].entries[table.rows[rec.template][endow.originDimension]];
     const coin = ent[endow.coinField];
     const bal = Object.values(st.accounts[holders[0]][endow.purpose][coin]).reduce((s, v) => s + v, 0);
     assert.equal(bal, ent[endow.moneyField], '化身钱账户余额应等于所选来历出身条目的起始钱');
-    assert.equal(st.ledgerTotals[coin][endow.source].cumulative, ent[endow.moneyField], 'ledgerTotals 开局来源累计应等于起始钱');
+    // 开局来源累计 = 化身起始钱 + 各组织开局公库该钱种之和（组织行 orgEndowment.fundsDimension 维度，缺写取表默认；期望值取 doc_data）。
+    const orgDoc = dd.dimensionDocs.find((d) => d.kind === 'org');
+    const fundsDim = dd.tableDocs.economyLedger.rows.find((r) => r.key === 'orgEndowment').value.fundsDimension;
+    const orgFunds = Object.values(orgDoc.rows).reduce((s, r) => s + ((r[fundsDim] ?? orgDoc.dimensions[fundsDim].default)[coin] ?? 0), 0);
+    assert.equal(st.ledgerTotals[coin][endow.source].cumulative, ent[endow.moneyField] + orgFunds, 'ledgerTotals 开局来源累计应等于化身起始钱加各组织开局公库');
+    // 全账本守恒（卷六 §4.1 规则 4）：该钱种全部账户余额之和 = 来源累计 − 去处累计（来源、去处按词表族 src、sink 判）。
+    const fams = dd.vocabDoc.families;
+    const sumBal = Object.values(st.accounts).reduce((s, byPur) => s + Object.values(byPur).reduce((t, byRes) => t + Object.values(byRes[coin] ?? {}).reduce((u, v) => u + v, 0), 0), 0);
+    const flow = Object.entries(st.ledgerTotals[coin]).reduce((s, [k, x]) => s + (Object.hasOwn(fams.src.entries, k) ? x.cumulative : Object.hasOwn(fams.sink.entries, k) ? -x.cumulative : 0), 0);
+    assert.equal(sumBal, flow, '全账本守恒：钱种余额之和应等于来源累计减去处累计');
     // S2-H（草案 §6）：选来历同一提案开玩家席位边、起始物逐件建实例入账并放置、散货按批次入账；期望值取导出包 doc_data。
     const rowOf = (code, key) => dd.tableDocs[code].rows.find((r) => r.key === key).value;
     const seatKind = rowOf('control', 'seatKind');
     const outfit = rowOf('social', 'outfit');
     const lotPrefix = rowOf('economyLedger', 'account').instanceLotPrefix;
     const avatar = holders[0];
-    const edges = Object.values(st.holdings ?? {}).flatMap((book) => Object.values(book));
+    // S2-TP1（主会话授权收窄）：只看玩家席位边与起始物放置边（种类取 rules.social.outfit.placement），开局统治边、法阵边不在此列。
+    const placeKinds = new Set(outfit.placement.map((x) => x.holdingKind));
+    const edges = Object.values(st.holdings ?? {}).flatMap((book) => Object.values(book)).filter((e) => e.kind === seatKind || placeKinds.has(e.kind));
     const seats = edges.filter((e) => e.kind === seatKind);
     assert.equal(seats.length, 1, '应恰有一条玩家席位边');
     assert.ok(seats[0].holder === avatar && seats[0].subject === avatar, '席位边的持有者与标的都应是化身');

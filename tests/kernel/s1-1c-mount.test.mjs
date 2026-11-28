@@ -4,19 +4,33 @@
 // 世界数据经测试副本改动，不改 world/；存档根目录用 tests/accept/temp-root.mjs#testTempRoot（不清理）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
 import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { closeInputs, inputsOf } from '../../server-plugin/kernel/memo.mjs';
 import { dim, modified } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 
 const code = (c) => (e) => /** @type {any} */ (e).code === c;
+
+/**
+ * state-owners 声明表 = 主文件与 state-owners.d/ 分片的合并（S2-TP1 主会话授权改夹具：开局一步写持有边与账本后须带分片登记）；
+ * 合并只调生产入口 rules/load/registry-shards.mjs 的 shardDirOf、mergeOwners，测试只读文件。
+ */
+function ownersOf(o, json) {
+  const main = 'world/ontology/state-owners.json';
+  const dir = new URL(`../../${shardDirOf(main)}/`, o);
+  const names = existsSync(dir) ? readdirSync(dir).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(main)}/${n}`, doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  // 合并结果冻结；测试副本要可改，取一份深拷贝（同 s2-p-position.test.mjs 的 clone(owners())）。
+  return JSON.parse(JSON.stringify(mergeOwners({ file: main, doc: json('state-owners.json') }, shards).doc));
+}
 
 /** 世界数据原文（与 index.mjs 同形：规则表按 registry.json 每行 file 读，按 code 收进 tableDocs）。 */
 function rawWorld() {
@@ -27,7 +41,7 @@ function rawWorld() {
   return {
     dimensionDocs: readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8'))),
     namedStructsDoc: json('named-structs.json'),
-    owners: json('state-owners.json'),
+    owners: ownersOf(o, json),
     registryRows,
     tableDocs: Object.fromEntries(registryRows.map((r) => [r.code, json(`../rules/${r.file}`)])),
     digestExclude: json('../rules/tables/digest-exclude.json').paths,

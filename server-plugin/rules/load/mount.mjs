@@ -20,7 +20,7 @@ import { checkBodyPlans } from '../body/body-plan.mjs';
 import { speciesView } from '../body/species.mjs';
 import { bodyView } from '../body/body.mjs';
 import { carcassOf } from '../body/carcass.mjs';
-import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
+import { runGenesis, runOpening, runOpeningPolity, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
 import { checkTerminationTables, destroyEntity, instantiateEntity } from '../lifecycle/terminate.mjs';
 import { checkRecordCoverage } from '../lifecycle/records.mjs';
@@ -121,11 +121,12 @@ function checkShards(shards, parts) {
 
 /**
  * 新开一局（卷十 R10-1.2、R10-11.4、R10-12.7）：世界创建事务由登记写者建 state（genesisMinute 先于时钟），紧接开局一步一笔事务；任一被拒即抛。
- * @param {Parameters<typeof runOpening>[0]} engine @returns {ReturnType<typeof buildState>}
+ * 开局一步这一笔里先 runOpening（openingMinute 与 gen.open），再 runOpeningPolity（统治边、组织公库、法阵；卷八 R8-18.9 gstage_polity，S2-TP1）。
+ * @param {Parameters<typeof runOpeningPolity>[0]} engine @returns {ReturnType<typeof buildState>}
  */
 function openWorld(engine) {
   const fresh = buildState(engine, [runGenesis, initClock]);
-  const r = runTransaction(engine, fresh, (tx) => runOpening(engine, fresh, tx));
+  const r = runTransaction(engine, fresh, (tx) => ({ ...runOpening(engine, fresh, tx), ...runOpeningPolity(engine, fresh, tx) }));
   if (!r.ok) throw new KernelError(String(r.code), {}, 'opening step rejected');
   return fresh;
 }

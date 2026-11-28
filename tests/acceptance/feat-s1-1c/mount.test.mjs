@@ -9,12 +9,13 @@
 import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { init, saveSlot, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { mountKernel } from '../../../server-plugin/rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from '../../../server-plugin/rules/load/registry-shards.mjs';
 import { inputsOf, closeInputs } from '../../../server-plugin/kernel/memo.mjs';
 import { modified, dim } from '../../../server-plugin/kernel/dimensions.mjs';
 import { createDigestCap } from '../../../server-plugin/textcore/digest.mjs';
@@ -23,6 +24,15 @@ import { testTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WORLD = join(ROOT, 'world');
 const ONTOLOGY = join(WORLD, 'ontology');
+// 与 server-plugin/index.mjs#readOwners 同形：主文件 + state-owners.d/ 分片按文件名次序合并（生产合并入口 registry-shards.mjs，不另抄一份）。
+function ownersOf() {
+  const main = 'world/ontology/state-owners.json';
+  const dir = join(ROOT, shardDirOf(main));
+  const names = existsSync(dir) ? readdirSync(dir).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(main)}/${n}`, doc: JSON.parse(readFileSync(join(dir, n), 'utf8')) }));
+  return structuredClone(mergeOwners({ file: main, doc: JSON.parse(readFileSync(join(ROOT, main), 'utf8')) }, shards).doc);
+}
+
 const DIM_DIR = join(ONTOLOGY, 'dimensions');
 
 function loadJson(p) {
@@ -76,7 +86,7 @@ function readRaw() {
   return {
     dimensionDocs: TABLES,
     namedStructsDoc: json('named-structs.json'),
-    owners: json('state-owners.json'),
+    owners: ownersOf(),
     registryRows: REGISTRY_ROWS,
     tableDocs,
     digestExclude: loadJson(join(WORLD, 'rules/tables/digest-exclude.json')).paths,

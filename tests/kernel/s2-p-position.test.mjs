@@ -16,6 +16,7 @@ import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { zoneAt, landCell } from '../../server-plugin/rules/place/zone.mjs';
 import { placeSubject } from '../../server-plugin/rules/travel/position.mjs';
 import { controlledEntities } from '../../server-plugin/rules/social/control.mjs';
+import { governorOf } from '../../server-plugin/rules/polity/govern.mjs';
 
 const W = new URL('../../world/', import.meta.url);
 const json = (rel) => JSON.parse(readFileSync(new URL(rel, W), 'utf8'));
@@ -170,14 +171,19 @@ test('7 选来历落位：化身 pos 在所选落脚处、coarse 真；初次朝
   const raw = rawWorld();
   const g = mountKernel(clone(raw), caps('s2p-spawn-'));
   const cands = lodgeCandidates(g);
-  const k = cands.length - 1;
+  // 取法（S2-TP1 主会话授权改）：落脚处须与所选出生地（place 0）同属一个统治组织，取菜单列表里合这一条的最后一项（统治归属经 governorOf 推算）。
+  const place0 = g.menu(null).affordances.find((a) => a.act === 'act_choose_origin').slots.place[0];
+  const ruler = (id) => governorOf(g.engine, g.state, id)?.org;
+  const k = cands.map((c, i) => [c, i]).filter(([c]) => ruler(c) !== undefined && ruler(c) === ruler(place0)).pop()[1];
   const av = choose(g, k);
   const props = g.state.created[av].props;
   assert.equal(props.pos.coarse, true);
   assert.equal(zoneAt(g.engine, g.state, props.pos), cands[k]);
   assert.equal(props.facing, rowOf(raw, cands[k]).facing);
   const here = g.menu(null).here;
-  assert.deepEqual(here, { place: cands[k], chain: [cands[k], ...ancestors(raw, cands[k])] });
+  // S2-TP1（主会话授权）：here 在所属聚落有法阵时另带 circle（对错归 S2-TP1 单测与验收题）；本条只比 place、chain，且 here 的键只许 place、chain、circle。
+  assert.deepEqual({ place: here.place, chain: here.chain }, { place: cands[k], chain: [cands[k], ...ancestors(raw, cands[k])] });
+  assert.ok(Object.keys(here).every((key) => ['place', 'chain', 'circle'].includes(key)), `here 有未知键：${Object.keys(here)}`);
   assert.ok(here.chain.includes(props.birthplace));
   // 确定性：同一种子同一输入两次开局 pos 逐位相同。
   const g2 = mountKernel(clone(raw), caps('s2p-spawn2-'));
