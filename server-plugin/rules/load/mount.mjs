@@ -32,7 +32,7 @@ import { checkHoldingKinds, checkOutfitTables } from '../social/holding-check.mj
 import { controlledByPlayer } from '../social/control.mjs';
 import { loadActions, menuOf } from '../act/catalog.mjs';
 import { resolveIntent } from '../act/resolve.mjs';
-import { compileWeather } from '../time_env/weather.mjs';
+import { compileWeather } from '../time_env/env.mjs';
 
 // 各域装配登记按 domains.mjs 的次序收齐（S2-SH 草案 §3）：一个字段名收一张冻结表。
 const collect = (/** @type {'terminationCleanups' | 'terminationTriggers' | 'instantiators' | 'advanceHooks' | 'primitiveWriters'} */ field) => Object.freeze(DOMAINS.flatMap((d) => d[field] || []));

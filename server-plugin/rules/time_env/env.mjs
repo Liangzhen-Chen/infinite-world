@@ -13,6 +13,9 @@ import { systemTimeView, calendarFrom, calendarDayIndex, calendarView, dayPartOf
 import { localPhase, seasonAt, solarTermAt, cellOf } from './season.mjs';
 import { weatherAt } from './weather.mjs';
 
+// 天气权重式的装配期编译经本文件转出给 rules/load/mount.mjs（季节与天气模型只由本文件 import，门禁 pp_envat_import；S2-T2 修改轮一）。
+export { compileWeather } from './weather.mjs';
+
 // env 键（卷二十 §2.7）。
 const KEY = Object.freeze({ solarPhase: 'env.solarPhase', season: 'env.season', weather: 'env.weather' });
 // 天气当日量：env 键 → 当日天气值上的字段（卷二十 §2.7、§4.3.1；字段同 weather.mjs#weatherAt 的 WeatherDay，缺口代号只在 weather.mjs）。
