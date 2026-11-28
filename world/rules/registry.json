@@ -154,6 +154,11 @@
      "moneyField": {"type": "string"},
      "coinField": {"type": "string"}
     }},
+    "orgEndowment": {"type": "struct", "required": ["source", "reason", "fundsDimension"], "fields": {
+     "source": {"type": "ref", "vocab": "src"},
+     "reason": {"type": "ref", "vocab": "verb"},
+     "fundsDimension": {"type": "string"}
+    }},
     "account": {"type": "struct", "required": ["sep", "lotPrefix", "instanceLotPrefix", "holderFlag"], "fields": {
      "sep": {"type": "string"},
      "lotPrefix": {"type": "string"},
@@ -161,9 +166,9 @@
      "holderFlag": {"type": "string"}
     }}
    },
-   "volume": "卷六 §2.5 :224（budget、alert）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40（卷六勘误另卡）；primitiveReason（卷九 :629）、endowment（卷四 G-5）、account（卷六 :103–:104）为 S2-L 新键；窗口与通道种类的跨字段校验在 rules/economy/ledger-check.mjs checkLedgerTables",
+   "volume": "卷六 §2.5 :224（budget、alert）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40（卷六勘误另卡）；primitiveReason（卷九 :629）、endowment（卷四 G-5）、orgEndowment（S2-TP1 组织开局公库，卷六 §4.22 规则 3）、account（卷六 :103–:104）为 S2-L 新键；窗口与通道种类的跨字段校验在 rules/economy/ledger-check.mjs checkLedgerTables",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"budget": false, "alert": false, "primitiveReason": false, "terminateReason": false, "endowment": false, "account": false}
+   "packOverridable": {"budget": false, "alert": false, "primitiveReason": false, "terminateReason": false, "endowment": false, "orgEndowment": false, "account": false}
   },
   {
    "code": "terminate",
@@ -680,6 +685,19 @@
    "volume": "卷十七 §3.3 :304（placeSubject 朝向；初次落位没有旧位置时的朝向，S2-P 主会话 Q7 甲：先取目标地点行 facing，缺则本键）；取值须小于 rules.grid.facingDirections，读点 rules/travel/position.mjs 核",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"initialFacing": false}
+  },
+  {
+   "code": "circle",
+   "file": "tables/circle.json",
+   "structure": "keys",
+   "type": {
+    "holdingKind": {"type": "ref", "vocab": "holding_kind"},
+    "lawGate": {"type": "ref", "vocab": "gate"}
+   },
+   "domain": {"holdingKind": {}, "lawGate": {}},
+   "volume": "S2-TP1 新表（接口稿 draft-s2-tp §2.1；主会话 TP 裁定 Q2 甲）：法阵持有边种类 holdingKind、规矩合法性门控 lawGate。本地规矩条目本身放词表族 circle_rule（规矩要写发布组织与设施用途，规则表键与值不得为实体 id，卷六 S6-2 :325）；条目里的 buildRX 由 rules/travel/circle.mjs 开局求值时经 rules/load/rx-compile.mjs 编译；法阵网络、本地规矩卷文未找到，随卡记勘误",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"holdingKind": false, "lawGate": false}
   },
   {
    "code": "perception",

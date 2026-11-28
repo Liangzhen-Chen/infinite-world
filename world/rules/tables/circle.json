@@ -1,0 +1,14 @@
+{
+ "rows": [
+  {
+   "key": "holdingKind",
+   "value": "hk_circle",
+   "basis": "S2-TP1：法阵＝宿主建筑上的持有边，持有者是聚落组织（接口稿 draft-s2-tp §0、§4）；种类行 hk_circle 登在 holding_kind 族（主会话 TP 补裁 1 乙：不改 hk_operates，新登一行，卷十八勘误），规则层只读本键，不写种类代号字面量"
+  },
+  {
+   "key": "lawGate",
+   "value": "gate_circle_rule_lawful",
+   "basis": "S2-TP1：本地规矩合法性门控条目（卷八b §2 :247 gate 族；接口稿 §2.2）。栈空（世界 0 部法典）取条目 defaultAllow（卷八b R8b-1.8 :594）；不合法即视为不存在、回退 parent 链上一级（主会话 TP 裁定 Q7 甲）。卷八b lawGate 落地后由它取答案，本键不变"
+  }
+ ]
+}

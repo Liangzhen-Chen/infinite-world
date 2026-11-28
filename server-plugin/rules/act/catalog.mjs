@@ -5,12 +5,14 @@
 
 import { KernelError } from '../../kernel/errors.mjs';
 import { evaluateRX } from '../../kernel/rx.mjs';
-import { checkValue } from '../../kernel/validate/types.mjs';
 import { dim } from '../../kernel/dimensions.mjs';
 import { kindOfEntity } from '../../kernel/storage.mjs';
 import { handlesOp } from '../../kernel/transaction.mjs';
 import { ruleValue } from '../load/registry.mjs';
+import { rxScopeOf, compileRuleRX } from '../load/rx-compile.mjs';
 import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
+import { circlesOf } from '../travel/circle.mjs';
+import { governorOf } from '../polity/govern.mjs';
 import { controlledByPlayer, controlledEntities } from '../social/control.mjs';
 import { placeChainOf } from '../place/zone.mjs';
 import { nowOf } from '../time_env/env.mjs';
@@ -55,12 +57,14 @@ const CHARGEN = 'chargen';
 const PLAYABLE_CLASS = 'playableClass';
 const CLASSES_FIELD = 'classes';
 // 本模块提供读数的命名空间（登记行在 state-owners.json rxNamespaces；读数含义见那里的 entry 列）。
-const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', speciesPlayable: 'species.playable', lodgeable: 'place.lodgeable' });
+const NS = Object.freeze({ slot: 'slot', avatarCount: 'player.avatarCount', isAvatar: 'actor.isAvatar', originOpen: 'origin.open', speciesPlayable: 'species.playable', lodgeable: 'place.lodgeable', sameGovernor: 'place.sameGovernor' });
+// 读数依赖别的槽位已选值的命名空间（菜单投影时槽位未选，缺这些读数不算不过，到 resolve 再判；同 whenHolds 的 slot.* 口径）。依赖槽位的判据只在此一处列。
+const SLOT_DEPENDENT = Object.freeze([NS.slot, NS.sameGovernor]);
+const slotDependent = (/** @type {string} */ key) => SLOT_DEPENDENT.some((ns) => key.startsWith(`${ns}${PATH_SEP}`));
 // 落脚处判据读的维度（卷五 §2.1 :144 accessClass；access 族条目字段 needsGrant，卷五 :1171）与化身位置维度（卷五 §4.1 规则 14）。
 const ACCESS_DIM = 'accessClass';
 const NEEDS_GRANT = 'needsGrant';
 const POS_DIM = 'pos';
-const RX_TYPE = Object.freeze({ type: 'rx' });
 const UNKNOWN_READ = 'E-DIM-UNKNOWN-READ';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -165,22 +169,10 @@ export function loadActions(world) {
   const writers = world.primitiveWriters instanceof Map ? world.primitiveWriters : new Map();
   const handled = (/** @type {string} */ op) => handlesOp(op) || writers.has(op);
   const families = isObj(vocab) && isObj(vocab.families) ? vocab.families : {};
-  const vocabIndex = new Map();
-  for (const [family, rec] of Object.entries(families)) {
-    for (const code of Object.keys(isObj(rec.entries) ? rec.entries : {})) vocabIndex.set(code, { family, prefix: rec.prefix });
-  }
   const entriesOf = (fam) => (isObj(families[fam]) && isObj(families[fam].entries) ? families[fam].entries : {});
-  const ns = Array.isArray(docData.owners && docData.owners.rxNamespaces) ? docData.owners.rxNamespaces : [];
-  const rules = rulesView(docData);
-  const maxDepth = Number(ruleValue(docData, 'kernelConstants', 'rxMaxDepth'));
-  // RX 编译走公共部件 checkValue 的 rx 类型（加载期编译的唯一入口，kernel/rx.mjs 文件头）；作用域 rules 供数据档读规则表值。
-  const compile = (text, dims, code, where) => {
-    const env = { rxScope: { dims, vocabIndex, ns, maxDepth, rules }, compiled: new Map() };
-    const bad = [];
-    checkValue(RX_TYPE, text, env, { path: where }, (e) => { bad.push(e); });
-    if (bad.length > 0) throw new KernelError(code, {}, `${where}: ${bad[0].want}`);
-    return env.compiled.get(where).tree;
-  };
+  // RX 编译走规则层共用入口 rules/load/rx-compile.mjs（内部经公共部件 checkValue 的 rx 类型）；作用域 rules 供数据档读规则表值。
+  const scope = rxScopeOf({ vocab, docData, rules: rulesView(docData) });
+  const compile = (text, dims, code, where) => compileRuleRX(scope, text, dims, where, code);
   const dimsOf = (kind) => {
     const doc = registry.tables.get(kind);
     return new Map(Object.entries(doc && isObj(doc.dimensions) ? doc.dimensions : {}));
@@ -343,7 +335,19 @@ export function nsReadsFor(engine, state, at) {
     // （accessClass 读得到且所指 access 条目 needsGrant 为真即筛掉，卷五 §4.13；读不到不筛，进入权判定待 S2-R2）。落脚处判据只在此一处。
     Object.defineProperty(reads, NS.lodgeable, { enumerable: true, get: () => lodgeable(engine, state, String(at.candidate)) });
   }
-  for (const [name, v] of Object.entries(at.slots || {})) reads[`${NS.slot}${PATH_SEP}${name}`] = v;
+  for (const [name, v] of Object.entries(at.slots || {})) {
+    reads[`${NS.slot}${PATH_SEP}${name}`] = v;
+    // 候选与该槽所选地点同属一个统治组织（S2-TP1 C；主会话问2 丑：子站点按坐标改挂后「属于某村」由卷八辖区定，不看包含树，卷八 :1708 勘误 1123k32、卷十 :499）。
+    // 统治归属只经 rules/polity/govern.mjs#governorOf；任一端无主即假。
+    if (typeof at.candidate === 'string' && typeof v === 'string') {
+      const candidate = at.candidate;
+      Object.defineProperty(reads, `${NS.sameGovernor}${PATH_SEP}${name}`, { enumerable: true, get: () => {
+        const a = placeTreeHas(engine, candidate) ? governorOf(engine, state, candidate) : null;
+        const b = placeTreeHas(engine, v) ? governorOf(engine, state, v) : null;
+        return a !== null && b !== null && a.org === b.org;
+      } });
+    }
+  }
   return reads;
 }
 
@@ -367,7 +371,8 @@ function lodgeable(engine, state, id) {
 
 /**
  * 化身此刻所在（菜单 here）：{place: zoneAt(pos), chain: [place, …祖先]}；pos 读不到或不在任何已建足迹里为 null。
- * @param {string} subject @returns {Readonly<{place: string, chain: readonly string[]}> | null}
+ * 此处所属聚落（here.place 的统治组织）持有现役法阵时另带 circle {holder 掌管组织, host 宿主建筑（告诉玩家法阵在哪）, tier 档}（S2-TP1）；所属聚落没有法阵即不带此键（主会话 TP 接口约定）。
+ * @param {string} subject @returns {Readonly<{place: string, chain: readonly string[], circle?: Readonly<{holder: string, host: string, tier: unknown}>}> | null}
  */
 function hereOf(engine, state, subject) {
   let pos;
@@ -376,20 +381,25 @@ function hereOf(engine, state, subject) {
     throw e;
   }
   const chain = placeChainOf(engine, state, pos);
-  return chain.length === 0 ? null : Object.freeze({ place: chain[0], chain });
+  if (chain.length === 0) return null;
+  // 此处所属聚落（here.place 的统治组织，governorOf）持有现役法阵时带 circle；判定只调 governorOf、circlesOf（主会话审 diff 必须改 2）。
+  const ruler = governorOf(engine, state, chain[0]);
+  const circle = ruler === null ? undefined : circlesOf(engine, state).find((c) => c.holder === ruler.org);
+  return Object.freeze({ place: chain[0], chain, ...(circle === undefined ? {} : { circle }) });
 }
 
 /**
  * 一个候选过不过本槽全部筛选：缺哪个维度读数就经 dim 补读哪个（读不到即缺读数，不算过）；缺的不是本表维度也不算过。
  */
-function passes(engine, state, slot, id, actor) {
-  const reads = nsReadsFor(engine, state, { actor, candidate: id });
+function passes(engine, state, slot, id, actor, chosen) {
+  const reads = nsReadsFor(engine, state, { actor, candidate: id, slots: chosen });
   return slot.filters.every((f) => {
     const bound = {};
     for (;;) {
       try { return evaluateRX(f.tree, { dim: bound }, reads) === true; } catch (e) {
         const key = missingKey(e);
         if (key === undefined) throw e;
+        if (chosen === undefined && slotDependent(key)) return true;
         if (Object.hasOwn(bound, key) || !f.dims.has(key)) return false;
         try { bound[key] = dim(engine, state, slot.table, id, key).value; } catch (d) {
           if (d instanceof KernelError && d.code === UNKNOWN_READ) return false;
@@ -411,6 +421,9 @@ function candidatesOf(engine, state, actId, slotName, actor) {
   const doc = engine.registry.tables.get(slot.table);
   return Object.keys(isObj(doc.rows) ? doc.rows : {}).sort().filter((id) => passes(engine, state, slot, id, actor));
 }
+
+/** 是否烘焙层地点树上的地点。 @param {string} id */
+const placeTreeHas = (engine, id) => engine.bake.placeTree.parentOf.has(id);
 
 /**
  * 意图收窄的 shape 段（与菜单投影同一套槽位处理表）：意图里每个值按所在槽的种类收窄；未声明、种类不对、缺必填一律 E-ACT-SLOT。
@@ -435,6 +448,12 @@ export function shapeOf(engine, state, actId, intent, actor) {
     }
     values[s.name] = h.pick(engine, state, row, s, given[s.name], actor);
     if (Object.hasOwn(s, 'table')) tables[s.name] = s.table;
+  }
+  // 下标按菜单投影的同一列表取（列表不随已选槽变，下标稳定）；全部槽取定后，带已选槽位值把每个 tableRow 槽的所选候选再过一次筛选，
+  // 依赖别的槽位的读数（SLOT_DEPENDENT）此时才判，不合即 E-ACT-SLOT（主会话 TP1 C 问1 乙；同 whenHolds 的 slot.* 口径）。
+  for (const s of row.slots) {
+    if (!Object.hasOwn(tables, s.name)) continue;
+    if (!passes(engine, state, s, String(values[s.name]), actor, values)) throw new KernelError('E-ACT-SLOT', {}, `${row.id}: slot ${s.name} candidate ${values[s.name]} does not fit the chosen slots`);
   }
   return { values, tables };
 }

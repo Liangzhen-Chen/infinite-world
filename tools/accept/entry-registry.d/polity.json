@@ -1,0 +1,77 @@
+{
+ "entries": [
+  {
+   "name": "orgIdsOf",
+   "file": "rules/polity/govern.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settlementOrgsOf",
+   "file": "rules/polity/govern.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "orgIdsOf",
+    "vocabEntry",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "governorOf",
+   "file": "rules/polity/govern.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "holdersOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "setGovernor",
+   "file": "rules/polity/govern.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "vocabEntry",
+    "ruleValue",
+    "openHolding"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runOpeningGovern",
+   "file": "rules/polity/govern.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "dim",
+    "holdersOf",
+    "settlementOrgsOf",
+    "setGovernor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "POLITY_MANIFEST",
+   "file": "rules/polity/manifest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  }
+ ]
+}

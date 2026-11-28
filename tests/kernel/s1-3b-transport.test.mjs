@@ -3,12 +3,13 @@
 // 动作载荷经执行器的部分（第 2–6、12 条）等 S1-3a 合入后由端到端烟测覆盖。期望值按卷文或在测试里先造前提，不抄仓库基线计数。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { express } from '../support/express.mjs';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init } from '../../server-plugin/index.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
 import { createRouterCaps } from '../../server-plugin/rules/transport/router-caps.mjs';
 import { mountSaveRoutes } from '../../server-plugin/kernel/save.mjs';
 import { canonical } from '../../server-plugin/kernel/storage.mjs';
@@ -142,6 +143,19 @@ test('save_import：合法字节导入后可读档、不改当前 state；改一
   } finally { await h.close(); }
 });
 
+/**
+ * state-owners 声明表 = 主文件与 state-owners.d/ 分片的合并（S2-TP1 主会话授权改夹具：开局一步写持有边与账本后须带分片登记）；
+ * 合并只调生产入口 rules/load/registry-shards.mjs 的 shardDirOf、mergeOwners，测试只读文件。
+ */
+function ownersOf(o, json) {
+  const main = 'world/ontology/state-owners.json';
+  const dir = new URL(`../../${shardDirOf(main)}/`, o);
+  const names = existsSync(dir) ? readdirSync(dir).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(main)}/${n}`, doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  // 合并结果冻结；测试副本要可改，取一份深拷贝（同 s2-p-position.test.mjs 的 clone(owners())）。
+  return JSON.parse(JSON.stringify(mergeOwners({ file: main, doc: json('state-owners.json') }, shards).doc));
+}
+
 /** 世界数据原文（与 index.mjs 同形），可改 host 表某键。 @param {string} key @param {number} value */
 function rawWorldWithHost(key, value) {
   const o = new URL('../../world/ontology/', import.meta.url);
@@ -153,9 +167,10 @@ function rawWorldWithHost(key, value) {
   tableDocs[hostCode] = { ...tableDocs[hostCode], rows: tableDocs[hostCode].rows.map((/** @type {any} */ r) => (r.key === key ? { ...r, value } : r)) };
   return {
     dimensionDocs: readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8'))),
-    namedStructsDoc: json('named-structs.json'), owners: json('state-owners.json'), registryRows, tableDocs,
+    namedStructsDoc: json('named-structs.json'), owners: ownersOf(o, json), registryRows, tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths, primitivesDoc: json('primitives.json'),
-    vocabDoc: json('dimensions/_vocab.json'), wire,
+    // S2-TP1（同类授权）：开局一步现经账本入账，账本按单位表算日序，夹具带上单位表（同 index.mjs 世界数据形状）。
+    vocabDoc: json('dimensions/_vocab.json'), unitsDoc: json('dimensions/_units.json'), wire,
   };
 }
 

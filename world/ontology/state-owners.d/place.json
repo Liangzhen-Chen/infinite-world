@@ -1,6 +1,7 @@
 {
  "rxNamespaces": [
-  {"ns": "place.lodgeable", "type": "boolean", "entry": "被筛的地点候选可否作开局落脚处：有建筑足迹（挂 rules.gen.roleFacility 所指组件类）、某个祖先是已开放地点（genOpen），且 accessClass 读得到时所指 access 条目 needsGrant 不为真（rules/act/catalog.mjs 读数；对象筛选 tf_lodge_place 读它）", "shape": "boolean", "volume": "卷五 §4.1 规则 2、11（建筑足迹）、§4.13 :1171（accessClass、needsGrant）；卷十 R10-12.7（开放范围）；卷十七 §3.3 :298（给地点落位）；S2-P 主会话 Q1 甲"}
+  {"ns": "place.lodgeable", "type": "boolean", "entry": "被筛的地点候选可否作开局落脚处：有建筑足迹（挂 rules.gen.roleFacility 所指组件类）、某个祖先是已开放地点（genOpen），且 accessClass 读得到时所指 access 条目 needsGrant 不为真（rules/act/catalog.mjs 读数；对象筛选 tf_lodge_place 读它）", "shape": "boolean", "volume": "卷五 §4.1 规则 2、11（建筑足迹）、§4.13 :1171（accessClass、needsGrant）；卷十 R10-12.7（开放范围）；卷十七 §3.3 :298（给地点落位）；S2-P 主会话 Q1 甲"},
+  {"ns": "place.sameGovernor", "type": "boolean", "entry": "被筛的地点候选与本意图 <槽位> 槽所选地点是否同属一个统治组织（两端 rules/polity/govern.mjs#governorOf 的 org 相同；任一端无主为假）。读数依赖该槽已选值：菜单投影时槽位未选，缺读数不算不过，resolve 带已选槽再判（rules/act/catalog.mjs nsReadsFor、passes）", "shape": "<槽位>", "volume": "S2-TP1 主会话 C 问1 乙、问2 丑；卷八 :1708 勘误 1123k32、卷十 :499（子站点按坐标改挂后，属于某村由卷八辖区定，不看包含树）"}
  ],
  "kernelApi": {
   "exports": [

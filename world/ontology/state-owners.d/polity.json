@@ -1,0 +1,8 @@
+{
+ "kernelApi": {
+  "exports": [
+   {"export": "rules/polity/govern.mjs#governorOf", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/polity/govern.mjs#setGovernor", "callers": ["rules"], "acceptsState": true}
+  ]
+ }
+}

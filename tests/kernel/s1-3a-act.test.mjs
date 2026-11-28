@@ -15,6 +15,7 @@ import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { handlesOp } from '../../server-plugin/kernel/transaction.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { mergeOwners, shardDirOf } from '../../server-plugin/rules/load/registry-shards.mjs';
+import { governorOf } from '../../server-plugin/rules/polity/govern.mjs';
 
 const W = new URL('../../world/', import.meta.url);
 const json = (rel) => JSON.parse(readFileSync(new URL(rel, W), 'utf8'));
@@ -103,7 +104,8 @@ function lodgePlaces(raw) {
   }).sort();
 }
 /** 筛选 whenRX → 期望候选（各按卷文判据从数据推出）；S2-P 起同一张表可有两个槽（place、lodge），期望按槽的筛选取，不按表名取。 */
-const candidatesByRX = (raw) => ({ genOpen: openPlaces(raw), 'species.playable': playableSpecies(raw), 'origin.open': openTemplates(raw), 'place.lodgeable': lodgePlaces(raw) });
+const candidatesByRX = (raw) => ({ genOpen: openPlaces(raw), 'species.playable': playableSpecies(raw), 'origin.open': openTemplates(raw), 'place.lodgeable && place.sameGovernor.place': lodgePlaces(raw) });
+// S2-TP1（主会话授权）：tf_lodge_place 的 whenRX 加了依赖 place 槽的 place.sameGovernor.place；菜单投影时 place 槽未选，依赖槽的读数不筛，期望仍是全部可落脚处。
 /** 选来历时 lodge 取 0 号候选后菜单的 here（S2-P 主会话 Q12 甲）：{place, chain: [place, …祖先]}。 */
 const hereAtLodge0 = (raw) => ({ place: lodgePlaces(raw)[0], chain: [lodgePlaces(raw)[0], ...placeAncestors(raw, lodgePlaces(raw)[0])] });
 
@@ -134,6 +136,9 @@ test('2 选来历：经 submitProposal 建化身（template 为所选模板行�
   const a = g.menu(null).affordances[0];
   const names = Object.keys(a.slots);
   const pick = Object.fromEntries(names.map((n) => [n, a.slots[n].length - 1]));
+  // S2-TP1（主会话授权改取法）：lodge 取菜单里与所选 place 同属一个统治组织的最后一项（governorOf 推算），不再取偶然排在最后的那一项。
+  const ruler = (id) => governorOf(g.engine, g.state, id)?.org;
+  pick.lodge = a.slots.lodge.map((l, i) => [l, i]).filter(([l]) => ruler(l) !== undefined && ruler(l) === ruler(a.slots.place[pick.place])).pop()[1];
   const before = g.logBook.entries.filter((e) => e.kind === 'command').length;
   const t0 = clockMinute(g.engine, g.state);
   const r = g.act({ act: spawn, slots: pick });
@@ -164,7 +169,9 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
   const m = g.menu(avatar);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
   // S2-P（Q12 甲）：here 单独断言；visible = 化身、开放地点、here 链（去重，按此次序）。
-  assert.deepEqual(m.here, hereAtLodge0(raw));
+  // S2-TP1（主会话授权）：here 在所属聚落有法阵时另带 circle（对错归本卡单测与验收题）；本条只比 place、chain，且 here 的键只许 place、chain、circle。
+  assert.deepEqual({ place: m.here.place, chain: m.here.chain }, hereAtLodge0(raw));
+  assert.ok(Object.keys(m.here).every((k) => ['place', 'chain', 'circle'].includes(k)), `here 有未知键：${Object.keys(m.here)}`);
   assert.deepEqual([...m.visible], [...new Set([avatar, ...openPlaces(raw), ...hereAtLodge0(raw).chain])]);
   const slotName = Object.keys(rows[pass].slots)[0];
   const max = raw.tableDocs.act.rows.find((r) => r.key === 'advanceMaxMinutes').value[rows[pass].class];
@@ -330,7 +337,9 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
   // S2-P（Q12 甲）：here 单独断言；visible = 化身、开放地点、here 链（去重，按此次序）。
-  assert.deepEqual(m.here, hereAtLodge0(raw));
+  // S2-TP1（主会话授权）：here 在所属聚落有法阵时另带 circle（对错归本卡单测与验收题）；本条只比 place、chain，且 here 的键只许 place、chain、circle。
+  assert.deepEqual({ place: m.here.place, chain: m.here.chain }, hereAtLodge0(raw));
+  assert.ok(Object.keys(m.here).every((k) => ['place', 'chain', 'circle'].includes(k)), `here 有未知键：${Object.keys(m.here)}`);
   assert.deepEqual([...m.visible], [...new Set([avatar, ...openPlaces(raw), ...hereAtLodge0(raw).chain])]);
   const t0 = clockMinute(g.engine, g.state);
   const r = g.act({ act: pass, numbers: { minutes: 15 } });

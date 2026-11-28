@@ -22,6 +22,13 @@
    "basis": "开局随身钱入账（S2-L 草案 §5）：新个体 origin 维度所指出身条目的 moneyField 枚数、coinField 钱种，经 post 以 source 来源入 purpose 分区新批次，事由 reason。purpose_general 取缺省分区（spendable 真）；verb_grant 是现有给予动词；字段名照 _vocab origin 条目（startingCoin 为 Q1 甲新栏）"
   },
   {
+   "key": "orgEndowment",
+   "value": {"source": "src_genesis", "reason": "verb_grant", "fundsDimension": "genesisFunds"},
+   "source": "卷六 §4.22 规则 3 :1260（开局 src_genesis 只在第 0 日）；卷八 §2.6 :328（公库缺省分区取 rules.polity.rolesPurposes.general，不另登）",
+   "grade": "designed",
+   "basis": "组织开局公库入账（S2-TP1；接口稿 draft-s2-tp §3 甲，主会话 TP 裁定 Q12）：每个组织行 fundsDimension 维度（资源 → 枚数）里非零的项，开 (组织, 公库缺省分区, 资源, 新批次) 账户，post 以 source 来源入账，事由 reason；同 endowment 的出身起始钱写法。第 0 日之后被限额通道拒（E-LEDGER-CAPPED-DIRECT）"
+  },
+  {
    "key": "account",
    "value": {"sep": "/", "lotPrefix": "lot_", "instanceLotPrefix": "lot_i_", "holderFlag": "ledgerHolder"},
    "source": "卷六 §2.1 :103–:104（账户 holder、resource{kind, key}、purpose）；卷三乙 §2.3（散货批次键 lot_＋全局递增序号）；卷六 :1642 E-LEDGER-HOLDER-NOT-SUBJECT 与卷二 §5.6 ledgerHolder 标记",

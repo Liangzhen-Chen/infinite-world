@@ -2,16 +2,21 @@
 // runGenesis：世界创建事务里写 state.genesis.genesisMinute（卷十 R10-1.2 :378）与世界种子 worldSeed（S1-3c Q1），值来自规则表 rules.gen.genesisMinute（R10-12.5 开局缺省三来路之一，不写代码常量）。
 // runOpening：开局一步（R10-12.7 :974）写 openingMinute，并对每个地点求开放范围 gen.open：作者已给的不覆盖；
 //   其余地点由 rules.gen.opening.openRX 求，该规则键尚未登记定值（卷十 :194；world/geo/gen-open.json 自注列缺口），故一律记 gap、不写偏离行（S1-2a 派卡「主会话已定」第 3 条）。
+//   末尾依次接开局统治边（卷八 R8-18.9 ③）→ 组织开局公库（卷六 §4.22 规则 3）→ 开局法阵（S2-TP1；主会话 TP 裁定 Q9 甲：接 runOpening 末尾，同在第 0 日这一笔事务里）。
 // openingOf：读 state.genesis（卷十 :285）。地点遍历只经烘焙层 engine.bake.placeTree.byLevel，不按地点 id 或名字分支。
 
 import { readPath, writePath } from '../../kernel/storage.mjs';
 import { dim } from '../../kernel/dimensions.mjs';
 import { KernelError } from '../../kernel/errors.mjs';
 import { ruleValue } from '../load/registry.mjs';
+import { runOpeningGovern } from '../polity/govern.mjs';
+import { endowOrgs } from '../economy/org-endow.mjs';
+import { runOpeningCircles } from '../travel/circle.mjs';
 
 /**
- * 本模块读的 engine 字段：路径句柄 P、世界数据副本 docData、烘焙层 bake。
+ * 本模块读的 engine 字段：路径句柄 P、世界数据副本 docData、烘焙层 bake；开局一步末尾三步另要 polity 域的字段（S2-TP1）。
  * @typedef {{P: Readonly<Record<string, Function>>, docData: Parameters<typeof ruleValue>[0], bake: {placeTree: {kind: string, byLevel: readonly string[]}}}} OpeningEngine
+ * @typedef {OpeningEngine & import('../polity/govern.mjs').PolityEngine} OpeningStepEngine
  */
 
 // 规则表代号与键名（卷十 §2.3 :156 rules.gen.*；世界模板参数暂落规则表，卷十封卷后勘误 1126k1）。
@@ -33,10 +38,11 @@ export function runGenesis(engine, state, tx) {
 }
 
 /**
- * 开局一步（卷十 R10-12.7）：写 openingMinute；逐地点判 gen.open。返回 {gaps}：记缺口的地点 id（按 byLevel 序）；openRX 未定值，本步不写偏离行。
+ * 开局一步（卷十 R10-12.7）：写 openingMinute；逐地点判 gen.open；再开统治边、组织公库入账、开法阵（S2-TP1）。
+ * 返回 {gaps, unowned, circleGaps}：gaps 是 gen.open 记缺口的地点 id（按 byLevel 序；openRX 未定值，本步不写偏离行）；unowned 是原属站点无主的地点；circleGaps 是有规矩却没写宿主建筑的组织。
  * R10-11.4：years 为 0 时 openingMinute 等于 genesisMinute；预跑（years > 0）未建，rules.gen.historyYears 的登记取值域只收 0，非 0 加载即拒（E-DIM-DOMAIN-RANGE）。
- * @param {OpeningEngine} engine @param {object} state @param {unknown} tx
- * @returns {{gaps: string[]}}
+ * @param {OpeningStepEngine} engine @param {object} state @param {unknown} tx
+ * @returns {{gaps: string[], unowned: string[], circleGaps: string[]}}
  */
 export function runOpening(engine, state, tx) {
   ruleValue(engine.docData, GEN, 'historyYears');
@@ -48,7 +54,10 @@ export function runOpening(engine, state, tx) {
   for (const id of byLevel) {
     if (!authored(engine, state, kind, id)) gaps.push(id);
   }
-  return { gaps };
+  const { unowned } = runOpeningGovern(engine, state, tx);
+  endowOrgs(engine, state, tx);
+  const { gaps: circleGaps } = runOpeningCircles(engine, state, tx);
+  return { gaps, unowned, circleGaps };
 }
 
 /**

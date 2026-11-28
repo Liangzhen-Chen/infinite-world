@@ -12,7 +12,15 @@
   "exports": [
    {"export": "rules/travel/position.mjs#placeSubject", "callers": ["rules"], "acceptsState": true},
    {"export": "rules/gen/sample.mjs#seedKeyHex", "callers": ["rules"], "acceptsState": false},
-   {"export": "rules/gen/sample.mjs#keyedHex", "callers": ["rules"], "acceptsState": false}
+   {"export": "rules/gen/sample.mjs#keyedHex", "callers": ["rules"], "acceptsState": false},
+   {"export": "rules/travel/circle.mjs#circleRuleOf", "callers": ["rules"], "acceptsState": true},
+   {"export": "rules/travel/circle.mjs#circlesOf", "callers": ["rules"], "acceptsState": true}
   ]
- }
+ },
+ "rxNamespaces": [
+  {"ns": "site.houses", "type": "number", "entry": "被求值的聚落组织统治下（rules/polity/govern.mjs#governorOf 归本组织）、用途落在所用规矩 houseTypes 里的地点数（rules/travel/circle.mjs#siteView；规矩行 buildRX 读它）", "shape": "count", "volume": "S2-TP1 接口稿 draft-s2-tp §2.1（buildRX 只读 site、org、tier 三个命名空间；本卡另加 rule）；亮圳 11-27 19:38「八户才有」"},
+  {"ns": "org.funds", "type": "number", "entry": "被求值的聚落组织公库缺省分区（rules.polity.rolesPurposes.general）里所用规矩 currency 的余额合计（rules/travel/circle.mjs#siteView 经账本 accountsOf；规矩行 buildRX 读它）", "shape": "count", "volume": "S2-TP1 接口稿 §3 甲（太穷派生：公库够不够 N 个月维护费）；亮圳 11-27 19:38「人数到了但自己经济很差」"},
+  {"ns": "tier", "type": "field", "entry": "所用规矩 tier 所指法阵档行（_vocab circle_tier 族）的标量字段（rules/travel/circle.mjs#runOpeningCircles 交 buildRX）", "shape": "<字段>", "volume": "S2-TP1 接口稿 §2.1（tier.upkeepPerMonth）；法阵分档方向 亮圳 11-28 02:48（加档只加数据行）"},
+  {"ns": "rule", "type": "field", "entry": "被求值的本地法阵规矩条目（词表族 circle_rule 的一条）的标量字段，如 minHouses、reserveMonths（rules/travel/circle.mjs#runOpeningCircles 交 buildRX）", "shape": "<字段>", "volume": "S2-TP1 卡文「规则和参数放数据」（crule_bs：门槛、reserveMonths 写在规矩行，buildRX 经本命名空间读，不在 RX 文本里另写数）"}
+ ]
 }

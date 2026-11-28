@@ -4,6 +4,7 @@
 import { KernelError } from '../../kernel/errors.mjs';
 import { BODY_MANIFEST } from '../body/manifest.mjs';
 import { ECONOMY_MANIFEST } from '../economy/manifest.mjs';
+import { POLITY_MANIFEST } from '../polity/manifest.mjs';
 import { SOCIAL_MANIFEST } from '../social/manifest.mjs';
 import { TRAVEL_MANIFEST } from '../travel/manifest.mjs';
 
@@ -21,4 +22,4 @@ function orderedDomains(list) {
   return Object.freeze(list);
 }
 
-export const DOMAINS = orderedDomains([BODY_MANIFEST, ECONOMY_MANIFEST, SOCIAL_MANIFEST, TRAVEL_MANIFEST]);
+export const DOMAINS = orderedDomains([BODY_MANIFEST, ECONOMY_MANIFEST, POLITY_MANIFEST, SOCIAL_MANIFEST, TRAVEL_MANIFEST]);
