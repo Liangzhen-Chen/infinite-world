@@ -95,7 +95,8 @@
   - client/ 原生 ES 模块，画面由 layout.json 数据定（此刻/我在哪/身上/菜单/存档 3 槽/记录），JS 零中文零 id；view 回复加 self（accountsOf、holdingsOf）；wire-v1 补 menu/here/now/self；_vocab ui_token 族（uitok_）、labels.zh 补 151 条；e2e-wire-cut 每行可指定测试与 total。
   - 主会话定草案 Q1–Q11 全推荐，Q7–Q9 界面默认值事后报。Sonnet 写、Haiku 出题、Opus 审必须改 1（readRepoFile 读盘异常回 404）→ API 第二轮可合（0.575 美元）。
   - 偏离：客户端直读语言包违背卷二十九:225（U1 删）；R29-7.10 frontend_kind 无合适值；holdings template 一律 null。
-- [ ] S2-T2 天气单元与当日天气（约 325 行，前置 T1）：亮圳 11-27 17:16 答「按设定文字挑站、做完给我看」，已解阻；站点对照草稿 主会话临时目录 s2t-stations.md 交李白核、待亮圳看（纬度带窄、覆灯湾极夜、雾杉文化圈三问）；不读纬度，按 T1b 本地相位；只做垄渠单元，其余 30 郡 null+gap，S2-T-D 推 MVP 后。
+- [x] S2-T2 天气单元与当日天气（约 325 行，前置 T1）：亮圳 11-27 17:16 答「按设定文字挑站、做完给我看」，已解阻；站点对照草稿 主会话临时目录 s2t-stations.md 交李白核、待亮圳看（纬度带窄、覆灯湾极夜、雾杉文化圈三问）；不读纬度，按 T1b 本地相位；只做垄渠单元，其余 30 郡 null+gap，S2-T-D 推 MVP 后。
+  - （11-28 结果：weather.mjs 纯派生天气，锚段递推，相位调 T1b localPhase，垄渠单元有天气、其余 30 郡 null+gap；抽取点代号改合文法 weather_*；Opus 审一轮可合。不阻合待办：weightRX 运行期未绑单元维度（卷二十:276）、缺 E-WX-WEIGHT-CYCLE 闭包检查、rx 编译脚手架与 catalog.mjs 重复、缺坏 weightRX 开局即拒用例、baseline 4 条 draw_sites 与 2 条 envat 旧行待 pre_merge --write 删、卷二十勘误（本地相位、抽取点拼写）待落。）
 - 派卡须知：卡文写「提交前跑 check-push-archive.mjs 自验通过」；派卡前核基线含全部依赖卡；建树与对比一律以 origin/master 为底。
 - [x] S2-GOV 规矩一致性清理（非玩法卡）：卡头规矩压到 45 行、第五节原样迁 tools/accept/card-rules.md（readRulesAt 先新后旧、远端优先）；合并提交不免查；产品原则三.6 改指针句；裁定表删 2 加 6；PLAN 拆行；快照 git 派生已合卡（生成含 HEAD、--check 取父提交）；isolated-repo 进程被杀后残留清理。Sonnet 写、Haiku 出题、Opus 审必须改 1（反思不属实）→ API 第二轮可合 → 测试一次性对比钉到 e5cb05269 → API 第三轮可合（两轮共 1.22 美元）。
 - [x] S1-3d 开局选种族（亮圳 11-27 01:16「玩家自己挑种族」）：选来历菜单加步 0 种族槽，候选为挂 rules.chargen.playableClass（comp_playable）的物种行，槽值写 create.facts.species；删来历行 species 列与 origin.ready，54 条来历全开；旧验收 9 文件前提改写。Sonnet 写一轮、Haiku 出题、Opus 审第一轮可合（旧验收逐条核只改前提）。不阻合：person.mjs:54 注释残留 origin.ready、origin-avatar 第 1 条标题过期。PR 头 feat/s1-3d。
