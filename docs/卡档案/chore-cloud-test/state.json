@@ -1,0 +1,61 @@
+{
+  "card": "chore-cloud-test",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T00:33:38.144Z",
+  "branches": {
+    "code": "chore/cloud-test",
+    "test": "test/cloud-test",
+    "pr": "chore/cloud-test"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/cloud",
+        "session": "ctx_7d914dc4d9d1",
+        "commits": [
+          "ab76ce1fc"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-cloud",
+        "session": "ctx_688443897a18",
+        "commits": [
+          "a0eb06d59"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-cloud",
+          "session": "ctx_9a0d35bfd05a",
+          "commits": [
+            "392c0b5ee"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "推送 chore/cloud-test 开 PR，CI main 绿即合（合入说明 卡分支：chore/cloud-test）；合后核 master CI 转绿，删 cloud、ts-cloud 工作树目录（不删分支），再依次开 T2、0c1 的 PR"
+}

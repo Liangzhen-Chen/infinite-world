@@ -1,0 +1,69 @@
+{
+  "card": "feat-s2-t2",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T01:41:40.380Z",
+  "branches": {
+    "code": "feat/s2-t2",
+    "test": "test/s2-t2",
+    "pr": "feat/s2-t2"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/t2",
+        "session": "ctx_0c06c70b7825",
+        "commits": [
+          "e0f669ef6",
+          "c5d470629"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-t2",
+        "session": "ctx_98240130cbbf",
+        "commits": [
+          "43078b567"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-t2",
+          "session": "ctx_dc7a910688eb",
+          "commits": [
+            "23273799f"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-t2/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.5656978
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 1,
+  "blocker": null,
+  "nextAction": "推送 feat/s2-t2 更新 PR #47，CI main 绿即合（合入说明 卡分支：feat/s2-t2）；合后删 t2、ts-t2 工作树目录（不删分支）并报李白，再同步 0c1 开 PR"
+}

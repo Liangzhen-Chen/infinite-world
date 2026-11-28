@@ -131,6 +131,9 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     assert.ok(Object.hasOwn(dd.vocabDoc.families.season.entries, now.season?.id), 'now.season.id 应是词表族 season 的条目');
     assert.ok(Object.hasOwn(dd.vocabDoc.families.solar_term.entries, now.solarTerm), 'now.solarTerm 应是词表族 solar_term 的条目');
     assert.ok(Array.isArray(now.gaps), 'now.gaps 应是缺口代号表');
+    // S2-T2（草案 §4，主会话 Q4 甲）：now.weather.state 是词表族 weather 条目；数值项为数或 null，有 null 时 gaps 非空（不当 0、不兜底）。
+    assert.ok(Object.hasOwn(dd.vocabDoc.families.weather.entries, now.weather?.state), 'now.weather.state 应是词表族 weather 的条目');
+    assert.ok(['precipMm', 'windMps', 'windDirDeg', 'cloud', 'humidity'].every((k) => typeof now.weather[k] === 'number' || (now.weather[k] === null && now.gaps.length > 0)), 'now.weather 数值项应为数，或为 null 且 gaps 非空');
     ctx.now1 = now;
     ctx.d1 = pkg.manifest.saveDigest;
     ctx.bytes1 = e1.buf;
