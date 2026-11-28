@@ -31,11 +31,21 @@ test('6a. 没有化身：now 只给系统时间（minute、day、minuteOfDay 为
   assert.ok(Array.isArray(now.gaps) && now.gaps.length > 0, '无化身时 gaps 应非空');
 });
 
-test('6b. 有化身：天气未建，now.weather 为 null 且 gaps 非空；季节若为 null 则 gaps 非空，若非 null 则只能是词表行（不出现 0 或默认值）', async () => {
+test('6b. 有化身：天气若为 null 则 gaps 非空；若非 null 则 state 只能是词表 weather 行，数值项为数或 null（为 null 时 gaps 非空，不出现 0 或默认值）；季节若为 null 则 gaps 非空，若非 null 则只能是词表行', async () => {
+  // S2-T2 合入后改写（主会话 Q3 甲，门槛不降）：天气本卡已建，原「天气未建 → 必为 null」在合入后必红，改为「null 或词表行」。理由见 docs/卡档案/feat-s2-t2/出题.md。
+  const WX_ENTRIES = S.loadJson(join(S.ROOT, 'world/ontology/dimensions/_vocab.json')).families.weather.entries;
   const { world, avatar } = await S.startAt(0);
   const now = S.nowOf(world, avatar);
-  assert.equal(now.weather ?? null, null, '天气本卡未建，weather 应为 null');
-  assert.ok(Array.isArray(now.gaps) && now.gaps.length > 0, 'weather 未建时 gaps 应非空');
+  const wx = now.weather ?? null;
+  if (wx === null) {
+    assert.ok(Array.isArray(now.gaps) && now.gaps.length > 0, '天气为 null 时 gaps 应非空');
+  } else {
+    assert.ok(WX_ENTRIES[wx.state], `weather.state 应为词表 weather 行，实得 ${wx.state}`);
+    for (const k of ['precipMm', 'windMps', 'windDirDeg', 'cloud', 'humidity']) {
+      assert.ok(wx[k] === null || typeof wx[k] === 'number', `weather.${k} 应为数或 null`);
+      if (wx[k] === null) assert.ok(Array.isArray(now.gaps) && now.gaps.length > 0, `weather.${k} 为 null 时 gaps 应非空`);
+    }
+  }
   if (now.season == null) {
     assert.ok(now.gaps.length > 0, 'season 为 null 时 gaps 应非空');
   } else {

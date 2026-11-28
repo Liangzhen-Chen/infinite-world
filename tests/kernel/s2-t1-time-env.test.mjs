@@ -242,8 +242,12 @@ test('7 无足迹区域地点与不兜底：单元内的区域地点（单元本
   assert.equal(now.calendar, null);
   assert.equal(now.dayPart, null);
   assert.ok(now.gaps.includes('calendar_from'));
-  assert.equal(now.weather, null);
-  assert.ok(now.gaps.includes('weather_unbuilt'));
+  // S2-T2：天气已建，开局地点所在单元有天气数据时 weather 为词表 weather 行；数值项为数或 null，有 null 时 gaps 非空（不兜底，不当 0）。
+  assert.ok(Object.hasOwn(families.weather.entries, String(now.weather?.state)), 'now.weather.state 应是词表族 weather 的条目');
+  for (const k of ['precipMm', 'windMps', 'windDirDeg', 'cloud', 'humidity']) {
+    assert.ok(now.weather[k] === null || typeof now.weather[k] === 'number', k);
+    if (now.weather[k] === null) assert.ok(now.gaps.some((x) => x.startsWith('weather_')), `${k} 为 null 时 gaps 应有天气缺口`);
+  }
   const chain = g.menu(null).here.chain;
   const cell = cellOf(g.engine, chain[0]);
   const rows = g.engine.registry.tables.get('place').rows;

@@ -32,6 +32,7 @@ import { checkHoldingKinds, checkOutfitTables } from '../social/holding-check.mj
 import { controlledByPlayer } from '../social/control.mjs';
 import { loadActions, menuOf } from '../act/catalog.mjs';
 import { resolveIntent } from '../act/resolve.mjs';
+import { compileWeather } from '../time_env/env.mjs';
 
 // 各域装配登记按 domains.mjs 的次序收齐（S2-SH 草案 §3）：一个字段名收一张冻结表。
 const collect = (/** @type {'terminationCleanups' | 'terminationTriggers' | 'instantiators' | 'advanceHooks' | 'primitiveWriters'} */ field) => Object.freeze(DOMAINS.flatMap((d) => d[field] || []));
@@ -172,11 +173,13 @@ export function mountKernel(raw, caps, resume) {
   // 规则层原语写者（S2-L R0）：内核 resolve 在内置处理函数表查不到时回落查它；动作目录加载期核可达原语时一并认它。
   const primitiveWriters = assemblePrimitiveWriters(owners, PRIMITIVE_WRITERS);
   const actions = docData.actionDocs === undefined ? null : loadActions({ registry, docData, vocab: vocabDoc, primitives, primitiveWriters });
+  // 天气权重式（卷二十 §2.5 weightRX；S2-T2 主会话 Q1 甲）：装配期编一次挂 engine.weather（冻结），编不过即 E-MOD-RX，坏数据开局即拒。
+  const weather = compileWeather({ registry, docData, vocab: vocabDoc, bake });
   // 提交后推进由本层注入 engine.advance（transaction 不 import scheduler，免成环）；openStates 记「事务已开」的 state（不嵌套）。
   /** @type {any} */
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
-    stateKeys, P, host, saveLayout, primitives, primitiveWriters, bake, vocab: vocabDoc, actions,
+    stateKeys, P, host, saveLayout, primitives, primitiveWriters, bake, vocab: vocabDoc, actions, weather,
     advanceHooks: ADVANCE_HOOKS, terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, instantiators: INSTANTIATORS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     // 意图收窄由本层注入（transaction 不 import 规则层；同 advance 注入），开局与复演同一函数（S1-3a）。
