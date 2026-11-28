@@ -1,6 +1,6 @@
 // 实体终止协议（卷二 §2.6 :552–:562；勘误 1126s20：落 rules/lifecycle/，内核只留拒写判定与事件日志写入）。
 // 本卡（S2-0a）只做第 1、2、5 步：定后继（现只有 wreck）与领域清理（清理函数、去留表）、终止标记、清状态实例与发终止事件；
-// 第 3 步账户分流、第 4 步持有边、撤销到期项与复生归 S2-0c。标记按主会话裁定 R1 作事务里最后一笔状态写入（五步语义与次序不变）。
+// 第 3 步账户分流（rules/economy/ledger.mjs）、第 4 步持有边（rules/social/holdings.mjs）由各域登记的清理函数做（S2-0c1）；撤销到期项与复生归后续卡。标记按主会话裁定 R1 作事务里最后一笔状态写入（五步语义与次序不变）。
 // 全部按登记数据判：类别行 termination、state-owners 的 systems.*.terminationCleanup、规则表 rules.terminate.*；不认任何 kind、类别或 id。
 // 另有建档路由 instantiateEntity（S1-3c 草案 §5）：create 原语建行后按 systems.*.instantiate 登记调实例化函数，与终止发起方同一登记做法。
 
@@ -8,7 +8,7 @@ import { KernelError } from '../../kernel/errors.mjs';
 import { T } from '../../kernel/handles.mjs';
 import { namedStructFieldsOf } from '../../kernel/named-structs.mjs';
 import { parseNumberType } from '../../kernel/validate/types.mjs';
-import { kindOfEntity, readPath, writePath, createEntity } from '../../kernel/storage.mjs';
+import { kindOfEntity, readPath, writePath, createEntity, setEntityProp } from '../../kernel/storage.mjs';
 import { classRowsOf } from '../../kernel/dimensions.mjs';
 import { txEmit } from '../../kernel/transaction.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
@@ -22,6 +22,8 @@ import { statusView, clearStatusesOf } from '../status/status.mjs';
 
 const TERMINATE = 'terminate';
 const WRECK_KIND = 'wreckKind';
+// 账本持有人主体标记维度名的登记处（rules.economyLedger.account.holderFlag，卷六 :103；S2-0c1 主会话 Q1 甲：残骸建时写真，余额可转给它）。只读数据，不 import 账本模块（防环）。
+const HOLDER_FLAG = Object.freeze({ table: 'economyLedger', key: 'account', field: 'holderFlag' });
 // 类别行的终止公共字段（卷二 §5.0、:553）与 state-owners systems.<名> 下清理函数登记的字段（卷二 :561）。
 const TERMINATION_FIELD = 'termination';
 const CLEANUP_FIELD = 'terminationCleanup';
@@ -249,7 +251,8 @@ export function idStem(engine, kind, id) {
 
 /**
  * 残骸实体（卷二 :553 wreck；主会话裁定 R5 A）：建在 rules.terminate.wreckKind 那张表，
- * id = 该表首个前缀 + 模式代号 wreck + _ + 主体 id 去前缀 + _ + 终止分钟（同一主体同一分钟不会终止两次，id 唯一且确定）。返回残骸 id。
+ * id = 该表首个前缀 + 模式代号 wreck + _ + 主体 id 去前缀 + _ + 终止分钟（同一主体同一分钟不会终止两次，id 唯一且确定）。
+ * 建后把账本持有人主体标记（rules.economyLedger.account.holderFlag 所指维度）写真，第 3 步账户分流可转给它（卷二 :556；S2-0c1 主会话 Q1 甲）。返回残骸 id。
  * @param {LifeEngine} engine @param {unknown} state @param {string} kind @param {string} id @param {number} minute @param {unknown} tx @returns {string}
  */
 function createWreck(engine, state, kind, id, minute, tx) {
@@ -259,6 +262,7 @@ function createWreck(engine, state, kind, id, minute, tx) {
   if (typeof prefix !== 'string') throw new KernelError('E-DIM-REF-MISSING', {}, `rules.terminate.wreckKind ${JSON.stringify(wk)}: no id prefix`);
   const wreckId = `${prefix}${T.code_enum.successor_mode.wreck}_${idStem(engine, kind, id)}_${minute}`;
   createEntity(state, wreckId, wk, {}, tx);
+  setEntityProp(state, wreckId, String(Object(ruleValue(Object(engine.docData), HOLDER_FLAG.table, HOLDER_FLAG.key))[HOLDER_FLAG.field]), true, tx);
   return wreckId;
 }
 
@@ -293,7 +297,7 @@ function markDayField(engine, entityId) {
 
 /**
  * 残留核对（卷二 :558 E-TERM-RESIDUE 不变量，本卡只核已建的键）：终止标记在；没有状态实例；名下没有去留为 clear 的记录。
- * 账户、持有边、到期项由 S2-0c 加进来。只读。返回 {ok, residue: 残留项的路径模式}。
+ * 账户、持有边由各自清理函数写完后自核本域（S2-0c1）；到期项随到期堆卡加。只读。返回 {ok, residue: 残留项的路径模式}。
  * @param {LifeEngine} engine @param {unknown} state @param {string} id
  * @returns {Readonly<{ok: boolean, residue: ReadonlyArray<string>}>}
  */

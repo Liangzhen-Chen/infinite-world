@@ -8,7 +8,8 @@
    "kind": "part",
    "needs": [
     "endowFromOrigin",
-    "transferWriter"
+    "transferWriter",
+    "settleAccountsOnTerminate"
    ],
    "rules": []
   },
@@ -252,6 +253,22 @@
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleAccountsOnTerminate",
+   "file": "rules/economy/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "ruleValue",
+    "accountsOf",
+    "resourceRow",
+    "openAccount",
+    "post"
+   ],
    "rules": []
   }
  ]
