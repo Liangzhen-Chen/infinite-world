@@ -10,7 +10,10 @@
   {"name": "localPhase", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "astroView"], "rules": []},
   {"name": "seasonAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "localPhase", "systemTimeView"], "rules": []},
   {"name": "solarTermAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "localPhase", "systemTimeView"], "rules": []},
-  {"name": "envAt", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["zoneAt", "localPhase", "seasonAt"], "rules": []},
+  {"name": "minutesPerDay", "file": "rules/time_env/calendar.mjs", "vol": null, "sec": null, "kind": "part", "needs": ["KernelError", "parseNumberType", "unitSi"], "rules": []},
+  {"name": "compileWeather", "file": "rules/time_env/weather.mjs", "vol": null, "sec": null, "kind": "part", "needs": ["KernelError", "checkValue", "ruleValue"], "rules": []},
+  {"name": "weatherAt", "file": "rules/time_env/weather.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "presentEntries", "lookupCurve", "readPath", "evaluateRX", "ruleValue", "ruleRow", "drawByKey", "minutesPerDay", "localPhase"], "rules": []},
+  {"name": "envAt", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["zoneAt", "localPhase", "seasonAt", "cellOf", "systemTimeView", "weatherAt"], "rules": []},
   {"name": "nowOf", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "zoneAt", "systemTimeView", "calendarFrom", "calendarDayIndex", "calendarView", "dayPartOf", "envAt", "solarTermAt"], "rules": []}
  ]
 }

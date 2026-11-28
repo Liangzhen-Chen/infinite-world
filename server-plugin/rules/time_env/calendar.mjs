@@ -35,10 +35,10 @@ const rangeError = (/** @type {string} */ detail) => new KernelError('E-DIM-DOMA
 /** 世界状态（本文件只经 dim、kindOfEntity 读）。 @typedef {object} TimeState */
 
 /**
- * 一日的分钟数：日单位 si ÷ 时钟单位 si（公共入口 unitSi），须为正整数，否则 E-DIM-UNIT-UNKNOWN。
+ * 一日的分钟数：日单位 si ÷ 时钟单位 si（公共入口 unitSi），须为正整数，否则 E-DIM-UNIT-UNKNOWN。天气递推取各日起始分钟也调它（S2-T2）。
  * @param {CalendarEngine} engine @returns {number}
  */
-function minutesPerDay(engine) {
+export function minutesPerDay(engine) {
   const doc = Object(engine.docData);
   const units = Array.isArray(Object(doc.unitsDoc).units) ? doc.unitsDoc.units : [];
   const yearRow = Object(units.find((/** @type {unknown} */ u) => isObj(Object(u).siFromRule) && Object(u).siFromRule.key === YEAR_RULE_KEY && Object(u).siFromRule.invert !== true));
