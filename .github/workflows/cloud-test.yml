@@ -1,0 +1,79 @@
+# 云上全量测试（只报告，不是合入闸门）。
+# 来由：亮圳 11-27 23:28 原话「立刻掐掉，让主会话以后全量都去云上跑」（李白转）——本机并发跑全量打爆电脑，
+# 全量测试与 pre_commit 全套一律上云。卡进行中 ci.yml 会因卡档案缺出题/审查在中途停下跑不到全量，
+# 故推卡头到 ci-run/<卡>-<n> 后手动触发本工作流。合入闸门仍是 .github/workflows/ci.yml，本工作流不放宽它。
+# 测试步红不让整个运行变红（只写进摘要）；checkout 或 npm ci 失败照常红。不跑卡档案检查（卡进行中必缺）。
+name: cloud-test
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 要测的分支或提交
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-test-${{ inputs.ref }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          # 门禁与状态快照要读 git 历史。
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - id: tsc
+        continue-on-error: true
+        run: npm run typecheck
+      - id: pre_commit
+        continue-on-error: true
+        run: node tools/accept/run.mjs pre_commit
+      - id: snapshot
+        continue-on-error: true
+        run: node tools/gen-status-snapshot.mjs --check
+      - id: test_all
+        continue-on-error: true
+        run: npm run test:all
+      - id: e2e
+        continue-on-error: true
+        run: npm run test:e2e
+      - id: wire_cut
+        continue-on-error: true
+        run: node tools/accept/e2e-wire-cut.mjs
+      - name: 报告
+        if: always()
+        env:
+          REF: ${{ inputs.ref }}
+          TSC: ${{ steps.tsc.outcome }}
+          PRE_COMMIT: ${{ steps.pre_commit.outcome }}
+          SNAPSHOT: ${{ steps.snapshot.outcome }}
+          TEST_ALL: ${{ steps.test_all.outcome }}
+          E2E: ${{ steps.e2e.outcome }}
+          WIRE_CUT: ${{ steps.wire_cut.outcome }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          {
+            echo "## cloud-test：$REF（$sha）"
+            echo ""
+            echo "| 步骤 | 结果 |"
+            echo "| --- | --- |"
+            echo "| tsc | $TSC |"
+            echo "| pre_commit | $PRE_COMMIT |"
+            echo "| snapshot | $SNAPSHOT |"
+            echo "| test_all | $TEST_ALL |"
+            echo "| e2e | $E2E |"
+            echo "| wire_cut | $WIRE_CUT |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "CLOUD-TEST $REF $sha tsc=$TSC pre_commit=$PRE_COMMIT snapshot=$SNAPSHOT test_all=$TEST_ALL e2e=$E2E wire_cut=$WIRE_CUT"

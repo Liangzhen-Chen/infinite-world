@@ -1,9 +1,10 @@
 // 验收：卡 chore/s2-sh（S2-SH 登记分片）：工具一致与门禁读合并结果。出题方：Claude Haiku 5.5（Orca 会员会话），标识 haiku-orca-test-s2sh；未参与写码与审卡。
 // 依据：卷二:763（总登记表 entries 与 file 字段，状态快照与入口接通率由它派生）、卷二:811（dimension 路径须按 keyKinds 取表头，缺 keyKinds 即违例）、卷十二:468（门禁基线分量，违例只经执行器计）、卷二:57（state-owners 系统声明表）。
 // 黑盒：真实仓库 CLI（退出码与标准输出）；注入类用例在 withIsolatedRepo 的 HEAD 干净副本里做（不碰工作区），新增失败 = 注入后出现而基线没有的 (itemKey, code) 对。
+// 改动理由（master CI 运行 46079982717 红在 G-1）：G-1 原先在同一 HEAD 上先生成快照再 --check，HEAD 为合并提交时两边必不一致；现改为生成后恢复已提交快照再检查，门槛不降，生成器不改。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { withIsolatedRepo, runGate } from '../../support/isolated-repo.mjs';
 import { writeTempRepoFile } from '../../../tools/accept/lib/temp-repo-write.mjs';
@@ -17,13 +18,16 @@ const failPairs = (report) => {
   return new Set(report.items.failed.flatMap((f) => (f.codes ?? []).map((c) => `${f.itemKey}|${c}`)));
 };
 
-test('G-1 临时仓库内先生成状态快照，再 gen-status-snapshot --check 退出 0（不依赖工作区快照现状）', { timeout: TIMEOUT }, async () => {
-  // 夹具先生成快照（工作区快照可能因暂存的卡档案未重生成而不符，那不是本卡问题）；生成后 --check 必须绿。
+test('G-1 干净 HEAD 副本内生成快照退出 0；恢复已提交快照后 --check 退出 0（不依赖刚生成的文件）', { timeout: TIMEOUT }, async () => {
+  // 生成模式把 HEAD 本身当基准，检查模式只取 HEAD 的各父提交（S2-GOV Q3 裁定，生成器是对的）。
+  // 同一 HEAD 上「先生成再检查」在合并提交（带「角色：合并」）处必不一致，所以生成后先把副本里的快照恢复成已提交版本，再检查。
+  // 运行号 46079982717：master CI 红在本例，根因即此。
   await withIsolatedRepo(async (copyRoot) => {
     const gen = spawnSync(process.execPath, [join(copyRoot, 'tools/gen-status-snapshot.mjs')], { cwd: copyRoot, encoding: 'utf8', timeout: TIMEOUT });
     assert.equal(gen.status, 0, `生成快照未过：${String(gen.stderr).slice(-300)}`);
+    execFileSync('git', ['checkout', '--', 'docs/状态快照.generated.md'], { cwd: copyRoot, stdio: 'ignore' });
     const chk = spawnSync(process.execPath, [join(copyRoot, 'tools/gen-status-snapshot.mjs'), '--check'], { cwd: copyRoot, encoding: 'utf8', timeout: TIMEOUT });
-    assert.equal(chk.status, 0, `刚生成的快照 --check 未过：${String(chk.stdout).slice(-500)}${String(chk.stderr).slice(-300)}`);
+    assert.equal(chk.status, 0, `已提交快照 --check 未过：${String(chk.stdout).slice(-500)}${String(chk.stderr).slice(-300)}`);
   });
 });
 
