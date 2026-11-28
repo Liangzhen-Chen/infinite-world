@@ -109,7 +109,11 @@ test('1 开局入账：选不同来历，化身名下各有一个钱账户，余
     assert.equal(accts[0].resource, want.coin);
     assert.equal(accts[0].purpose, ENDOW.purpose);
     assert.equal(g.views.balance(accts[0].account), want.n);
-    assert.equal(g.state.ledgerTotals[want.coin][ENDOW.source].cumulative, want.n);
+    // S2-TP1（主会话授权）：开局一步另把各组织开局公库经同一来源入账；世界累计 = 化身起始钱 + 各组织该钱种开局公库之和（组织行 orgEndowment.fundsDimension，缺写取表默认）。
+    const fundsDim = LEDGER_RULES.find((r) => r.key === 'orgEndowment').value.fundsDimension;
+    const orgDoc = rawWorld().dimensionDocs.find((d) => d.kind === 'org');
+    const orgFunds = Object.values(orgDoc.rows).reduce((s, r) => s + ((r[fundsDim] ?? orgDoc.dimensions[fundsDim].default)[want.coin] ?? 0), 0);
+    assert.equal(g.state.ledgerTotals[want.coin][ENDOW.source].cumulative, want.n + orgFunds);
     const ev = g.logBook.entries.find((e) => e.verb === ENDOW.reason);
     assert.ok(ev, '缺开局入账事件');
     assert.equal(ev.payload.refs.origin, want.origin);

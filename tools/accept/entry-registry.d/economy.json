@@ -270,6 +270,21 @@
     "post"
    ],
    "rules": []
+  },
+  {
+   "name": "endowOrgs",
+   "file": "rules/economy/org-endow.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "dim",
+    "ruleValue",
+    "orgIdsOf",
+    "openAccount",
+    "post"
+   ],
+   "rules": []
   }
  ]
 }

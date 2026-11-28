@@ -60,6 +60,8 @@ const caps = (tag) => ({ digestCap: createDigestCap(), saveRoot: pathToFileURL(j
 const code = (c) => (e) => e.code === c;
 const persons = (g) => Object.keys(g.state.created).filter((id) => g.state.created[id].kind === 'person');
 const edges = (g) => Object.values(g.state.holdings || {}).flatMap((b) => Object.entries(b).map(([id, e]) => ({ id, ...e })));
+// S2-TP1（主会话授权收窄到化身自己）：开局一步另开统治边与法阵边（不进日志），化身的边只有玩家席位边与起始物放置边（种类取 rules.social.outfit.placement）。
+const avatarEdges = (g) => edges(g).filter((e) => e.kind === SEAT || OUTFIT.placement.some((p) => p.holdingKind === e.kind));
 const kindOfRow = (pred) => Object.keys(KINDS).sort().find((k) => pred(KINDS[k]));
 // 本卡开得了的种类（不触发未建数据门）。
 const openable = (r) => !r.concluded && !r.carriesRel && !r.intimate && r.holdWhile === null && r.admission === null;
@@ -107,7 +109,7 @@ test('2 起始物逐件/散货分界：每个来历——逐件物实例数 = lo
     assert.equal(instAccts.length, wantInst, `origin ${i}`);
     assert.ok(instAccts.every((x) => x.balance === 1));
     const instIds = instAccts.map((x) => x.key.slice('lot_i_'.length)).sort();
-    const placed = edges(g).filter((e) => e.kind !== SEAT).map((e) => e.subject).sort();
+    const placed = avatarEdges(g).filter((e) => e.kind !== SEAT).map((e) => e.subject).sort();
     assert.deepEqual(placed, instIds, `origin ${i}: every instance placed exactly once`);
     for (const x of list.filter((y) => !isInst(y.item))) {
       const res = Object.keys(VOCAB.resource.entries).find((k) => VOCAB.resource.entries[k][OUTFIT.resourceItemField] === x.item);
@@ -125,7 +127,7 @@ test('3 事件：每条开边恰一条持有变化事件（established），载�
   const g = await init(express.Router(), { saveRoot: testTempRoot('s2h-events-') });
   const a = spawn(g, 0);
   const evs = g.logBook.entries.filter((e) => e.verb === EVENTS.verb);
-  assert.equal(evs.length, edges(g).length);
+  assert.equal(evs.length, avatarEdges(g).length);
   for (const e of evs) {
     assert.equal(e.payload.change, EVENTS.change.established);
     assert.deepEqual(Object.keys(e.payload).sort(), ['at', 'change', 'edge', 'holder', 'kind', 'prevHolder', 'subject']);

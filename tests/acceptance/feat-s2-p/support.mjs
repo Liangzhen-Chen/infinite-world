@@ -10,6 +10,8 @@ import { express } from '../../support/express.mjs';
 import { copyRepo } from '../../support/wire-host.mjs';
 import { init } from '../../../server-plugin/index.mjs';
 import { testTempRoot, removeTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
+// 统治归属判定（数据推算）：取 tests/support/governor-of-data.mjs，不经别卡的验收目录。
+import { ownerOfPlace } from '../../support/governor-of-data.mjs';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WORLD = join(ROOT, 'world');
@@ -151,8 +153,15 @@ export function slotOffer(world, slot) {
 }
 export const lodgeOffer = (world) => slotOffer(world, 'lodge');
 // 选来历（origin 与 place 取下标 0，species 取下标 0），落脚处取 lodge 候选的下标。
-export const chooseLodge = (world, lodgeIndex) =>
-  world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0, lodge: lodgeIndex } });
+// 落脚处须与所选出生地同归属（掌管组织相同，统治归属判定，不看包含树；卷八:1708 勘误、卷十:499）。出生地由数据推算：取与落脚处同归属的那一项（找不到即报错，不随意配对）。
+export const chooseLodge = (world, lodgeIndex) => {
+  const lodge = slotOffer(world, 'lodge')[lodgeIndex];
+  const places = slotOffer(world, 'place');
+  const owner = ownerOfPlace(ROOT, lodge);
+  const placeIndex = places.findIndex((p) => owner !== null && ownerOfPlace(ROOT, p) === owner);
+  assert.ok(placeIndex >= 0, `出生地候选里应有与落脚处 ${lodge} 同归属的一项`);
+  return world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: placeIndex, lodge: lodgeIndex } });
+};
 export const newPersons = (world, before) => Object.keys(world.state.created ?? {})
   .filter((id) => !before.created.includes(id) && world.state.created[id].kind === 'person');
 // 开一局并选第 lodgeIndex 个落脚处；返回化身 id。

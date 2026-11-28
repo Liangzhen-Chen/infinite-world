@@ -9,18 +9,16 @@ import { dim, presentEntries, lookupCurve } from '../../kernel/dimensions.mjs';
 import { readPath } from '../../kernel/storage.mjs';
 import { evaluateRX } from '../../kernel/rx.mjs';
 import { GRAMMAR_TOKENS } from '../../kernel/handles.mjs';
-import { checkValue } from '../../kernel/validate/types.mjs';
 import { fixedUnits, fixedScale, fixedToNumber } from '../../kernel/det-math.mjs';
 import { ruleValue, ruleRow } from '../load/registry.mjs';
 import { drawByKey } from '../gen/sample.mjs';
+import { rxScopeOf, compileRuleRX } from '../load/rx-compile.mjs';
 import { minutesPerDay } from './calendar.mjs';
 import { localPhase } from './season.mjs';
 
 const FAMILY = 'weather';
 const RULES = 'weather';
 const PROTO_TABLE = 'climateProto';
-const KC = 'kernelConstants';
-const RX_MAX_DEPTH = 'rxMaxDepth';
 const GRID = 'grid';
 const FULL_TURN_DEG = 'fullTurnDeg';
 // 天气单元行的维度（卷二十 §2.7 :359–:364；climateProto 李白 11-19 15:5x ⑤）。
@@ -32,7 +30,6 @@ const SEASON_CURVE = 'seasonCurve';
 const RULE = Object.freeze({ anchorDays: 'anchorDays', weightScale: 'weightScale', persistBase: 'persistBase' });
 // weightRX 的两个命名空间读数（state-owners rxNamespaces；卷二十 §2.5 :276）。
 const NS = Object.freeze({ phase: 'env.solarPhase', curve: 'env.seasonCurve' });
-const RX_TYPE = Object.freeze({ type: 'rx' });
 const UNKNOWN_READ = 'E-DIM-UNKNOWN-READ';
 const REF_MISSING = 'E-DIM-REF-MISSING';
 const GAP = Object.freeze({
@@ -71,27 +68,13 @@ const rowsOf = (engine) => {
  */
 export function compileWeather(world) {
   const { registry, docData, vocab, bake } = world;
-  const families = Object(Object(vocab).families);
-  const vocabIndex = new Map();
-  for (const [family, rec] of Object.entries(families)) {
-    const entries = Object(rec).entries;
-    for (const code of Object.keys(isObj(entries) ? entries : {})) vocabIndex.set(code, { family, prefix: Object(rec).prefix });
-  }
+  const scope = rxScopeOf({ vocab, docData });
   const dims = new Map(Object.entries(Object(Object(registry.tables.get(bake.placeTree.kind)).dimensions)));
-  const declared = Object(docData.owners).rxNamespaces;
-  const ns = Array.isArray(declared) ? declared : [];
-  const maxDepth = Number(ruleValue(docData, KC, RX_MAX_DEPTH));
   /** @type {Record<string, unknown>} */
   const trees = {};
   for (const [id, row] of Object.entries(rowsOf({ vocab }))) {
     if (!isObj(row) || row[ROW.rx] === undefined || row[ROW.rx] === null) continue;
-    const where = `${FAMILY}.${id}.${ROW.rx}`;
-    const env = { rxScope: { dims, vocabIndex, ns, maxDepth }, compiled: new Map() };
-    /** @type {unknown[]} */
-    const bad = [];
-    checkValue(RX_TYPE, row[ROW.rx], env, { path: where }, (/** @type {unknown} */ e) => { bad.push(e); });
-    if (bad.length > 0) throw new KernelError('E-MOD-RX', {}, `${where}: ${Object(bad[0]).want}`);
-    trees[id] = env.compiled.get(where).tree;
+    trees[id] = compileRuleRX(scope, row[ROW.rx], dims, `${FAMILY}.${id}.${ROW.rx}`, 'E-MOD-RX');
   }
   return Object.freeze({ trees: Object.freeze(trees) });
 }

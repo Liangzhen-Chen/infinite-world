@@ -3,7 +3,9 @@
 // 期望值全部从 world/ 数据读（出身条目 startingMoney、startingCoin，资源种类表，_vocab verb 族）。
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import * as S from './support.mjs';
+import { genesisEntriesOf } from '../../support/governor-of-data.mjs';
 
 after(S.cleanup);
 
@@ -34,7 +36,11 @@ test('1. 开局给钱：三个起始钱各不相同的来历各自入账；化�
     assert.equal(typeof coin, 'string', `出身条目 ${originId} 应有 startingCoin（钱的资源种类键）`);
     assert.ok(S.RESOURCE_IDS.includes(coin), 'startingCoin 应是资源种类表中的键');
     assert.equal(S.balance(w.state, avatars[0], coin), entry.startingMoney, '化身账户余额应等于 startingMoney');
-    assert.equal(S.cumOf(S.totalsOf(w.state, coin)[S.GENESIS]), entry.startingMoney, 'src_genesis 累计应等于起始钱');
+    // 世界 src_genesis 累计 = 化身起始钱 + 各组织开局公库（genesisFunds 中该钱资源的金额之和），两项都从数据推算（不抄「全世界只有化身」的计数）。
+    const orgRows = S.loadJson(join(S.ROOT, 'world/ontology/dimensions/org.json')).rows;
+    const orgGenesis = Object.values(orgRows).flatMap((o) => genesisEntriesOf(o))
+      .filter((g) => g.resource === coin).reduce((sum, g) => sum + g.amount, 0);
+    assert.equal(S.cumOf(S.totalsOf(w.state, coin)[S.GENESIS]), entry.startingMoney + orgGenesis, 'src_genesis 累计应等于化身起始钱加各组织 genesisFunds 之和');
     S.assertConserved(w.state, coin);
 
     const ev = w.logBook.entries.find((e) => e.kind === 'event' && e.ok === true && e.seq === r.seq

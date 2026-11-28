@@ -6,6 +6,11 @@
       "id": "loc_hw",
       "name": "河湾村",
       "source": "卷四 :1085（出生地取 gen.open 为真的地点）；卷十 R10-12.6 :970；旧数据河湾村是起始村（locations.json:4 第一行地点，起始地区单元 weather-cell.json）"
-    }
+    },
+    {"id": "loc_bs", "name": "白石镇", "source": "S2-TP1 主会话 TP 裁定 Q11（更正）：开放白石镇与河湾、榆坡、苇汀、砾泉、桑坂 5 个人族村共 6 处（亮圳 11-28 02:48 交李白，李白裁同意）；坐法阵过去的地方须可见"},
+    {"id": "loc_bs_yupo", "name": "榆坡村", "source": "同 loc_bs 一行"},
+    {"id": "loc_bs_weiting", "name": "苇汀村", "source": "同 loc_bs 一行"},
+    {"id": "loc_bs_liquan", "name": "砾泉村", "source": "同 loc_bs 一行"},
+    {"id": "loc_bs_sangban", "name": "桑坂村", "source": "同 loc_bs 一行"}
   ]
 }

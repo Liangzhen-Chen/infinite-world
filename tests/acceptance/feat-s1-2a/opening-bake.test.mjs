@@ -8,12 +8,13 @@
 import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { init, loadSlot, replay_apply } from '../../../server-plugin/index.mjs';
 import { mountKernel } from '../../../server-plugin/rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from '../../../server-plugin/rules/load/registry-shards.mjs';
 import { createDigestCap } from '../../../server-plugin/textcore/digest.mjs';
 import { runTransaction } from '../../../server-plugin/kernel/transaction.mjs';
 import { clone } from '../../../server-plugin/kernel/bytes.mjs';
@@ -24,6 +25,15 @@ import { testTempRoot } from '../../accept/temp-root.mjs';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WORLD = join(ROOT, 'world');
 const ONTOLOGY = join(WORLD, 'ontology');
+// 与 server-plugin/index.mjs#readOwners 同形：主文件 + state-owners.d/ 分片按文件名次序合并（生产合并入口 registry-shards.mjs，不另抄一份）。
+function ownersOf() {
+  const main = 'world/ontology/state-owners.json';
+  const dir = join(ROOT, shardDirOf(main));
+  const names = existsSync(dir) ? readdirSync(dir).sort() : [];
+  const shards = names.map((n) => ({ file: `${shardDirOf(main)}/${n}`, doc: JSON.parse(readFileSync(join(dir, n), 'utf8')) }));
+  return structuredClone(mergeOwners({ file: main, doc: JSON.parse(readFileSync(join(ROOT, main), 'utf8')) }, shards).doc);
+}
+
 const DIM_DIR = join(ONTOLOGY, 'dimensions');
 
 // 卷十 R10-11.4 / R10-12.7 / 卷二十七 R27-4.13 等新模块导出（动态加载，见文件头）。
@@ -79,7 +89,7 @@ function readRaw() {
   return {
     dimensionDocs: TABLES,
     namedStructsDoc: json('named-structs.json'),
-    owners: json('state-owners.json'),
+    owners: ownersOf(),
     registryRows: REGISTRY_ROWS,
     tableDocs,
     digestExclude: loadJson(join(WORLD, 'rules/tables/digest-exclude.json')).paths,
@@ -231,12 +241,19 @@ test('6. 烘焙层不进摘要：清空烘焙层后重存，saveDigest 不变；
   const m3 = writeSlot(rebuilt, { state, logBook }, 0);
   assert.equal(m3.saveDigest, m1.saveDigest, '重建烘焙层后存档摘要不变');
 
-  // doc_state 序列化不含烘焙层任何键（键名取自 engine.bake 与烘焙树本身，不写死）。
-  const docState = canonical(docOf(engine, state, logBook).doc_state);
+  // doc_state 与烘焙层不相交：顶层键不得是烘焙层的键（键名取自 engine.bake 与烘焙树本身，不写死）；
+  // 烘焙树的结构（byLevel 序列、parentOf 表）不得被序列化进 doc_state。持有边的 kind 字段（holdings.<持有者>.<边>.kind）属于正式状态，不算。
+  const docState = docOf(engine, state, logBook).doc_state;
   const bakeKeys = [...Object.keys(engine.bake), ...Object.keys(tree)];
-  for (const k of bakeKeys) {
-    assert.ok(!docState.includes(`"${k}":`), `doc_state 不得含烘焙层键 ${k}（卷二十七 R27-4.13）`);
-  }
+  // 结构键＝烘焙层与烘焙树里值为对象、Map、数组或函数的键（键名从 Object.keys 推出，不写死）；标量标签键（如 kind 为字符串）不算结构。
+  const structuralKeys = [...Object.entries(engine.bake), ...Object.entries(tree)]
+    .filter(([, v]) => v !== null && (typeof v === 'object' || typeof v === 'function'))
+    .map(([k]) => k);
+  assert.ok(structuralKeys.length > 0, '前提：烘焙层应有结构键（对象、Map、数组或函数值）');
+  assert.deepEqual(Object.keys(docState).filter((k) => bakeKeys.includes(k)), [], 'doc_state 顶层键与烘焙层键不相交（卷二十七 R27-4.13）');
+  const deepKeys = (v, out = []) => { if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) { out.push(k); deepKeys(x, out); } return out; };
+  const deep = deepKeys(docState);
+  for (const k of structuralKeys) assert.equal(deep.includes(k), false, `doc_state 不得序列化烘焙树结构键 ${k}（卷二十七 R27-4.13）`);
 });
 
 test('7. 烘焙层可重建且一致：同一 doc_data 两次建树摘要相等；存读复演后重建的树摘要与开局时相等', async () => {

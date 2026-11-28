@@ -58,6 +58,29 @@
     "TRAVEL_MANIFEST"
    ],
    "rules": []
+  },
+  {
+   "name": "rxScopeOf",
+   "file": "rules/load/rx-compile.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "compileRuleRX",
+   "file": "rules/load/rx-compile.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "checkValue"
+   ],
+   "rules": []
   }
  ]
 }
