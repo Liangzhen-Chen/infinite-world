@@ -821,7 +821,7 @@
     },
     {
       "id": "K1125-P3",
-      "summary": "5 处待判卷文行按 literature/design_spec 分级落地。（原前半句首个交付口径已被亮圳 11-26 19:33「MVP 改为阶段2收尾」与 11-27 19:15「一个镇子下面几个村子」取代，见 K1126-MVP、K1127-MVPTOWN。）",
+      "summary": "5 处待判卷文行按 literature/design_spec 分级落地。部分取代：交付口径半句（11-30 交最小可玩版）已被亮圳 11-26 19:33「MVP 改为阶段2收尾」、11-27 19:15「一个镇子下面几个村子」原话取代（见 K1126-MVP、K1127-MVPTOWN），分级半句仍有效。",
       "source": "docs/gemini/kickoff-1125.md:450",
       "status": "active",
       "decidedBy": "亮圳",

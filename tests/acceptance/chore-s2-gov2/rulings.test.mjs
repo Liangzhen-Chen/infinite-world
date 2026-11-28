@@ -35,9 +35,18 @@ const ids = () => {
   return out;
 };
 
-test('现行有效裁定里不再有已废止的 K1125-P3 与 K1125-DATE（卷十二:108）', () => {
-  const found = ids().filter((x) => x.id === 'K1125-P3' || x.id === 'K1125-DATE');
+test('现行有效裁定里不再有已废止的 K1125-DATE（卷十二:108）', () => {
+  const found = ids().filter((x) => x.id === 'K1125-DATE');
   assert.deepEqual(found.map((x) => x.id), [], `仍挂着过期项：${found.map((x) => x.path).join('、')}`);
+});
+
+test('K1125-P3 若保留，其条目须注明取代情况（未被取代 或 部分取代，主会话裁定 msg_0b46859e6d2c）', () => {
+  const holders = [];
+  walk(DOC, '$', (k, v, p, parent) => { if (k === 'id' && v === 'K1125-P3') holders.push(parent); });
+  for (const obj of holders) {
+    const s = JSON.stringify(obj);
+    assert.ok(s.includes('未被取代') || s.includes('部分取代'), 'K1125-P3 仍保留，但条目未注明取代情况');
+  }
 });
 
 test('K1125-P4 若保留，其条目必须注明未被取代（卷十二:108；以写码方开发.md 为准）', () => {
