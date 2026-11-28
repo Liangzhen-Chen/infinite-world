@@ -63,15 +63,6 @@
     "setGovernor"
    ],
    "rules": []
-  },
-  {
-   "name": "POLITY_MANIFEST",
-   "file": "rules/polity/manifest.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "part",
-   "needs": [],
-   "rules": []
   }
  ]
 }
