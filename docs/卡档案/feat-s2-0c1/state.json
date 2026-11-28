@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0c1",
   "phase": "pr",
-  "updatedAt": "2026-11-28T02:25:16.339Z",
+  "updatedAt": "2026-11-28T03:42:23.399Z",
   "branches": {
     "code": "feat/s2-0c1",
     "test": "test/s2-0c1",
@@ -35,7 +35,8 @@
           "f46fac008",
           "0c8140178",
           "84022c2b0",
-          "b27b34e9b"
+          "b27b34e9b",
+          "90906221a"
         ]
       },
       "costUsd": null
@@ -69,5 +70,5 @@
   },
   "failCount": 1,
   "blocker": null,
-  "nextAction": "等 PR #48 合入后同步 master（出题角色），推送 feat/s2-0c1 开 PR，CI main 绿即合（合入说明 卡分支：feat/s2-0c1）；合后删 0c1、ts-0c1 工作树目录（不删分支）并报李白"
+  "nextAction": "PR feat/s2-0c1→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-0c1）；合后删 0c1、ts-0c1 工作树目录（不删分支）并报李白"
 }
