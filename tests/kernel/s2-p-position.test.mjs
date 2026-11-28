@@ -234,12 +234,14 @@ test('10 move 拒收（state 逐位不变）：缺 subject E-EFF-PARAM；to 不�
   const region = g.state.created[av].props.birthplace;
   const n = ruleOf(raw, 'grid', 'facingDirections');
   const snap = () => canonical(g.state.created);
-  for (const [effect, want] of [
+  /** @type {Array<[Record<string, unknown>, string]>} */
+  const cases = [
     [{ op: 'move', to }, 'E-EFF-PARAM'],
     [{ op: 'move', subject: av, to: av }, 'E-DIM-REF-MISSING'],
     [{ op: 'move', subject: av, to: region }, 'E-ACT-WRITER-NOT-READY'],
     [{ op: 'move', subject: av, to, facing: n }, 'E-EFF-PARAM'],
-  ]) {
+  ];
+  for (const [effect, want] of cases) {
     const before = snap();
     assert.equal(g.submitProposal({ effects: [effect] }).code, want, JSON.stringify(effect));
     assert.equal(snap(), before);

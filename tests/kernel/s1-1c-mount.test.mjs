@@ -90,7 +90,7 @@ test('modified 无兜底：engine 没有 modifierSources 数组即抛；空数�
   const g = await init(express.Router());
   // 取任一实体行自带、且在本表登记过的维度（从数据里找，不写死 kind 与维度）。
   const [kind, id, dimension] = [...g.engine.registry.tables].flatMap(([k, d]) => Object.entries(d.rows || {})
-    .flatMap(([rid, row]) => Object.keys(row || {}).filter((dm) => Object.hasOwn(d.dimensions || {}, dm)).map((dm) => [k, rid, dm])))[0];
+    .flatMap(([rid, row]) => Object.keys(row || {}).filter((dm) => Object.hasOwn(d.dimensions !== null && typeof d.dimensions === 'object' ? d.dimensions : {}, dm)).map((dm) => [k, rid, dm])))[0];
   assert.equal(modified(g.engine, g.state, kind, id, dimension).value, dim(g.engine, g.state, kind, id, dimension).value);
   const { modifierSources, ...rest } = g.engine;
   assert.throws(() => modified(rest, g.state, kind, id, dimension), code('E-DIM-STRUCT-FIELD'));
@@ -127,6 +127,7 @@ test('读档后接着玩：replay_apply 返回与 init 同形；推进后再存�
   const dirB = testTempRoot('s1c-resume-b-');
   const g = await init(express.Router(), { saveRoot: dirA });
   const step = g.engine.host.heartbeatStepMinutes;
+  assert.ok(typeof step === 'number');
   g.submitProposal({ effects: [{ op: 'time', minutes: step + 3 }] });
   const r = replay_apply(loadSlot(saveSlot(g), { saveRoot: dirA }));
   for (const k of ['engine', 'state', 'logBook', 'submitProposal', 'advance', 'save', 'saveDigest']) assert.ok(Object.hasOwn(r, k), k);
