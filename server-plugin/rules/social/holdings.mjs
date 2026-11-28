@@ -353,7 +353,7 @@ function dispose(engine, state, edge, trigger, successor, tx) {
 /**
  * kernelApi holderEnded（卷十八 R18-1.2 协议甲）：持有者 holderId 名下的现役边（filter 可限种类、标的），各按种类行 trigger 那一格处置；
  * successorId 是承接实体（转入承接实体用，可空）。trigger 须是 TRIGGER 之一，否则 E-DIM-STRUCT-FIELD。
- * 本卡的调用者：openHolding 的 exclusive 让出与 incompatible 自动让出（离任）；终止触发（gone）归 S2-0c1。
+ * 调用者：openHolding 的 exclusive 让出与 incompatible 自动让出（离任）；终止清理 subjectEndCleanup（终止，S2-0c1）。
  * @param {SocialEngine} engine @param {SocialState} state @param {string} holderId @param {string} trigger @param {string | null} successorId @param {unknown} tx
  * @param {{kind?: string, subject?: string}} [filter]
  */
@@ -373,11 +373,16 @@ export function subjectEnded(engine, state, subjectId, tx) {
 }
 
 /**
- * 终止清理（卷二 :561 handler(engine, state, info, tx)；state-owners systems.holdings.terminationCleanup）：被终止实体作标的的边经协议乙关闭（S2-H 主会话 Q9 甲）。
- * @param {SocialEngine} engine @param {SocialState} state @param {{id: string}} info @param {unknown} tx
+ * 终止清理（卷二 §2.6 :557 第 4 步、:561 handler(engine, state, info, tx)；state-owners systems.holdings.terminationCleanup）：
+ * 被终止实体作持有者的边按种类行「终止」格经协议甲处置（承接实体取 info.successorId，S2-0c1），作标的的边经协议乙关闭（S2-H 主会话 Q9 甲）。
+ * 写完核本域残留：它仍是现役边的持有者或标的即 E-TERM-RESIDUE（卷二 :558）。
+ * @param {SocialEngine} engine @param {SocialState} state @param {{id: string, successorId: string | null}} info @param {unknown} tx
  */
 export function subjectEndCleanup(engine, state, info, tx) {
+  holderEnded(engine, state, info.id, TRIGGER.gone, info.successorId, tx);
   subjectEnded(engine, state, info.id, tx);
+  const left = [...holdingsOf(engine, state, info.id), ...holdersOf(engine, state, info.id)].map((e) => e.id);
+  if (left.length > 0) throw new KernelError('E-TERM-RESIDUE', {}, `terminate: ${info.id} still on edges ${left.join(', ')}`);
 }
 
 /** 终止清理的登记项（social 域 manifest 收齐）。 */

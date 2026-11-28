@@ -3007,6 +3007,25 @@
      "visibilityAllowed": ["private", "public", "witnessed"],
      "worthSlots": {"destroyed": [], "moved": [], "stake": []}
     },
+    "verb_estate_settled": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {
+      "legs": "list<struct{account: AccountKey, delta: integer} | struct{source|sink: ref vocab src|sink, resource: ref vocab resource, qty: integer}>",
+      "refs": "map<string, any>"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "source": "卷二 §2.6 :556 第 3 步（账户分流经账本转移）；S2-0c1 主会话 Q6 乙：终止分流专用动词，载荷即账本 post 事件 {legs, refs}",
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
     "verb_opening": {
      "calendarBound": false,
      "headSlot": null,

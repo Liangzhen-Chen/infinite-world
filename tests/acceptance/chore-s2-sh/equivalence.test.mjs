@@ -1,6 +1,8 @@
 // 验收：卡 chore/s2-sh（S2-SH 登记分片）：等价与读档。出题方：Claude Haiku 5.5（Orca 会员会话），标识 haiku-orca-test-s2sh；未参与写码与审卡。
 // 依据：卷二:512–:513（加载期机器生成与冻结）、卷二十七:543（世界数据副本摘要 dataPacksDigest，规则层不读摘要）、卷二十七:740（复演）、卷二:972–:1016（存档路由与存档四路）；草案 §4、§8.1。
 // 黑盒：真实 init（不 mock）；分片情形用 copyRepo 的临时副本，副本内的 index.mjs 读副本世界数据。期望值从主文件原文与 saveDigest 比对得出，不写死哈希。
+// 改动记录（出题方 haiku-orca-test-0c1，2026-11-28）：E-2 原断言 /^ℹ pass 1$/ 写死了冒烟文件的用例数；冒烟文件加了 S2-0c1 零 mock 补充例后计数变为 2，云上全量运行 46093780357 因此红。
+// 改为：通过数 ≥1（仍断言子进程真跑出了测试）且 ℹ fail 0；退出码 0 的断言未动，门槛未降。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -49,7 +51,10 @@ test('E-2 零 mock 端到端冒烟（tests/e2e/vertical-slice-smoke.test.mjs）�
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   const r = spawnSync(process.execPath, ['--test', join(REPO_PATH, 'tests/e2e/vertical-slice-smoke.test.mjs')], { cwd: REPO_PATH, encoding: 'utf8', env, timeout: 540000 });
-  assert.match(String(r.stdout), /^ℹ pass 1$/m, `冒烟子进程未实际跑出 1 条通过：${String(r.stdout).slice(-400)}`);
+  // 改动理由（云上全量运行 46093780357，E-2 红）：冒烟文件加了一例，通过数不再是 1；原断言写死计数（卡头硬规矩第 4 条）。
+  // 现只要求「实际跑出至少 1 条且零失败」，子进程退出码 0 的断言不动。
+  assert.match(String(r.stdout), /^ℹ pass ([1-9]\d*)$/m, `冒烟子进程未实际跑出通过项：${String(r.stdout).slice(-400)}`);
+  assert.match(String(r.stdout), /^ℹ fail 0$/m, `冒烟子进程有失败项：${String(r.stdout).slice(-400)}`);
   assert.equal(r.status, 0, `冒烟未过：${String(r.stdout).slice(-800)}${String(r.stderr).slice(-400)}`);
 });
 

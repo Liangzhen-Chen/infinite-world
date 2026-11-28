@@ -145,6 +145,7 @@
     }}}},
     "alert": {"type": "map", "key": {"type": "ref", "vocab": "resource"}, "value": {"type": "map", "key": {"type": "ref", "refs": [{"vocab": "src"}, {"vocab": "sink"}]}, "value": {"type": "integer", "unit": "count", "domain": [0, null], "nullable": true}}},
     "primitiveReason": {"type": "ref", "vocab": "verb"},
+    "terminateReason": {"type": "ref", "vocab": "verb"},
     "endowment": {"type": "struct", "required": ["source", "purpose", "reason", "originDimension", "moneyField", "coinField"], "fields": {
      "source": {"type": "ref", "vocab": "src"},
      "purpose": {"type": "ref", "vocab": "purpose"},
@@ -162,7 +163,7 @@
    },
    "volume": "卷六 §2.5 :224（budget、alert）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40（卷六勘误另卡）；primitiveReason（卷九 :629）、endowment（卷四 G-5）、account（卷六 :103–:104）为 S2-L 新键；窗口与通道种类的跨字段校验在 rules/economy/ledger-check.mjs checkLedgerTables",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"budget": false, "alert": false, "primitiveReason": false, "endowment": false, "account": false}
+   "packOverridable": {"budget": false, "alert": false, "primitiveReason": false, "terminateReason": false, "endowment": false, "account": false}
   },
   {
    "code": "terminate",

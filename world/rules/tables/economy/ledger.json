@@ -8,6 +8,13 @@
    "basis": "原语提案不带事由，transfer 原语写者以本行作 post 的 reason（S2-L 主会话 Q6 乙：_vocab verb 族新加 verb_transfer）"
   },
   {
+   "key": "terminateReason",
+   "value": "verb_estate_settled",
+   "source": "卷二 §2.6 :556 第 3 步（账户分流经账本转移）；卷六 §3.2 :289 post 的 reason 是 verb 代号",
+   "grade": "designed",
+   "basis": "终止分流的 post 事由（S2-0c1 主会话 Q6 乙）：专用动词 verb_estate_settled（_vocab verb 族，载荷即 post 事件 {legs, refs}）；不借 verb_entity_terminated（它只由内核发、载荷是终止事件，卷二 :557）"
+  },
+  {
    "key": "endowment",
    "value": {"source": "src_genesis", "purpose": "purpose_general", "reason": "verb_grant", "originDimension": "origin", "moneyField": "startingMoney", "coinField": "startingCoin"},
    "source": "卷四 G-5（出身给予经账本）；卷六 §4.22 规则 3 :1260（开局 src_genesis 只在第 0 日）；卷六 §2.2 purpose 族",

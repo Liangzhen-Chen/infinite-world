@@ -4,7 +4,9 @@
 // 每步失败报「停在第 N/6 步」，tests/e2e/wire-cuts.json 与 tools/accept/e2e-wire-cut.mjs 依赖这串文字判定拔线停在哪一步。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as plugin from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { startHost, view, act, saveAt, loadAt, exportAt, importAt, unpack, findInShards, tamperShardBytes } from '../support/wire-host.mjs';
 import { testTempRoot, removeTempRoot } from '../accept/temp-root.mjs';
 
@@ -170,4 +172,56 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     const bad = await importAt(B, 4, tamperShardBytes(ctx.bytes0));
     assert.match(bad.text, /E-SAVE-SHARD-DIGEST/, '改一字节的导入应报 E-SAVE-SHARD-DIGEST');
   });
+});
+
+// S2-0c1（NPC 死后财物分流）零 mock 补充：线协议只有菜单动作、没有提案路由，所以 create 与 destroy 经真实 init 的 submitProposal 走。
+// 不并入上面六步（wire-cuts.json 依赖「第 N/6 步」）。依据见 docs/卡档案/feat-s2-0c1/出题.md。
+test('零 mock 补充：开局 → 以来历建 NPC → destroy → 每种资源世界总量不变，死者零残留', async (t) => {
+  const root = testTempRoot('s2-0c1-e2e-');
+  t.after(() => removeTempRoot(root));
+  const world = await plugin.init(express.Router(), { saveRoot: root });
+  const isOk = (r) => r?.ok === true || r?.result === 'ok';
+  const menuOrigin = world.menu(null).affordances.find((x) => (x.act ?? x.id) === 'act_choose_origin');
+  assert.ok(menuOrigin, '开局菜单应含 act_choose_origin');
+  const rowId = menuOrigin.slots.origin[0];
+  const opened = await world.act({ act: 'act_choose_origin', slots: { species: 0, origin: 0, place: 0, lodge: 0 } });
+  assert.equal(isOk(opened), true, `开局选来历应成功：${JSON.stringify(opened)}`);
+  // 有心智物种：物种表里 classes 含 comp_sapient 的首行（数据取，不写 id）。
+  const sapient = JSON.parse(readFileSync(new URL('../../world/ontology/dimensions/species.json', import.meta.url), 'utf8')).rows;
+  const species = Object.keys(sapient).find((k) => sapient[k].classes.includes('comp_sapient'));
+  const persons = () => Object.keys(world.state.created).filter((k) => world.state.created[k].kind === 'person');
+  const beforePersons = persons();
+  const made = world.submitProposal({ effects: [{ op: 'create', kind: 'person', template: rowId, facts: { species } }] });
+  assert.equal(isOk(made), true, `以来历行建 person 应成功：${JSON.stringify(made)}`);
+  const [npc] = persons().filter((k) => !beforePersons.includes(k));
+  assert.ok(npc, 'create 应新增一个 person');
+  const totals = () => {
+    const out = {};
+    for (const byPurpose of Object.values(world.state.accounts ?? {})) {
+      for (const byRes of Object.values(byPurpose ?? {})) {
+        for (const [res, byKey] of Object.entries(byRes ?? {})) {
+          out[res] = (out[res] ?? 0) + Object.values(byKey ?? {}).reduce((s, v) => s + v, 0);
+        }
+      }
+    }
+    return out;
+  };
+  const before = totals();
+  assert.ok(Object.values(before).some((v) => v > 0), '前提：带来历 NPC 应有非零余额');
+  const gone = world.submitProposal({ effects: [{ op: 'destroy', entity: npc }] });
+  assert.equal(isOk(gone), true, `destroy 应成功：${JSON.stringify(gone)}`);
+  const afterTotals = totals();
+  for (const res of new Set([...Object.keys(before), ...Object.keys(afterTotals)])) {
+    assert.equal(afterTotals[res] ?? 0, before[res] ?? 0, `资源 ${res} 的世界总量 destroy 前后应相同`);
+  }
+  const npcAccounts = Object.values(world.state.accounts?.[npc] ?? {}).flatMap((byRes) => Object.values(byRes).flatMap((byKey) => Object.values(byKey)));
+  assert.ok(npcAccounts.every((v) => v === 0), '死者名下账户应全为零或无');
+  const liveHolds = [...world.logBook.entries.reduce((m, e) => {
+    if (e.kind !== 'event' || e.ok !== true || e.verb !== 'verb_holding_changed') return m;
+    const p = e.payload ?? {};
+    if (p.change === 'ended') m.delete(p.edge);
+    else m.set(p.edge, p);
+    return m;
+  }, new Map()).values()];
+  assert.deepEqual(liveHolds.filter((p) => p.holder === npc || p.subject === npc), [], '死者不应是任何现役边的持有者或标的');
 });

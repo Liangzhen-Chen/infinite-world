@@ -1,0 +1,74 @@
+{
+  "card": "feat-s2-0c1",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T03:42:23.399Z",
+  "branches": {
+    "code": "feat/s2-0c1",
+    "test": "test/s2-0c1",
+    "pr": "feat/s2-0c1"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/0c1",
+        "session": "ctx_7f1fe3737e03",
+        "commits": [
+          "0c3a72eab",
+          "0521dc766"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-0c1",
+        "session": "ctx_cb60c4b9c221",
+        "commits": [
+          "2c94df4fb",
+          "f46fac008",
+          "0c8140178",
+          "84022c2b0",
+          "b27b34e9b",
+          "90906221a"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-0c1",
+          "session": "ctx_49fcebe86914",
+          "commits": [
+            "336177034"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-0c1/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.5366448
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 1,
+  "blocker": null,
+  "nextAction": "PR feat/s2-0c1→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-0c1）；合后删 0c1、ts-0c1 工作树目录（不删分支）并报李白"
+}
