@@ -1,0 +1,43 @@
+{
+  "card": "chore-cloud-test",
+  "phase": "write",
+  "updatedAt": "2026-11-27T23:30:00.000Z",
+  "branches": {
+    "code": "chore/cloud-test",
+    "test": "test/cloud-test",
+    "pr": "chore/cloud-test"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/cloud",
+        "session": null,
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-cloud",
+        "session": null,
+        "commits": []
+      },
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码与出题并行；写码交卷后主会话读 diff，通知出题方合 chore/cloud-test，再派 Opus 审卡"
+}
