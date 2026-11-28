@@ -1,7 +1,7 @@
 {
   "card": "chore-cloud-test",
-  "phase": "write",
-  "updatedAt": "2026-11-27T23:30:00.000Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T00:33:38.144Z",
   "branches": {
     "code": "chore/cloud-test",
     "test": "test/cloud-test",
@@ -15,8 +15,10 @@
       "receipt": null,
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/cloud",
-        "session": null,
-        "commits": []
+        "session": "ctx_7d914dc4d9d1",
+        "commits": [
+          "ab76ce1fc"
+        ]
       },
       "costUsd": null
     },
@@ -26,12 +28,28 @@
       "receipt": null,
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/ts-cloud",
-        "session": null,
-        "commits": []
+        "session": "ctx_688443897a18",
+        "commits": [
+          "a0eb06d59"
+        ]
       },
       "costUsd": null
     },
-    "review": []
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-cloud",
+          "session": "ctx_9a0d35bfd05a",
+          "commits": [
+            "392c0b5ee"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
   },
   "ci": {
     "status": "pending",
@@ -39,5 +57,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码与出题并行；写码交卷后主会话读 diff，通知出题方合 chore/cloud-test，再派 Opus 审卡"
+  "nextAction": "推送 chore/cloud-test 开 PR，CI main 绿即合（合入说明 卡分支：chore/cloud-test）；合后核 master CI 转绿，删 cloud、ts-cloud 工作树目录（不删分支），再依次开 T2、0c1 的 PR"
 }
