@@ -5,7 +5,7 @@
 ## 1. 启动只读 3 文件与六份单一真相源
 - 每次启动、压缩或换班后，只读 3 份文件：`docs/产品原则.md`、`CLAUDE.md`、`docs/状态快照.generated.md`（由 CI 生成，严禁手写），再看 `orca worktree ps` 与在途卡的 `docs/卡档案/<卡>/state.json`。
 - **主会话换班（亮圳原话：『换班是我定的，照做』，出处 李白转 msg_d0e590ac17f8，2026-11-25 20:24；细则 docs/gemini/collab-eval-1125.md 4.5 节）**：每合完 3–5 张卡、或每天一次、或自动压缩两次以上，在批次收尾的空档换新主会话接班。主会话不留未落盘的状态：每张在途卡推进状态时覆盖写 state.json（phase、blocker、nextAction 必填）；下班前确认在途卡都已收尾或已写进 state.json。总台邮箱用 Orca 持久 run（首个主会话 `orca orchestration run-create` 建，接班会话 `orca orchestration run-use --id <run>` 接管，子会话回报发 `--to run:<run>`）。
-- 全仓唯一真相源：① 北极星 `docs/产品原则.md`；② 规矩 `CLAUDE.md` + `docs/派活卡头规矩.md`（<=50 行；门禁机读键值在 tools/accept/card-rules.md）；③ 生效裁定 `docs/审查/现行有效裁定.json`（废止即删，不追流水账）；④ 进度 `docs/状态快照.generated.md`；⑤ 契约与入口 `world/ontology/contracts.json` + `tools/accept/entry-registry.json`；⑥ 现行设计 `docs/统一底层设计/` + `docs/世界设计/`。
+- 全仓唯一真相源：① 北极星 `docs/产品原则.md`；② 规矩 `CLAUDE.md` + `docs/派活卡头规矩.md`（<=50 行；门禁机读键值在 tools/accept/card-rules.md）；③ 生效裁定 `docs/审查/现行有效裁定.json`（废止即删，不追流水账）；④ 进度 `docs/状态快照.generated.md`；⑤ 契约与入口 `world/ontology/contracts.json` + `tools/accept/entry-registry.json`（登记主文件 `world/ontology/state-owners.json`、`tools/accept/entry-registry.json` 与分片目录 `world/ontology/state-owners.d/`、`tools/accept/entry-registry.d/` 合并读，新登记只写本域分片）；⑥ 现行设计 `docs/统一底层设计/` + `docs/世界设计/`。
 - `archive/` 为物理隔离历史仓：严禁生产代码与现行文档引用，严禁往 `docs/卡回报/`、`docs/当前状态.md`、`docs/统一底层设计/版本快照/`、`world/drafts/` 回写文件。
 
 ## 2. 北极星与落地红线（无特例）
@@ -31,6 +31,6 @@
 
 ## 5. 测试机、花费闸门、安全与通知
 - **运行位置（亮圳原话：『立刻掐掉，让主会话以后全量都去云上跑』，出处 李白转 2026-11-27 23:28）**：本机只许跑单个测试文件或小范围针对性测试，同一时刻只一个 node 测试进程，不手动跑 pre_commit 全套；提交钩子的 pre_commit 各会话排队、不并发。全量测试与 pre_commit 全套一律上云：卡进行中推 `ci-run/<卡>-<n>` 后手动触发 GitHub Actions `cloud-test`（只出报告），合入闸门仍是 `.github/workflows/ci.yml`；推进世界长测与九省性能基准走腾讯云 `dnd-runner`（经 `tools/cloud/`）。
-- **审批闸门**：**删文件/云资源、充值、拓权、放宽硬规则**须先停下报亮圳同意；花费不设单项停线，按省钱原则做并记账（亮圳原话：『我同意。第二个也没问题。』并说从没定过「单项超5元必须问他」，出处 李白转述 2026-11-25 12:31，msg_81259953138a）；常规操作与技术管理决策由李白自定。
+- **审批闸门**：**删文件/云资源、充值、拓权、放宽硬规则**须先停下报亮圳同意（例外 K1126-WTDEL：合入 master 后的临时工作树核净可删，只删目录不删分支，删后报李白；其他删除仍须亮圳点头）；花费不设单项停线，按省钱原则做并记账（亮圳原话：『我同意。第二个也没问题。』并说从没定过「单项超5元必须问他」，出处 李白转述 2026-11-25 12:31，msg_81259953138a）；常规操作与技术管理决策由李白自定。
 - **安全与原创**：不打印、不提交任何密钥，不读 `SillyTavern/data/*/secrets.json`；不复制《再生勇士》正文/人名/地名/情节（受 `world/i18n/blocklist.zh.json` 拦截）；未成年 NPC 不进亲密情节。
 - **找李白**：直接写在主会话自己的回复里（李白读原话），或用 `orca orchestration send/reply` 发；不再用 notify.py（它发往的旧提醒入口已停用，李白技术裁定 msg_d0e590ac17f8）。要报的只三类：合入（含 PR/CI 链接）、卡住（冲突文件:行 + 两种备选与代价）、花费/云机/审批闸门。不打印、不写出任何密钥与 webhook 地址。
