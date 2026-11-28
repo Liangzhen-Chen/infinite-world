@@ -245,10 +245,15 @@ test('6. 烘焙层不进摘要：清空烘焙层后重存，saveDigest 不变；
   // 烘焙树的结构（byLevel 序列、parentOf 表）不得被序列化进 doc_state。持有边的 kind 字段（holdings.<持有者>.<边>.kind）属于正式状态，不算。
   const docState = docOf(engine, state, logBook).doc_state;
   const bakeKeys = [...Object.keys(engine.bake), ...Object.keys(tree)];
-  assert.ok(tree.byLevel !== undefined && tree.parentOf !== undefined, '前提：烘焙树应有 byLevel 与 parentOf');
+  // 结构键＝烘焙层与烘焙树里值为对象、Map、数组或函数的键（键名从 Object.keys 推出，不写死）；标量标签键（如 kind 为字符串）不算结构。
+  const structuralKeys = [...Object.entries(engine.bake), ...Object.entries(tree)]
+    .filter(([, v]) => v !== null && (typeof v === 'object' || typeof v === 'function'))
+    .map(([k]) => k);
+  assert.ok(structuralKeys.length > 0, '前提：烘焙层应有结构键（对象、Map、数组或函数值）');
   assert.deepEqual(Object.keys(docState).filter((k) => bakeKeys.includes(k)), [], 'doc_state 顶层键与烘焙层键不相交（卷二十七 R27-4.13）');
   const deepKeys = (v, out = []) => { if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) { out.push(k); deepKeys(x, out); } return out; };
-  for (const k of ['byLevel', 'parentOf']) assert.equal(deepKeys(docState).includes(k), false, `doc_state 不得序列化烘焙树结构 ${k}（卷二十七 R27-4.13）`);
+  const deep = deepKeys(docState);
+  for (const k of structuralKeys) assert.equal(deep.includes(k), false, `doc_state 不得序列化烘焙树结构键 ${k}（卷二十七 R27-4.13）`);
 });
 
 test('7. 烘焙层可重建且一致：同一 doc_data 两次建树摘要相等；存读复演后重建的树摘要与开局时相等', async () => {
