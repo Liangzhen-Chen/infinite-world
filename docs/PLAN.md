@@ -103,6 +103,7 @@
 
 ### 待办登记（11-27 主会话5 并入，不阻当前卡）
 - S2-GOV 不阻合：同步 master 的合并提交生成快照时只算第一父，合并后要多补一次快照提交（生成应含 MERGE_HEAD）；isolated-repo 两套重试参数（RM 与 REMOVE_RETRY）、退出钩子吞错；已合卡记账分支上回列在途；卷十二:544 引用旧第五节待勘误；产品原则 :28 tests/overfit-guard 已不存在、:31「更正」所指不清（待报亮圳）；K1126 出处只落在本卡开发.md。
+- [x] chore/cloud-test 全量测试上云（非玩法卡；亮圳 11-27 23:28「立刻掐掉，让主会话以后全量都去云上跑」）：新 .github/workflows/cloud-test.yml 只手动触发、只读、只报告（推卡头到 ci-run/<卡>-<n> 后 gh workflow run cloud-test.yml -f ref=…），ci.yml 推送忽略 ci-run/**、PR 闸门不动；CLAUDE.md §5 运行位置改写；顺带修 master G-1 红（运行 46079982717：同一 HEAD 先生成后检查在真合并提交处必不同，G-1 改为恢复已提交快照再检查，生成器不改）。Sonnet 写、Haiku 出题、Opus 审一轮可合。不阻合：出题未断言 inputs.ref 不进 run 块、未反向断言 npm ci 不带 continue-on-error、cloud-test.test.mjs:3 注释称无 YAML 库与 package.json:28 不符；提交钩子 pre_commit 是否上云待亮圳拍板（李白 11-28 报）。
 - 长生种设想（亮圳 11-26 12:27）改动稿与独立审查已出（主会话临时目录 longevity-*.md），待 Gemini 审与亮圳拍板 P1–P7。
 - docs/问题.md 11-24 起停更，仍有效两条挪此：world/meta 未归档，见 docs/问题.md:4；卷文出处待判 5 处，见 docs/问题.md:25–:30。
 - 规矩读取过渡退路，S2-GOV Q9：card-archive.mjs readRulesAt 在 ref 上读不到 tools/accept/card-rules.md 时退回 docs/派活卡头规矩.md 第五节，留到 S2-SW 删。
