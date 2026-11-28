@@ -1018,8 +1018,9 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_escape_hatch",
    "detector": "typed_pos",
-   "expect": "zero",
+   "expect": "le_baseline",
    "form": "scan",
    "gates": [
     "pre_commit",
@@ -1048,7 +1049,7 @@
    "scanClass": "escape_hatch",
    "source": "卷一 §12.1 V-2 逃逸口部分（卷二 §2.8 第 4a 条、§2.9）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
