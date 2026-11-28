@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0c1",
-  "phase": "review_r2",
-  "updatedAt": "2026-11-28T02:15:20.684Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T02:25:16.339Z",
   "branches": {
     "code": "feat/s2-0c1",
     "test": "test/s2-0c1",
@@ -53,6 +53,13 @@
           ]
         },
         "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-0c1/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.5366448
       }
     ]
   },
@@ -62,5 +69,5 @@
   },
   "failCount": 1,
   "blocker": null,
-  "nextAction": "API 干净复核第二轮（opus-api-review-0c1-r2，带 --archive 写收据）；可合后 feat/s2-0c1 快进到 test/s2-0c1，等 PR #48 合入后再同步一次 master，推送开 PR"
+  "nextAction": "等 PR #48 合入后同步 master（出题角色），推送 feat/s2-0c1 开 PR，CI main 绿即合（合入说明 卡分支：feat/s2-0c1）；合后删 0c1、ts-0c1 工作树目录（不删分支）并报李白"
 }
