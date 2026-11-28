@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-tp1",
-  "phase": "review_r2",
-  "updatedAt": "2026-11-28T09:30:00.000Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T10:00:00.000Z",
   "branches": {
     "code": "feat/s2-tp1",
     "test": "test/s2-tp1",
@@ -16,7 +16,11 @@
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/tp1",
         "session": "ctx_67096586a0ed",
-        "commits": []
+        "commits": [
+          "3bdccc6d6",
+          "96c21b82e",
+          "f694627da"
+        ]
       },
       "costUsd": null
     },
@@ -27,7 +31,11 @@
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/ts-tp1",
         "session": "ctx_94edf83948cb",
-        "commits": []
+        "commits": [
+          "701519135",
+          "9ec537ff7",
+          "23af85adc"
+        ]
       },
       "costUsd": null
     },
@@ -60,5 +68,5 @@
   },
   "failCount": 1,
   "blocker": null,
-  "nextAction": "第二轮 API 复核可合（a913e6524）；出题方同步 origin/master 进卡分支，推 ci-run/s2-tp1-3 云上全量，开 PR feat/s2-tp1→master，CI main 绿即合"
+  "nextAction": "PR feat/s2-tp1→master 走 CI，main 绿即合（合入说明 卡分支：feat/s2-tp1）；合后删 tp1、ts-tp1 工作树目录（不删分支）并报李白提交号；接着开 mount.mjs 清零 any 小卡"
 }
