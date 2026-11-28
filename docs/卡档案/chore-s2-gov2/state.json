@@ -1,7 +1,7 @@
 {
   "card": "chore-s2-gov2",
-  "phase": "review_r2",
-  "updatedAt": "2026-11-28T02:29:58.156Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-28T02:34:06.246Z",
   "branches": {
     "code": "chore/s2-gov2",
     "test": "test/s2-gov2",
@@ -54,6 +54,13 @@
           ]
         },
         "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/chore-s2-gov2/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.5684156
       }
     ]
   },
@@ -63,5 +70,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "API 干净复核第二轮（opus-api-review-gov2-r2，带 --archive）；可合后 chore/s2-gov2 快进到 test/s2-gov2，推送更新 PR #48，CI main 绿即合"
+  "nextAction": "推送 chore/s2-gov2 更新 PR #48，CI main 绿即合（合入说明 卡分支：chore/s2-gov2）；合后报李白「Gemini 11-27 全部已改」附提交号，等放行 TP1；删 gov2、ts-gov2 工作树目录（不删分支）"
 }
